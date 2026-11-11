@@ -36,7 +36,7 @@ echo -e "${GREEN}✓ Docker e Docker Compose detectados com sucesso.${NC}"
 if [ ! -f .env ]; then
     echo -e "${YELLOW}⚠️ Arquivo .env não encontrado. Criando cópia inicial a partir de .env.example...${NC}"
     cp .env.example .env
-    echo -e "${GREEN}✓ Arquivo .env criado.${NC}"
+    echo -e "${GREEN}✓ Arquivo .env criado. Configure suas senhas reais com: nano .env${NC}"
 fi
 
 # 4. Compilação e inicialização dos containers (Frontend + Backend + DB + Adminer)
@@ -74,8 +74,7 @@ echo -e "${GREEN}===============================================================
 echo -e "Frontend Web (HTTP): http://SEU_IP_VPS (Porta 80) ou http://SEU_IP_VPS:3000"
 echo -e "Backend API Health:  http://SEU_IP_VPS/api/health"
 echo -e "Adminer (via SSH):   http://127.0.0.1:8080"
-echo -e "Usuário Master:      manoelmgsantos@acengenhariase.com.br"
-echo -e "Senha Mestra:        @Ac123456"
+echo -e "Credenciais Admin:   Definidas no seu arquivo .env (BOOTSTRAP_ADMIN_EMAIL)"
 echo -e "\nComandos úteis:"
 echo -e "  • Ver logs gerais:         docker compose logs -f"
 echo -e "  • Ver logs do backend:     docker compose logs -f backend"

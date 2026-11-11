@@ -11,7 +11,7 @@ A stack foi estruturada em **4 serviços isolados** conectados pela rede interna
 | Serviço | Container | Tecnologia | Porta Exposta | Função |
 | :--- | :--- | :--- | :--- | :--- |
 | **`frontend`** | `cybergrc-frontend` | Nginx 1.27 Alpine + Vite SPA | `80:80` e `3000:80` | Serve a interface web estática otimizada com Gzip, cabeçalhos de segurança OWASP e faz Proxy Reverso de `/api/` para o container `backend`. |
-| **`backend`** | `cybergrc-backend` | Node.js 20 Alpine + Express | `127.0.0.1:3001:3001` (Interno `3001`) | API RESTful, Motor de Segurança HMAC-SHA256, Rate Limiting, Anti-Brute-Force, Google OAuth2 `@acengenhariase.com.br` e sincronização transacional. |
+| **`backend`** | `cybergrc-backend` | Node.js 20 Alpine + Express | `127.0.0.1:3001:3001` (Interno `3001`) | API RESTful, Motor de Segurança HMAC-SHA256, Rate Limiting, Anti-Brute-Force, Google OAuth2 corporativo e sincronização transacional. |
 | **`db`** | `cybergrc-postgres` | PostgreSQL 17 Alpine | `127.0.0.1:5432:5432` | Banco de dados relacional de produção com volume persistente `cybergrc-postgres-data` e healthcheck automático. |
 | **`adminer`** | `cybergrc-adminer` | Adminer Latest | `127.0.0.1:8080:8080` | Painel visual para inspeção do banco PostgreSQL (restrito ao localhost/túnel SSH por segurança). |
 
@@ -21,10 +21,7 @@ A stack foi estruturada em **4 serviços isolados** conectados pela rede interna
 
 Todos os dados fictícios ou de demonstração foram removidos. O sistema sobe **100% zerado**, mantendo exclusivamente a estrutura essencial para você preencher do zero:
 
-- **1 Usuário Administrador Principal**:
-  - **Nome:** `Manoel Martins`
-  - **E-mail:** `manoelmgsantos@acengenhariase.com.br`
-  - **Senha Inicial:** `@Ac123456`
+- **1 Conta de Administrador Principal** (definida de forma segura no arquivo `.env` da VPS).
 - **1 Unidade Matriz Essencial**:
   - `MATRIZ-001` — **Escritório Central (Matriz)** (`Sede Corporativa Central - AC Engenharia`), com `0` efetivo inicial e **0 canteiros fictícios**.
 - **Cadastros Operacionais 100% Zerados (`0` registros)**:
@@ -56,9 +53,10 @@ sudo usermod -aG docker $USER
 ```
 
 ### Passo 2: Enviar os Arquivos do Projeto para a VPS
-Clone seu repositório ou envie a pasta do projeto para `/opt/cybergrc`:
+Clone seu repositório para `/opt/cybergrc`:
 ```bash
 mkdir -p /opt/cybergrc
+git clone https://github.com/manoelmgsantos-dotcom/SGSI-AC.git /opt/cybergrc
 cd /opt/cybergrc
 ```
 
@@ -68,19 +66,19 @@ Copie o arquivo `.env.example` para `.env`:
 cp .env.example .env
 nano .env
 ```
-Confira ou personalize as variáveis principais:
+Personalize as variáveis principais no seu `.env`:
 ```env
 NODE_ENV=production
 FRONTEND_PORT=80
 APP_PORT=3000
 POSTGRES_DB=cybergrc
 POSTGRES_USER=cybergrc
-POSTGRES_PASSWORD=@Ac123456
-BOOTSTRAP_ADMIN_EMAIL=manoelmgsantos@acengenhariase.com.br
-BOOTSTRAP_ADMIN_PASSWORD=@Ac123456
+POSTGRES_PASSWORD=SUA_SENHA_FORTE_DO_BANCO
+BOOTSTRAP_ADMIN_EMAIL=seu-email-admin@suaempresa.com.br
+BOOTSTRAP_ADMIN_PASSWORD=SUA_SENHA_FORTE_DE_ADMIN
 SESSION_SECRET=sua-chave-secreta-forte-aqui-ac-engenharia-2026
 GOOGLE_CLIENT_ID=seu-client-id-do-google.apps.googleusercontent.com
-APP_DOMAIN=sgsi.acengenhariase.com.br
+APP_DOMAIN=sgsi.suaempresa.com.br
 ```
 
 ### Passo 4: Subir Toda a Stack (Frontend + Backend + PostgreSQL 17)
