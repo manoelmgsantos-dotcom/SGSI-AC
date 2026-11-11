@@ -74,12 +74,12 @@ O sistema foi submetido a uma reestruturação completa de segurança seguindo o
 
 A stack de produção para VPS é dividida em **4 serviços isolados** conectados pela rede interna `cybergrc-enterprise-net`:
 
-| Serviço | Container | Tecnologia | Porta | Função |
+| Serviço | Container | Tecnologia | Porta (Dedicada Anti-Conflito) | Função |
 | :--- | :--- | :--- | :--- | :--- |
-| **`frontend`** | `cybergrc-frontend` | Nginx 1.27 Alpine + Vite SPA | `80:80` e `3000:80` | Serve a interface web estática otimizada com Gzip, cabeçalhos de segurança OWASP e faz Proxy Reverso de `/api/` para o container `backend`. |
-| **`backend`** | `cybergrc-backend` | Node.js 20 Alpine + Express | `127.0.0.1:3001:3001` | API RESTful executando em usuário não-root (`cybergrc`), motor de segurança HMAC-SHA256 e sincronização transacional com o PostgreSQL. |
-| **`db`** | `cybergrc-postgres` | PostgreSQL 17 Alpine | `127.0.0.1:5432:5432` | Banco de dados relacional de produção com volume persistente `cybergrc-postgres-data` e healthcheck automático. |
-| **`adminer`** | `cybergrc-adminer` | Adminer Latest | `127.0.0.1:8080:8080` | Gerenciador visual do banco restrito exclusivamente ao `localhost` (acessível com segurança via túnel SSH). |
+| **`frontend`** | `cybergrc-frontend` | Nginx 1.27 Alpine + Vite SPA | **`4300:80`** | Serve a interface web estática otimizada com Gzip, cabeçalhos de segurança OWASP e faz Proxy Reverso de `/api/` para o container `backend`. |
+| **`backend`** | `cybergrc-backend` | Node.js 20 Alpine + Express | **`127.0.0.1:4301:4301`** | API RESTful executando em usuário não-root (`cybergrc`), motor de segurança HMAC-SHA256 e sincronização transacional com o PostgreSQL. |
+| **`db`** | `cybergrc-postgres` | PostgreSQL 17 Alpine | **`127.0.0.1:5439:5432`** | Banco de dados relacional de produção com volume persistente `cybergrc-postgres-data` e healthcheck automático. |
+| **`adminer`** | `cybergrc-adminer` | Adminer Latest | **`127.0.0.1:8480:8080`** | Gerenciador visual do banco restrito exclusivamente ao `localhost` (acessível com segurança via túnel SSH). |
 
 ---
 
@@ -127,8 +127,10 @@ nano .env
 Preencha as variáveis no seu `.env`:
 ```env
 NODE_ENV=production
-FRONTEND_PORT=80
-APP_PORT=3000
+APP_PORT=4300
+BACKEND_PORT=4301
+POSTGRES_PORT=5439
+ADMINER_PORT=8480
 
 # Credenciais do PostgreSQL 17
 POSTGRES_DB=cybergrc
@@ -159,9 +161,8 @@ Ou suba diretamente via Docker Compose:
 docker compose up -d --build
 ```
 Após alguns segundos, acesse no navegador:
-- **Via Porta 80 (Padrão Web):** `http://IP_DA_SUA_VPS`
-- **Via Porta 3000:** `http://IP_DA_SUA_VPS:3000`
-- **Healthcheck da API:** `http://IP_DA_SUA_VPS/api/health`
+- **Painel Principal Web (Porta `4300`):** `http://IP_DA_SUA_VPS:4300`
+- **Healthcheck da API:** `http://IP_DA_SUA_VPS:4300/api/health`
 
 ---
 
@@ -179,7 +180,7 @@ Após alguns segundos, acesse no navegador:
    ```bash
    npm run db:reset
    ```
-4. **Inicie o servidor completo (Frontend Vite na porta `3000` + Backend Express na porta `3001`):**
+4. **Inicie o servidor completo (Frontend Vite na porta `4300` + Backend Express na porta `4301`):**
    ```bash
    npm run dev
    ```
@@ -208,12 +209,12 @@ Após alguns segundos, acesse no navegador:
   ```bash
   cat backup_sgsi_2026-11-11.sql | docker compose exec -T db psql -U cybergrc -d cybergrc
   ```
-- **Acessar o Adminer (`127.0.0.1:8080`) com Segurança via Túnel SSH:**
+- **Acessar o Adminer (`127.0.0.1:8480`) com Segurança via Túnel SSH:**
   Na sua máquina local, abra um terminal e crie o túnel SSH para a VPS:
   ```bash
-  ssh -L 8080:127.0.0.1:8080 usuario@IP_DA_SUA_VPS
+  ssh -L 8480:127.0.0.1:8480 usuario@IP_DA_SUA_VPS
   ```
-  Em seguida, acesse `http://localhost:8080` no seu navegador local.
+  Em seguida, acesse `http://localhost:8480` no seu navegador local.
 - **Atualizar a VPS quando houver novas alterações no GitHub:**
   ```bash
   cd /opt/cybergrc

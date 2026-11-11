@@ -59,8 +59,8 @@ fi
 # 6. Verifica status dos containers
 docker compose ps
 
-echo -e "\n${BLUE}🔍 [4/4] Testando resposta do Frontend (porta 80/3000) e Backend (/api/health)...${NC}"
-HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health || echo "000")
+echo -e "\n${BLUE}🔍 [4/4] Testando resposta do Frontend (porta 4300) e Backend (/api/health)...${NC}"
+HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4300/api/health || echo "000")
 
 if [ "$HTTP_STATUS" = "200" ]; then
     echo -e "${GREEN}✓ Stack completa online respondendo HTTP 200!${NC}"
@@ -71,9 +71,10 @@ fi
 echo -e "\n${GREEN}========================================================================${NC}"
 echo -e "${GREEN}🎉 DEPLOY CONCLUÍDO COM SUCESSO - AC ENGENHARIA!${NC}"
 echo -e "${GREEN}========================================================================${NC}"
-echo -e "Frontend Web (HTTP): http://SEU_IP_VPS (Porta 80) ou http://SEU_IP_VPS:3000"
-echo -e "Backend API Health:  http://SEU_IP_VPS/api/health"
-echo -e "Adminer (via SSH):   http://127.0.0.1:8080"
+echo -e "Frontend Web (HTTP): http://SEU_IP_VPS:4300"
+echo -e "Backend API (Local): http://127.0.0.1:4301/api/health"
+echo -e "PostgreSQL (Local):  127.0.0.1:5439"
+echo -e "Adminer (via SSH):   http://127.0.0.1:8480"
 echo -e "Credenciais Admin:   Definidas no seu arquivo .env (BOOTSTRAP_ADMIN_EMAIL)"
 echo -e "\nComandos úteis:"
 echo -e "  • Ver logs gerais:         docker compose logs -f"

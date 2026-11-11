@@ -8,8 +8,9 @@ let restartTimer = null;
 function startTunnel() {
   console.log('\n🌐 [CyberGRC Tunnel] Iniciando túnel seguro Cloudflare...');
   
+  const frontendPort = process.env.APP_PORT || '4300';
   const cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-  currentChild = spawn(cmd, ['cloudflared', 'tunnel', '--url', 'http://127.0.0.1:3000'], {
+  currentChild = spawn(cmd, ['cloudflared', 'tunnel', '--url', `http://127.0.0.1:${frontendPort}`], {
     stdio: ['ignore', 'pipe', 'pipe'],
     shell: true
   });

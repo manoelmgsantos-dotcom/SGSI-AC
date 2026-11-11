@@ -22,14 +22,14 @@ COPY . .
 RUN node scripts/reset-db.mjs && node scripts/build.mjs
 
 # ------------------------------------------------------------------------------
-# Estágio 2: Runtime de Produção (Backend API)
+# Estágio 2: Runtime de Produção (Backend API na Porta 4301)
 # ------------------------------------------------------------------------------
 FROM node:20-alpine AS backend-runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=4301
 
 # Criação de usuário e grupo não-root para conformidade ISO 27001
 RUN addgroup -S cybergrc && adduser -S cybergrc -G cybergrc
@@ -50,10 +50,10 @@ RUN mkdir -p /app/server/data && chown -R cybergrc:cybergrc /app
 
 USER cybergrc
 
-EXPOSE 3001
+EXPOSE 4301
 
-# Verificação de integridade da API
+# Verificação de integridade da API na porta 4301
 HEALTHCHECK --interval=20s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3001/api/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:4301/api/health || exit 1
 
 CMD ["node", "dist-server/index.mjs"]

@@ -1,7 +1,8 @@
 import { spawn } from 'node:child_process';
 
+const frontendPort = process.env.APP_PORT || '4300';
 const apiProcess = spawn(process.execPath, ['--import', 'tsx', 'server/index.ts'], { stdio: 'inherit' });
-const viteProcess = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--port=3000', '--host=0.0.0.0'], { stdio: 'inherit' });
+const viteProcess = spawn(process.execPath, ['node_modules/vite/bin/vite.js', `--port=${frontendPort}`, '--host=0.0.0.0'], { stdio: 'inherit' });
 
 let stopping = false;
 

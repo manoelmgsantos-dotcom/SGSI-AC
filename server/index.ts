@@ -140,7 +140,7 @@ function getNetworkAccessUrls() {
           !addr.address.startsWith('169.254.') &&
           addr.address !== '192.168.56.1'
         ) {
-          lanUrl = `http://${addr.address}:3000`;
+          lanUrl = `http://${addr.address}:${process.env.APP_PORT || '4300'}`;
           break;
         }
       }
@@ -842,7 +842,7 @@ app.use((error: unknown, _request: Request, response: Response, _next: NextFunct
   response.status(500).json({ error: 'Erro interno do servidor.' });
 });
 
-const port = Number(process.env.PORT ?? process.env.API_PORT ?? 3001);
+const port = Number(process.env.PORT ?? process.env.API_PORT ?? 4301);
 initializeDatabase()
   .then(() => app.listen(port, process.env.API_HOST ?? '0.0.0.0', () => {
     console.log(`API CyberGRC disponível na porta ${port}.`);

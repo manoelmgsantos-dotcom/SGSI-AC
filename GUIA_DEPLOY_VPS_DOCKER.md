@@ -10,10 +10,10 @@ A stack foi estruturada em **4 serviços isolados** conectados pela rede interna
 
 | Serviço | Container | Tecnologia | Porta Exposta | Função |
 | :--- | :--- | :--- | :--- | :--- |
-| **`frontend`** | `cybergrc-frontend` | Nginx 1.27 Alpine + Vite SPA | `80:80` e `3000:80` | Serve a interface web estática otimizada com Gzip, cabeçalhos de segurança OWASP e faz Proxy Reverso de `/api/` para o container `backend`. |
-| **`backend`** | `cybergrc-backend` | Node.js 20 Alpine + Express | `127.0.0.1:3001:3001` (Interno `3001`) | API RESTful, Motor de Segurança HMAC-SHA256, Rate Limiting, Anti-Brute-Force, Google OAuth2 corporativo e sincronização transacional. |
-| **`db`** | `cybergrc-postgres` | PostgreSQL 17 Alpine | `127.0.0.1:5432:5432` | Banco de dados relacional de produção com volume persistente `cybergrc-postgres-data` e healthcheck automático. |
-| **`adminer`** | `cybergrc-adminer` | Adminer Latest | `127.0.0.1:8080:8080` | Painel visual para inspeção do banco PostgreSQL (restrito ao localhost/túnel SSH por segurança). |
+| **`frontend`** | `cybergrc-frontend` | Nginx 1.27 Alpine + Vite SPA | **`4300:80`** | Serve a interface web estática otimizada com Gzip, cabeçalhos de segurança OWASP e faz Proxy Reverso de `/api/` para o container `backend`. |
+| **`backend`** | `cybergrc-backend` | Node.js 20 Alpine + Express | **`127.0.0.1:4301:4301`** (Interno `4301`) | API RESTful, Motor de Segurança HMAC-SHA256, Rate Limiting, Anti-Brute-Force, Google OAuth2 corporativo e sincronização transacional. |
+| **`db`** | `cybergrc-postgres` | PostgreSQL 17 Alpine | **`127.0.0.1:5439:5432`** | Banco de dados relacional de produção com volume persistente `cybergrc-postgres-data` e healthcheck automático. |
+| **`adminer`** | `cybergrc-adminer` | Adminer Latest | **`127.0.0.1:8480:8080`** | Painel visual para inspeção do banco PostgreSQL (restrito ao localhost/túnel SSH por segurança). |
 
 ---
 
@@ -69,8 +69,10 @@ nano .env
 Personalize as variáveis principais no seu `.env`:
 ```env
 NODE_ENV=production
-FRONTEND_PORT=80
-APP_PORT=3000
+APP_PORT=4300
+BACKEND_PORT=4301
+POSTGRES_PORT=5439
+ADMINER_PORT=8480
 POSTGRES_DB=cybergrc
 POSTGRES_USER=cybergrc
 POSTGRES_PASSWORD=SUA_SENHA_FORTE_DO_BANCO
