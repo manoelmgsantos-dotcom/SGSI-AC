@@ -1,0 +1,10 @@
+node_modules
+.git
+.github
+.gemini
+*.log
+.env.local
+.env
+dist
+dist-server
+.vscode

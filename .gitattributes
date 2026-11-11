@@ -1,0 +1,6 @@
+# Garante que scripts shell (.sh) e arquivos Docker/SQL usem sempre LF (Linux/VPS)
+*.sh text eol=lf
+Dockerfile* text eol=lf
+*.conf text eol=lf
+*.yml text eol=lf
+*.sql text eol=lf

@@ -1,0 +1,25 @@
+# Dependências e Builds
+node_modules/
+build/
+dist/
+dist-server/
+coverage/
+
+# Variáveis de Ambiente e Segredos (Nunca subir .env real no GitHub!)
+.env
+.env.*
+!.env.example
+
+# Logs e Arquivos Temporários de Túnel
+*.log
+current-tunnel-url.txt
+*.pid
+*.seed
+
+# Sistema Operacional e IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
