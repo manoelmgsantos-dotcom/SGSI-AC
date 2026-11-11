@@ -12,8 +12,8 @@ FROM node:20-alpine AS backend-builder
 WORKDIR /app
 
 # Instala dependências de compilação
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json ./
+RUN npm install --legacy-peer-deps --no-audit --no-fund
 
 # Copia código-fonte completo
 COPY . .
@@ -34,9 +34,9 @@ ENV PORT=4301
 # Criação de usuário e grupo não-root para conformidade ISO 27001
 RUN addgroup -S cybergrc && adduser -S cybergrc -G cybergrc
 
-# Instala apenas dependências de produção necessárias em tempo de execução
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+# Instala apenas dependências leves de produção necessárias em tempo de execução
+COPY package.json ./
+RUN npm install --omit=dev --legacy-peer-deps --no-audit --no-fund && npm cache clean --force
 
 # Copia artefatos compilados e base inicial limpa
 COPY --from=backend-builder /app/dist ./dist
