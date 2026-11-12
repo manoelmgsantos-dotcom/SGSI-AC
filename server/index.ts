@@ -429,7 +429,8 @@ app.delete('/api/users/:id', requireAdminRole, asyncRoute(async (request, respon
   if (!userId) throw new HttpError(400, 'ID do usuário obrigatório.');
 
   // Impede auto-exclusão ou exclusão do Administrador Principal
-  if (userId === 'usr-admin' || userId.toLowerCase() === 'manoelmgsantos@acengenhariase.com.br') {
+  const bootstrapAdminEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'ti@acengenhariase.com.br').toLowerCase().trim();
+  if (userId === 'usr-admin' || userId.toLowerCase() === 'ti@acengenhariase.com.br' || userId.toLowerCase() === bootstrapAdminEmail) {
     throw new HttpError(403, 'Operação bloqueada: O Administrador Principal do SGSI não pode ser excluído.');
   }
 
@@ -560,7 +561,8 @@ app.post('/api/admin/reset-database', requireAdminRole, asyncRoute(async (_reque
   if (!pgUp) pgUp = await checkAndInitializePostgres();
   if (pgUp) {
     try {
-      await pool.query("DELETE FROM app_users WHERE LOWER(email) <> 'manoelmgsantos@acengenhariase.com.br';");
+      const bootstrapAdminEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'ti@acengenhariase.com.br').toLowerCase().trim();
+      await pool.query("DELETE FROM app_users WHERE LOWER(email) <> 'ti@acengenhariase.com.br' AND LOWER(email) <> $1;", [bootstrapAdminEmail]);
       await pool.query('TRUNCATE TABLE grc_records;');
       for (const [collection, items] of Object.entries(sanitizedSnapshot)) {
         if (collection === 'meta') continue;
@@ -599,8 +601,8 @@ app.post('/api/auth/login', asyncRoute(async (request, response) => {
   // 1. Proteção contra ataques de força bruta (bloqueio após 5 falhas por conta ou 15 por IP em 15 min)
   checkLoginBruteForce(request, email);
 
-  const masterAdminEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'manoelmgsantos@acengenhariase.com.br').toLowerCase().trim();
-  const defaultMasterEmail = 'manoelmgsantos@acengenhariase.com.br';
+  const masterAdminEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'ti@acengenhariase.com.br').toLowerCase().trim();
+  const defaultMasterEmail = 'ti@acengenhariase.com.br';
   const isBootstrapAdmin = email === masterAdminEmail || email === defaultMasterEmail;
 
   let pgUp = isPostgresOnline();
@@ -906,8 +908,8 @@ app.post('/api/auth/google', asyncRoute(async (request, response) => {
   let wasInviteAccepted = false;
 
   // 1. O Administrador Principal sempre tem acesso concedido
-  const bootstrapAdminEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'manoelmgsantos@acengenhariase.com.br').toLowerCase().trim();
-  const isSuperAdmin = email === 'manoelmgsantos@acengenhariase.com.br' || email === bootstrapAdminEmail;
+  const bootstrapAdminEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'ti@acengenhariase.com.br').toLowerCase().trim();
+  const isSuperAdmin = email === 'ti@acengenhariase.com.br' || email === bootstrapAdminEmail;
 
   if (pgUp) {
     try {
@@ -1005,10 +1007,10 @@ app.post('/api/auth/google', asyncRoute(async (request, response) => {
   if (!user && isSuperAdmin) {
     user = {
       id: 'usr-admin',
-      name: name || 'Manoel Martins',
+      name: name || 'Admin-SGSI',
       email: email,
       role: 'secops',
-      roleName: 'Administrador Geral & SecOps SGSI',
+      roleName: 'Gestor de T.I. & SecOps',
       status: 'Ativo',
       isSuperAdmin: true
     };

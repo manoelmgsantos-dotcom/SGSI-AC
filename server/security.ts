@@ -110,7 +110,8 @@ export function requireAdminRole(request: Request, _response: Response, next: Ne
     return;
   }
   const adminRoles = new Set(['secops', 'dpo', 'diretoria', 'executivo']);
-  const isMasterEmail = user.email.toLowerCase() === 'manoelmgsantos@acengenhariase.com.br';
+  const bootstrapAdminEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'ti@acengenhariase.com.br').toLowerCase().trim();
+  const isMasterEmail = user.email.toLowerCase() === 'ti@acengenhariase.com.br' || user.email.toLowerCase() === bootstrapAdminEmail;
   if (!adminRoles.has(user.role) && !isMasterEmail) {
     next(new HttpError(403, 'Acesso negado: privilégios insuficientes para esta operação administrativa (ISO 27001 A.5.15).'));
     return;

@@ -7,7 +7,7 @@ dotenv.config();
 const { Client } = pg;
 const dbUrl = process.env.DATABASE_URL || 'postgresql://cybergrc:%40Ac123456@db:5432/cybergrc';
 
-const targetEmail = (process.argv[2] || process.env.BOOTSTRAP_ADMIN_EMAIL || 'manoelmgsantos@acengenhariase.com.br').toLowerCase().trim();
+const targetEmail = (process.argv[2] || process.env.BOOTSTRAP_ADMIN_EMAIL || 'ti@acengenhariase.com.br').toLowerCase().trim();
 const targetPassword = process.argv[3] || process.env.BOOTSTRAP_ADMIN_PASSWORD || '@Ac123456';
 
 console.log('========================================================================');
@@ -38,13 +38,13 @@ async function resetAdmin() {
     // 2. Garante o registro do usuário em grc_records (coleção 'users')
     const adminRecord = {
       id: "usr-admin",
-      name: "Manoel Martins",
+      name: "Admin-SGSI",
       email: targetEmail,
       role: "secops",
-      roleName: "Administrador Geral & SecOps SGSI",
+      roleName: "Gestor de T.I. & SecOps",
       department: "Diretoria de Tecnologia & Governança SGSI",
       location: "Escritório Central (Matriz)",
-      avatar: "MM",
+      avatar: "A",
       color: "blue",
       status: "Ativo",
       isSuperAdmin: true,

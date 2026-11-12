@@ -78,14 +78,14 @@ export async function checkAndInitializePostgres(): Promise<boolean> {
       END $$;
     `);
 
-    const email = requireEnvironment('BOOTSTRAP_ADMIN_EMAIL').toLowerCase();
-    const existingAdmin = await pool.query('SELECT 1 FROM app_users WHERE email = $1', [email]);
+    const email = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'ti@acengenhariase.com.br').toLowerCase().trim();
+    const existingAdmin = await pool.query('SELECT 1 FROM app_users WHERE LOWER(email) = $1', [email]);
     if (existingAdmin.rowCount === 0) {
-      const password = requireEnvironment('BOOTSTRAP_ADMIN_PASSWORD');
+      const password = process.env.BOOTSTRAP_ADMIN_PASSWORD || '@Ac123456';
       const hash = await bcrypt.hash(password, 10);
       await pool.query(
-        `INSERT INTO app_users (email, password_hash, role)
-         VALUES ($1, $2, 'secops') ON CONFLICT (email) DO NOTHING`,
+        `INSERT INTO app_users (email, password_hash, role, active, created_at, updated_at)
+         VALUES ($1, $2, 'secops', TRUE, NOW(), NOW()) ON CONFLICT (email) DO NOTHING`,
         [email, hash],
       );
     }
@@ -135,6 +135,48 @@ export async function checkAndInitializePostgres(): Promise<boolean> {
         }
       } catch {
         // Ignora silenciosamente
+      }
+
+      // Migração de papéis de usuários: garante que ti@acengenhariase.com.br seja o único Administrador Principal
+      // e que manoelmgsantos@acengenhariase.com.br seja um usuário normal (Engenheiro / Operações)
+      try {
+        await pool.query(`
+          UPDATE app_users 
+          SET role = 'secops', active = TRUE 
+          WHERE LOWER(email) = 'ti@acengenhariase.com.br';
+          
+          UPDATE app_users 
+          SET role = 'gestor_obra' 
+          WHERE LOWER(email) = 'manoelmgsantos@acengenhariase.com.br';
+
+          UPDATE grc_records 
+          SET payload = jsonb_set(
+            jsonb_set(
+              jsonb_set(
+                jsonb_set(payload, '{isSuperAdmin}', 'false'::jsonb),
+                '{role}', '"gestor_obra"'::jsonb
+              ),
+              '{roleName}', '"Engenheiro Residente / Obras"'::jsonb
+            ),
+            '{id}', '"usr-manoel"'::jsonb
+          )
+          WHERE collection = 'users' AND LOWER(payload->>'email') = 'manoelmgsantos@acengenhariase.com.br';
+
+          UPDATE grc_records 
+          SET payload = jsonb_set(
+            jsonb_set(
+              jsonb_set(
+                jsonb_set(payload, '{isSuperAdmin}', 'true'::jsonb),
+                '{role}', '"secops"'::jsonb
+              ),
+              '{roleName}', '"Gestor de T.I. & SecOps"'::jsonb
+            ),
+            '{id}', '"usr-admin"'::jsonb
+          )
+          WHERE collection = 'users' AND LOWER(payload->>'email') = 'ti@acengenhariase.com.br';
+        `);
+      } catch (migErr) {
+        console.warn('Aviso ao sincronizar papéis no PostgreSQL:', migErr);
       }
     }
 

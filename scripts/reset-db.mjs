@@ -15,13 +15,13 @@ console.log('===================================================================
 // 1. Usuário Administrador Principal Único (Sem senha em texto plano no payload público)
 const MASTER_ADMIN_USER = {
   id: "usr-admin",
-  name: "Manoel Martins",
-  email: "manoelmgsantos@acengenhariase.com.br",
+  name: "Admin-SGSI",
+  email: "ti@acengenhariase.com.br",
   role: "secops",
-  roleName: "Administrador Geral & SecOps SGSI",
+  roleName: "Gestor de T.I. & SecOps",
   department: "Diretoria de Tecnologia & Governança SGSI",
   location: "Escritório Central (Matriz)",
-  avatar: "MM",
+  avatar: "A",
   color: "blue",
   status: "Ativo",
   isSuperAdmin: true,
@@ -31,6 +31,24 @@ const MASTER_ADMIN_USER = {
     "Operação do SIEM Wazuh, Backups Imutáveis Sienge ERP e Firewalls",
     "Homologação de Evidências, Relatórios ANPD e Auditoria Forense",
     "Gestão do Escritório Central (Matriz) e Conectividade VPN com Canteiros"
+  ]
+};
+
+// 1.1 Usuário Normal / Operacional (Engenheiro Residente / Obras)
+const NORMAL_USER_MANOEL = {
+  id: "usr-manoel",
+  name: "Manoel Martins",
+  email: "manoelmgsantos@acengenhariase.com.br",
+  role: "gestor_obra",
+  roleName: "Engenheiro Residente / Obras",
+  department: "Diretoria de Operações & Obras",
+  location: "Escritório Central (Matriz)",
+  avatar: "MM",
+  color: "amber",
+  status: "Ativo",
+  isSuperAdmin: false,
+  responsibilities: [
+    "Segurança de canteiro, biometria em catracas, termos de empreiteiras e evidências operacionais."
   ]
 };
 
@@ -66,7 +84,7 @@ const INITIAL_AUDIT_LOG = {
   module: "SYSTEM",
   action: "INSTALACAO_LIMPA_INICIALIZADA: SGSI da AC Engenharia pronto para preenchimento do zero",
   severity: "INFO",
-  actor: "Manoel Martins <manoelmgsantos@acengenhariase.com.br>",
+  actor: "Admin-SGSI <ti@acengenhariase.com.br>",
   target_module: "Governança SGSI",
   description: "Base de dados zerada e inicializada em estado limpo (zeroed) para início da operação oficial da AC Engenharia.",
   ip: "127.0.0.1",
@@ -435,7 +453,7 @@ export const CLEAN_DATABASE_SNAPSHOT = {
     resetAt: new Date().toISOString(),
     organization: "AC Engenharia"
   },
-  users: [MASTER_ADMIN_USER],
+  users: [MASTER_ADMIN_USER, NORMAL_USER_MANOEL],
   obras: [MATRIZ_OBRA], // Apenas a Matriz Central (0 obras fictícias)
   risks: [],            // Zerado
   ropa: [],             // Zerado
@@ -501,9 +519,9 @@ async function resetDatabase() {
 
     // 1. Limpa app_users (mantendo apenas o Administrador Principal)
     await client.query(`
-      DELETE FROM app_users WHERE LOWER(email) <> 'manoelmgsantos@acengenhariase.com.br';
+      DELETE FROM app_users WHERE LOWER(email) <> 'ti@acengenhariase.com.br';
     `);
-    console.log('  -> app_users limpo: apenas o Administrador Principal (Manoel Martins) preservado.');
+    console.log('  -> app_users limpo: apenas o Administrador Principal (Admin-SGSI) preservado.');
 
     // 2. Limpa grc_records
     await client.query('TRUNCATE TABLE grc_records;');
@@ -539,7 +557,8 @@ async function resetDatabase() {
   console.log('🎉 BASE DE DADOS ZERADA COM SUCESSO (INSTALAÇÃO LIMPA AC ENGENHARIA)!');
   console.log('========================================================================');
   console.log('Status da Base:');
-  console.log('  • 1 Administrador Principal: Manoel Martins (manoelmgsantos@acengenhariase.com.br)');
+  console.log('  • 1 Administrador Principal: Admin-SGSI (ti@acengenhariase.com.br)');
+  console.log('  • 1 Usuário Operacional: Manoel Martins (manoelmgsantos@acengenhariase.com.br)');
   console.log('  • 1 Unidade Matriz: Escritório Central (Matriz) — 0 canteiros fictícios');
   console.log('  • 0 Riscos cadastrados (matriz 5x5 limpa)');
   console.log('  • 0 Processos RoPA (LGPD limpo)');

@@ -61,13 +61,13 @@ window.sanitizeClientUser = sanitizeClientUser;
 const DEFAULT_AC_USERS = [
   {
     id: "usr-admin",
-    name: "Manoel Martins",
-    email: "manoelmgsantos@acengenhariase.com.br",
+    name: "Admin-SGSI",
+    email: "ti@acengenhariase.com.br",
     role: "secops",
-    roleName: "Administrador Geral & SecOps SGSI",
+    roleName: "Gestor de T.I. & SecOps",
     department: "Diretoria de Tecnologia & Governança SGSI",
     location: "Escritório Central (Matriz)",
-    avatar: "MM",
+    avatar: "A",
     color: "blue",
     status: "Ativo",
     isSuperAdmin: true,
@@ -77,6 +77,22 @@ const DEFAULT_AC_USERS = [
       "Operação do SIEM Wazuh, Backups Imutáveis Sienge ERP e Firewalls",
       "Homologação de Evidências, Relatórios ANPD e Auditoria Forense",
       "Gestão do Escritório Central (Matriz) e Conectividade VPN com Canteiros"
+    ]
+  },
+  {
+    id: "usr-manoel",
+    name: "Manoel Martins",
+    email: "manoelmgsantos@acengenhariase.com.br",
+    role: "gestor_obra",
+    roleName: "Engenheiro Residente / Obras",
+    department: "Diretoria de Operações & Obras",
+    location: "Escritório Central (Matriz)",
+    avatar: "MM",
+    color: "amber",
+    status: "Ativo",
+    isSuperAdmin: false,
+    responsibilities: [
+      "Segurança de canteiro, biometria em catracas, termos de empreiteiras e evidências operacionais."
     ]
   }
 ];
@@ -128,7 +144,25 @@ function getStoredUsers() {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map(u => sanitizeClientUser(u));
+        return parsed.map(u => {
+          const user = sanitizeClientUser(u);
+          // Alinhamento de segurança: O único Administrador Principal é ti@acengenhariase.com.br
+          if (user.email && user.email.toLowerCase() === 'ti@acengenhariase.com.br') {
+            user.isSuperAdmin = true;
+            user.id = 'usr-admin';
+            user.name = user.name || 'Admin-SGSI';
+            user.role = 'secops';
+            user.roleName = 'Gestor de T.I. & SecOps';
+          } else if (user.email && user.email.toLowerCase() === 'manoelmgsantos@acengenhariase.com.br') {
+            user.isSuperAdmin = false;
+            if (user.id === 'usr-admin') user.id = 'usr-manoel';
+            if (user.role === 'secops') {
+              user.role = 'gestor_obra';
+              user.roleName = 'Engenheiro Residente / Obras';
+            }
+          }
+          return user;
+        });
       }
     }
   } catch (e) {
@@ -171,7 +205,23 @@ const AuthState = {
 function getStoredSessionUser() {
   try {
     const raw = localStorage.getItem("AC_AUTH_USER_V2");
-    if (raw) return sanitizeClientUser(JSON.parse(raw));
+    if (raw) {
+      const u = sanitizeClientUser(JSON.parse(raw));
+      if (u.email && u.email.toLowerCase() === 'manoelmgsantos@acengenhariase.com.br') {
+        u.isSuperAdmin = false;
+        if (u.id === 'usr-admin') u.id = 'usr-manoel';
+        if (u.role === 'secops') {
+          u.role = 'gestor_obra';
+          u.roleName = 'Engenheiro Residente / Obras';
+        }
+      } else if (u.email && u.email.toLowerCase() === 'ti@acengenhariase.com.br') {
+        u.isSuperAdmin = true;
+        u.id = 'usr-admin';
+        u.role = 'secops';
+        u.roleName = 'Gestor de T.I. & SecOps';
+      }
+      return u;
+    }
   } catch (e) {
     console.warn("Falha ao recuperar sessão do usuário:", e);
   }
