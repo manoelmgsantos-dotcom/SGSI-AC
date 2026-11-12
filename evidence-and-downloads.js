@@ -3,100 +3,6 @@
  * AC Engenharia - SGSI & GRC Enterprise Platform
  */
 
-// Catálogo Demonstrativo de Evidências (para fins de simulação e restauração)
-const DEMO_EVIDENCE = [
-  {
-    id: "EVID-001",
-    title: "GPO Bloqueio de Portas USB e Mídias Removíveis em Notebooks de Obras",
-    control: "ISO 27001 A.8.1 / LGPD Art. 46",
-    category: "Infraestrutura & T.I.",
-    location: "Obra Horizon & Obra Metropolitan",
-    responsible: "Carlos Eduardo Rocha (T.I.)",
-    date: "2026-10-15",
-    fileName: "relatorio-gpo-usb-block-2026.pdf",
-    fileSize: "1.4 MB",
-    sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    status: "Aprovada",
-    approvedBy: "Dra. Amanda Carvalho (DPO)",
-    description: "Diretiva de grupo aplicada em 42 notebooks de canteiros de obras bloqueando gravação e leitura em portas USB para contenção de vazamento de projetos e cadastros."
-  },
-  {
-    id: "EVID-002",
-    title: "Termos Anti-Repasse de Leads Assinados por Imobiliárias e Corretores (CV CRM)",
-    control: "LGPD Art. 42 / Precedente Cyrela",
-    category: "Privacidade & Contratos",
-    location: "Sede & Estandes de Vendas",
-    responsible: "Dra. Amanda Carvalho (DPO)",
-    date: "2026-10-20",
-    fileName: "aditivo-contratual-imobiliarias-leads-v3.pdf",
-    fileSize: "2.8 MB",
-    sha256: "a6c9d2f8e137b019c43b2f8a129d8924b104928e19c028a38410928a391c0129",
-    status: "Aprovada",
-    approvedBy: "Dra. Amanda Carvalho (DPO)",
-    description: "Aditivo contratual firmado com 8 imobiliárias parceiras e 45 corretores cadastrados no CV CRM proibindo expressamente o repasse de cadastros para parceiros de decoração e marcenaria."
-  },
-  {
-    id: "EVID-003",
-    title: "Laudo de Teste de Restauração de Backup Imutável Veeam (Sienge ERP)",
-    control: "ISO 27001 A.8.13 / Continuidade",
-    category: "Continuidade & T.I.",
-    location: "Sienge Cloud & AWS S3 Object Lock",
-    responsible: "Carlos Eduardo Rocha (T.I.)",
-    date: "2026-10-24",
-    fileName: "laudo-restauracao-backup-s3-object-lock.pdf",
-    fileSize: "3.1 MB",
-    sha256: "c18294a0819c48b291048b021948b201948b201948c201948b201948b201948b",
-    status: "Aprovada",
-    approvedBy: "Dra. Amanda Carvalho (DPO)",
-    description: "Simulação de desastre e restauração bem-sucedida do banco de dados central Sienge a partir de bucket S3 com Object Lock imutável em 42 minutos com integridade 100% comprovada."
-  },
-  {
-    id: "EVID-004",
-    title: "Certificado de Expurgo Seguro de Biometria Facial pós-Habite-se (Residencial Jardins)",
-    control: "LGPD Art. 11, 15 e 16 (Dados Sensíveis)",
-    category: "Canteiros de Obras",
-    location: "Obra Residencial Jardins (Entregue)",
-    responsible: "Eng. Marcos Vinícius (Obras)",
-    date: "2026-10-26",
-    fileName: "termo-descarte-biometria-catraca-henry.pdf",
-    fileSize: "890 KB",
-    sha256: "98124018294b0291480b201948b201948c201948b201948b201948b201948b11",
-    status: "Aprovada",
-    approvedBy: "Dra. Amanda Carvalho (DPO)",
-    description: "Exclusão definitiva e sobrescrita segura dos templates biométricos faciais de 312 colaboradores e terceirizados após a expedição do Habite-se pela prefeitura."
-  },
-  {
-    id: "EVID-005",
-    title: "Relatório Mensal de Varredura e Detecção Wazuh SIEM nos Servidores Centrais",
-    control: "ISO 27001 A.8.8 / ANPD Res. 15/2024",
-    category: "SecOps & SIEM",
-    location: "Data Center Sede & Cloud",
-    responsible: "Carlos Eduardo Rocha (T.I.)",
-    date: "2026-10-28",
-    fileName: "wazuh-vulnerability-scan-outubro-2026.pdf",
-    fileSize: "4.6 MB",
-    sha256: "5819028491028491029481029481029481029481029481029481029481029481",
-    status: "Em Análise",
-    approvedBy: "Pendente de Homologação",
-    description: "Varredura automatizada de vulnerabilidades CVE e conformidade CIS Benchmark em 14 instâncias de servidores e firewalls MikroTik dos canteiros."
-  },
-  {
-    id: "EVID-006",
-    title: "Lista de Presença e Ata do Treinamento de Conscientização LGPD (Engenheiros e Corretores)",
-    control: "ISO 27001 A.6.3 / LGPD Art. 50",
-    category: "Conscientização & RH",
-    location: "Sede Central & Plataforma Teams",
-    responsible: "Dra. Amanda Carvalho (DPO)",
-    date: "2026-10-27",
-    fileName: "lista-presenca-treinamento-seguranca-obras.pdf",
-    fileSize: "1.9 MB",
-    sha256: "7192840192840192840192840192840192840192840192840192840192840192",
-    status: "Aprovada",
-    approvedBy: "Dra. Amanda Carvalho (DPO)",
-    description: "Capacitação obrigatória de 2 horas realizada com 64 engenheiros de obra, mestres e corretores parceiros sobre prevenção a phishing de boletos e proteção de dados pessoais."
-  }
-];
-
 // Base Padrão Limpa (Início do Zero para a Empresa)
 const DEFAULT_EVIDENCE = [];
 
@@ -840,7 +746,6 @@ function downloadAntiRepasseAgreement() {
 }
 
 // Exposição Global
-window.DEMO_EVIDENCE = DEMO_EVIDENCE;
 window.DEFAULT_EVIDENCE = DEFAULT_EVIDENCE;
 window.getStoredEvidence = getStoredEvidence;
 window.saveStoredEvidence = saveStoredEvidence;

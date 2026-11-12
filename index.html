@@ -407,9 +407,6 @@
             <select id="select-unidade-filter" onchange="setSectorFilter(this.value)" class="bg-transparent text-slate-800 font-semibold focus:outline-none cursor-pointer text-xs">
               <option value="todos">🌐 Todas as Unidades (Visão Geral)</option>
               <option value="Escritório Central (Matriz)">⭐ Escritório Central (Matriz)</option>
-              <option value="Obra Horizon">📍 Obra Horizon</option>
-              <option value="Obra Metropolitan">📍 Obra Metropolitan</option>
-              <option value="Obra Logística Sul">📍 Obra Logística Sul</option>
             </select>
             <button type="button" onclick="openObrasManagerModal()" class="ml-1.5 p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer" title="Gerenciar Canteiros & Obras">
               <i data-lucide="settings" class="w-3.5 h-3.5"></i>
@@ -428,11 +425,11 @@
           <div class="relative shrink-0">
             <button onclick="toggleUserMenuDropdown(event)" id="header-user-btn" class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-colors cursor-pointer">
               <div id="header-user-avatar" class="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#0f2942] to-slate-700 text-white font-bold text-xs flex items-center justify-center shadow-xs">
-                AC
+                MM
               </div>
               <div class="text-left hidden lg:block">
-                <div id="header-user-name" class="text-xs font-bold text-slate-800 leading-tight">Dra. Amanda Carvalho</div>
-                <div id="header-user-role" class="text-[10px] text-slate-500 font-medium leading-tight">DPO & Jurídico</div>
+                <div id="header-user-name" class="text-xs font-bold text-slate-800 leading-tight">Administrador SGSI</div>
+                <div id="header-user-role" class="text-[10px] text-slate-500 font-medium leading-tight">Sessão Corporativa</div>
               </div>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
             </button>
@@ -2443,7 +2440,7 @@
             </div>
             <button onclick="openModal('modal-simulate-wazuh')" class="btn-action px-3.5 py-1.5 text-xs font-semibold rounded bg-amber-600 hover:bg-amber-700 text-white transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer">
               <i data-lucide="zap" class="w-4 h-4"></i>
-              <span>Simular Alerta SIEM</span>
+              <span>Registrar Alerta SIEM</span>
             </button>
           </div>
 
@@ -4112,7 +4109,7 @@ openssl ts -reply -in response.tsr -text</pre>
           <div class="relative z-10 pt-8 mt-6 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Servidor Corporativo Online (Porta 3001 • PostgreSQL Ativo)</span>
+              <span>Servidor Corporativo Online (PostgreSQL 17 & API Ativos)</span>
             </div>
             <div class="font-mono text-slate-400">TLS 1.3 • Hash Encadeado</div>
           </div>
@@ -4137,7 +4134,7 @@ openssl ts -reply -in response.tsr -text</pre>
             <div class="space-y-1 text-center sm:text-left">
               <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Portal de Acesso SGSI</h2>
               <p class="text-xs text-slate-500 leading-relaxed">
-                Autenticação corporativa centralizada. Colaboradores realizam login e cadastro exclusivamente através da conta institucional <strong>Google Workspace</strong>.
+                Autenticação corporativa centralizada. Colaboradores realizam login exclusivamente através da conta institucional <strong>Google Workspace</strong>.
               </p>
             </div>
 
@@ -4213,12 +4210,12 @@ openssl ts -reply -in response.tsr -text</pre>
                   </div>
                 </div>
 
-                <form onsubmit="loginWithForm(event)" class="space-y-3">
+                <form onsubmit="loginWithForm(event)" autocomplete="off" class="space-y-3">
                   <div>
                     <label class="block text-[11px] font-semibold text-slate-700 mb-1">E-mail do Administrador</label>
                     <div class="relative">
                       <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5"></i>
-                      <input type="email" id="login-input-email" required value="manoelmgsantos@acengenhariase.com.br" placeholder="admin@acengenhariase.com.br" class="w-full pl-8 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+                      <input type="email" id="login-input-email" required value="" autocomplete="username" placeholder="Digite o e-mail do administrador" class="w-full pl-8 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
                     </div>
                   </div>
 
@@ -4228,19 +4225,11 @@ openssl ts -reply -in response.tsr -text</pre>
                     </div>
                     <div class="relative">
                       <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5"></i>
-                      <input type="password" id="login-input-password" required value="@Ac123456" placeholder="Digite a senha mestra" class="w-full pl-8 pr-9 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+                      <input type="password" id="login-input-password" required value="" autocomplete="current-password" placeholder="Digite a senha mestra" class="w-full pl-8 pr-9 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
                       <button type="button" onclick="togglePasswordVisibility()" title="Mostrar ou ocultar senha" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 p-0.5 cursor-pointer">
                         <i data-lucide="eye" id="login-eye-icon" class="w-3.5 h-3.5"></i>
                       </button>
                     </div>
-                  </div>
-
-                  <div class="flex items-center justify-between text-[11px]">
-                    <label class="flex items-center gap-1.5 cursor-pointer text-slate-600">
-                      <input type="checkbox" id="login-remember-session" checked class="rounded border-slate-300 text-[#004b93] focus:ring-[#004b93]" />
-                      <span>Lembrar credenciais</span>
-                    </label>
-                    <button type="button" onclick="fillLoginCredentials('manoelmgsantos@acengenhariase.com.br', '@Ac123456')" class="text-[10px] text-[#004b93] hover:underline font-semibold cursor-pointer">Preencher Master</button>
                   </div>
 
                   <button type="submit" id="btn-login-submit" class="w-full py-2 px-3 rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white font-semibold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs">
@@ -4260,93 +4249,6 @@ openssl ts -reply -in response.tsr -text</pre>
           </div>
         </div>
 
-      </div>
-    </div>
-
-    <!-- MODAL SELETOR DE CONTAS GOOGLE CORPORATIVAS (GOOGLE WORKSPACE SSO) -->
-    <div id="modal-google-sso-picker" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
-      <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        <!-- Header Google -->
-        <div class="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
-          <div class="flex items-center gap-2.5">
-            <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-            </svg>
-            <div>
-              <h3 class="text-xs font-bold leading-tight">Fazer login com o Google</h3>
-              <p class="text-[10px] text-slate-300">Escolha uma conta para acessar CyberGRC & SGSI</p>
-            </div>
-          </div>
-          <button type="button" onclick="closeGoogleAccountPicker()" class="text-slate-400 hover:text-white cursor-pointer p-1">
-            <i data-lucide="x" class="w-4 h-4"></i>
-          </button>
-        </div>
-
-        <div class="p-5 space-y-4 text-xs">
-          <!-- Domínio Autorizado Aviso -->
-          <div class="p-3 rounded-xl bg-blue-50/80 border border-blue-200/80 text-[11px] flex items-center justify-between text-blue-900">
-            <span class="font-semibold">Domínio Corporativo Autorizado:</span>
-            <span id="google-picker-allowed-domain-text" class="font-mono font-bold text-[#004b93] bg-white px-2 py-0.5 rounded border border-blue-200">@acengenhariase.com.br</span>
-          </div>
-
-          <!-- Contas Corporativas Autorizadas / Convidadas -->
-          <div class="space-y-1.5">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span>Contas da Construtora (Autorizadas / Convites):</span>
-              <span class="text-[10px] text-blue-600 font-normal">Clique para Entrar</span>
-            </div>
-            
-            <div id="google-picker-accounts-container" class="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
-              <!-- Populado dinamicamente via openGoogleAccountPicker() -->
-            </div>
-          </div>
-
-          <!-- Testar com outro e-mail institucional -->
-          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-            <div class="text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
-              <i data-lucide="mail-search" class="w-3.5 h-3.5 text-[#004b93]"></i>
-              <span>Testar com outro e-mail corporativo:</span>
-            </div>
-            <p class="text-[10px] text-slate-500 leading-tight">
-              Apenas e-mails previamente convidados pelo Administrador têm acesso liberado.
-            </p>
-            <form onsubmit="submitCustomGoogleAccount(event)" class="space-y-2">
-              <div class="grid grid-cols-2 gap-2">
-                <input type="text" id="google-picker-custom-name" placeholder="Nome completo" class="px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500" />
-                <input type="email" id="google-picker-custom-email" required placeholder="nome@acengenhariase.com.br" class="px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-mono text-[11px]" />
-              </div>
-              <button type="submit" class="w-full py-1.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs">
-                <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
-                <span>Verificar Convite e Entrar</span>
-              </button>
-            </form>
-          </div>
-
-          <!-- Testes de Segurança: Barreira de Convite e Domínio -->
-          <div class="pt-2 border-t border-slate-100 space-y-1.5 text-[11px]">
-            <div class="flex items-center justify-between">
-              <span class="text-slate-500">Testar e-mail sem convite:</span>
-              <button type="button" onclick="selectGoogleQuickAccount('sem.convite@acengenhariase.com.br', 'Colaborador Sem Convite')" class="text-amber-700 hover:text-amber-900 font-semibold underline cursor-pointer">
-                Simular e-mail sem convite
-              </button>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-slate-500">Testar domínio pessoal:</span>
-              <button type="button" onclick="selectGoogleQuickAccount('usuario.pessoal@gmail.com', 'Conta Externa')" class="text-rose-600 hover:text-rose-800 font-semibold underline cursor-pointer">
-                Simular acesso @gmail.com
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="p-3 bg-slate-50 border-t border-slate-100 flex justify-end">
-          <button type="button" onclick="closeGoogleAccountPicker()" class="px-3.5 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs cursor-pointer">
-            Cancelar
-          </button>
-        </div>
       </div>
     </div>
 
@@ -5487,14 +5389,14 @@ openssl ts -reply -in response.tsr -text</pre>
     </div>
 
     <!-- ===================================================================== -->
-    <!-- MODAL: SIMULAR DISPARO DE ALERTA WAZUH SIEM -->
+    <!-- MODAL: REGISTRAR ALERTA WAZUH SIEM -->
     <!-- ===================================================================== -->
     <div id="modal-simulate-wazuh" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
       <div class="bg-white border border-slate-200 rounded-lg w-full max-w-md p-5 space-y-4 text-xs shadow-2xl">
         <div class="flex items-center justify-between pb-3 border-b border-slate-200">
           <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
             <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i>
-            Simular Disparo de Alerta SIEM Wazuh
+            Registrar Alerta SIEM Wazuh
           </h3>
           <button onclick="closeModal('modal-simulate-wazuh')" class="text-slate-400 hover:text-slate-700">
             <i data-lucide="x" class="w-4 h-4"></i>
@@ -5515,17 +5417,17 @@ openssl ts -reply -in response.tsr -text</pre>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-slate-700 mb-1 font-semibold">Host Afetado *</label>
-              <input type="text" id="wazuh-sim-host" required value="wks-fin-04" class="w-full bg-slate-50 border border-slate-200 rounded px-3 py-2 text-slate-900 font-mono focus:outline-none" />
+              <input type="text" id="wazuh-sim-host" required value="" placeholder="Ex: srv-bim-01" class="w-full bg-slate-50 border border-slate-200 rounded px-3 py-2 text-slate-900 font-mono focus:outline-none" />
             </div>
             <div>
               <label class="block text-slate-700 mb-1 font-semibold">IP Origem *</label>
-              <input type="text" id="wazuh-sim-ip" required value="192.168.10.88" class="w-full bg-slate-50 border border-slate-200 rounded px-3 py-2 text-slate-900 font-mono focus:outline-none" />
+              <input type="text" id="wazuh-sim-ip" required value="" placeholder="Ex: 10.0.10.25" class="w-full bg-slate-50 border border-slate-200 rounded px-3 py-2 text-slate-900 font-mono focus:outline-none" />
             </div>
           </div>
 
           <div class="pt-2 border-t border-slate-200 flex items-center justify-end gap-2">
             <button type="button" onclick="closeModal('modal-simulate-wazuh')" class="px-3 py-1.5 text-slate-600 hover:text-slate-900">Cancelar</button>
-            <button type="submit" class="px-4 py-2 rounded bg-amber-500 hover:bg-amber-600 text-white font-semibold">Injetar Alerta no SIEM</button>
+            <button type="submit" class="px-4 py-2 rounded bg-amber-500 hover:bg-amber-600 text-white font-semibold">Registrar Alerta no SIEM</button>
           </div>
         </form>
       </div>
@@ -6605,740 +6507,6 @@ openssl ts -reply -in response.tsr -text</pre>
       // [BLOCO 1: MOCK_DATABASE] -> Schema relacional em memória com persistência
       // =========================================================================
 
-      // Base Modelo Demonstrativa (Preservada para caso de restauração de exemplos)
-      const DEMO_DB = {
-        // 1. SoA (Declaração de Aplicabilidade - ISO/IEC 27001:2022 Anexo A para AC Engenharia)
-        soaControls: [
-          { 
-            code: "A.5.1", 
-            theme: "Organizacional", 
-            title: "Políticas de Segurança da Informação da AC Engenharia", 
-            applicable: true, 
-            status: "Implementado", 
-            justification: "Diretrizes corporativas aplicadas à sede e a todos os canteiros de obras.", 
-            risksMitigated: ["RSK-001", "RSK-002"],
-            history: [
-              { date: "2026-10-25 10:00", author: "Comitê de Segurança", role: "SecOps / CISO", action: "Revisão Anual", comment: "Alinhamento com a norma ABNT NBR ISO/IEC 27001:2022." }
-            ],
-            evidenceFiles: [
-              { name: "Politica_Geral_Seguranca_AC.pdf", type: "PDF", size: "3.2 MB", date: "2026-10-25", verified: true }
-            ]
-          },
-          { 
-            code: "A.5.8", 
-            theme: "Organizacional", 
-            title: "Segurança da Informação no Gerenciamento de Projetos e Obras", 
-            applicable: true, 
-            status: "Implementado", 
-            justification: "Requisitos de segurança incorporados aos cronogramas de engenharia e modelagem BIM.", 
-            risksMitigated: ["RSK-001"],
-            history: [
-              { date: "2026-10-24 14:00", author: "Coord. BIM & Obras", role: "Gestor Obra", action: "Validação Técnica", comment: "Controle integrado ao fluxo de aprovação de plantas executivas." }
-            ],
-            evidenceFiles: [
-              { name: "Diretriz_Seguranca_Projetos_BIM.pdf", type: "PDF", size: "2.1 MB", date: "2026-10-24", verified: true }
-            ]
-          },
-          { 
-            code: "A.5.15", 
-            theme: "Organizacional", 
-            title: "Controle de Acesso Lógico e Físico (Catracas & AD)", 
-            applicable: true, 
-            status: "Implementado", 
-            justification: "Segregação estrita de privilégios para dados de SST, financeiro e acesso aos canteiros.", 
-            risksMitigated: ["RSK-003", "RSK-004"],
-            history: [
-              { date: "2026-10-22 09:30", author: "Carlos Silva", role: "SecOps Lead", action: "Revisão Semestral", comment: "Revisão de acessos privilegiados no Active Directory e nas catracas dos canteiros." }
-            ],
-            evidenceFiles: [
-              { name: "Relatorio_Revisao_Acessos_2026.pdf", type: "PDF", size: "1.5 MB", date: "2026-10-22", verified: true }
-            ]
-          },
-          { 
-            code: "A.5.19", 
-            theme: "Organizacional", 
-            title: "Segurança da Informação em Fornecedores e Empreiteiras de Obra", 
-            applicable: true, 
-            status: "Implementado", 
-            justification: "Cláusulas mandatórias de DPA LGPD e SST em todos os contratos de empreiteiras.", 
-            risksMitigated: ["RSK-005"],
-            history: [
-              { date: "2026-10-20 11:00", author: "Dra. Mariana Costa", role: "DPO / Jurídico", action: "Homologação Jurídica", comment: "Minuta padrão de DPA com responsabilidade solidária homologada para suprimentos." }
-            ],
-            evidenceFiles: [
-              { name: "Minuta_Padrao_DPA_Empreiteiras_NR18.pdf", type: "PDF", size: "1.8 MB", date: "2026-10-20", verified: true }
-            ]
-          },
-          { 
-            code: "A.6.1", 
-            theme: "Pessoas", 
-            title: "Seleção e Homologação de Pessoal e Operários de Canteiro", 
-            applicable: true, 
-            status: "Implementado", 
-            justification: "Background check preliminar e termos de sigilo na contratação de operários e engenheiros.", 
-            risksMitigated: ["RSK-004"],
-            history: [
-              { date: "2026-10-18 16:00", author: "Fernanda Martins (RH)", role: "RH / SST (NR-18)", action: "Atualização de Processo", comment: "Termo de sigilo integrado ao kit de integração admissional." }
-            ],
-            evidenceFiles: [
-              { name: "Termo_Confidencialidade_Admissional.pdf", type: "PDF", size: "620 KB", date: "2026-10-18", verified: true }
-            ]
-          },
-          { 
-            code: "A.6.4", 
-            theme: "Pessoas", 
-            title: "Conscientização, Educação e Treinamento em Segurança e LGPD", 
-            applicable: true, 
-            status: "Em Implementação", 
-            justification: "Treinamentos semanais (Cronograma de 52 Semanas) para corretores e encarregados de canteiro.", 
-            risksMitigated: ["RSK-002", "RSK-007"],
-            history: [
-              { date: "2026-10-15 10:00", author: "Comitê de Privacidade", role: "DPO / Jurídico", action: "Planejamento 2026", comment: "Campanha contínua das 52 semanas conectada à aba de Governança." }
-            ],
-            evidenceFiles: [
-              { name: "Cartilha_Plantao_Seguro_Estandes.pdf", type: "PDF", size: "3.4 MB", date: "2026-10-15", verified: true }
-            ]
-          },
-          { 
-            code: "A.7.4", 
-            theme: "Físico", 
-            title: "Monitoramento Físico de Canteiros, Estandes e Almoxarifados", 
-            applicable: true, 
-            status: "Implementado", 
-            justification: "Câmeras CFTV em VLAN isolada, placas informativas de gravação e catracas faciais.", 
-            risksMitigated: ["RSK-003", "RSK-008"],
-            history: [
-              { date: "2026-10-12 15:30", author: "Segurança Patrimonial", role: "SecOps / Gestor", action: "Vistoria em Canteiro", comment: "Fixação de placas de aviso LGPD nos portões de acesso do Canteiro Horizon." }
-            ],
-            evidenceFiles: [
-              { name: "Laudo_CFTV_Avisos_LGPD_Horizon.pdf", type: "PDF", size: "4.1 MB", date: "2026-10-12", verified: true }
-            ]
-          },
-          { 
-            code: "A.8.1", 
-            theme: "Tecnológico", 
-            title: "Dispositivos de Usuários Finais e Notebooks de Obra", 
-            applicable: true, 
-            status: "Implementado", 
-            justification: "Criptografia BitLocker obrigatória e agente GLPI ativo em 100% dos laptops de campo.", 
-            risksMitigated: ["RSK-006"],
-            history: [
-              { date: "2026-10-10 11:15", author: "Suporte TI", role: "SecOps Lead", action: "Auditoria GLPI", comment: "98% dos notebooks de residentes com BitLocker ativo e verificado." }
-            ],
-            evidenceFiles: [
-              { name: "Inventario_BitLocker_GLPI_Obras.pdf", type: "PDF", size: "1.1 MB", date: "2026-10-10", verified: true }
-            ]
-          },
-          { 
-            code: "A.8.7", 
-            theme: "Tecnológico", 
-            title: "Proteção Contra Malware e Ransomware em Servidores BIM", 
-            applicable: true, 
-            status: "Implementado", 
-            justification: "Agente Wazuh EDR com regras de detecção precoce de sequestro de dados DWG/RVT.", 
-            risksMitigated: ["RSK-001"],
-            history: [
-              { date: "2026-10-08 09:00", author: "Carlos Silva", role: "SecOps Lead", action: "Atualização de Regras", comment: "Ativadas regras FIM (File Integrity Monitoring) nas pastas do Revit Vault." }
-            ],
-            evidenceFiles: [
-              { name: "Configuracao_Wazuh_FIM_BIM.pdf", type: "PDF", size: "780 KB", date: "2026-10-08", verified: true }
-            ]
-          },
-          { 
-            code: "A.8.10", 
-            theme: "Tecnológico", 
-            title: "Expurgo e Eliminação Segura de Biometria Facial pós-Habite-se", 
-            applicable: true, 
-            status: "Implementado", 
-            justification: "Rotina programada de exclusão definitiva de templates biométricos após entrega das chaves.", 
-            risksMitigated: ["RSK-003"],
-            history: [
-              { date: "2026-10-05 14:20", author: "Comitê LGPD", role: "DPO / Jurídico", action: "Validação de Rotina", comment: "Rotina de descarte em conformidade estrita com o Art. 11 da LGPD." }
-            ],
-            evidenceFiles: [
-              { name: "Procedimento_Expurgo_Biometria_Canteiros.pdf", type: "PDF", size: "1.3 MB", date: "2026-10-05", verified: true }
-            ]
-          },
-          { 
-            code: "A.8.20", 
-            theme: "Tecnológico", 
-            title: "Segregação de Redes VLAN em Estandes de Vendas e Obras", 
-            applicable: true, 
-            status: "Implementado", 
-            justification: "Isolamento de roteadores MikroTik: VLAN de Engenharia, VLAN de Catracas e Wi-Fi Visitante isolado.", 
-            risksMitigated: ["RSK-007"],
-            history: [
-              { date: "2026-10-01 10:00", author: "Adm Redes", role: "SecOps Lead", action: "Configuração MikroTik", comment: "VLAN 30 (Catracas) e VLAN 40 (Estande) isoladas sem roteamento inter-VLAN." }
-            ],
-            evidenceFiles: [
-              { name: "Topologia_Rede_VLANs_Obras_MikroTik.pdf", type: "PDF", size: "2.8 MB", date: "2026-10-01", verified: true }
-            ]
-          }
-        ],
-
-        // 2. Matriz RACI da Construtora
-        raciMatrix: [
-          { 
-            id: 1, 
-            process: "Resposta a Incidentes de Ransomware em Servidor BIM / Sienge", 
-            secops: "R", 
-            executive: "A", 
-            legal: "C", 
-            hr: "I",
-            history: [
-              { date: "2026-10-25 15:00", author: "Dr. Roberto Albuquerque", role: "Diretoria C-Level", action: "Aprovação Formal", comment: "Diretoria é a única autorizada a homologar decisões executivas e notificações." }
-            ],
-            evidenceFiles: [
-              { name: "Procedimento_Operacional_CSIRT_Ransomware.pdf", type: "PDF", size: "1.9 MB", date: "2026-10-25", verified: true }
-            ]
-          },
-          { 
-            id: 2, 
-            process: "Revogação de Acesso e Offboarding no AD & Catracas Faciais", 
-            secops: "R", 
-            executive: "I", 
-            legal: "C", 
-            hr: "A",
-            history: [
-              { date: "2026-10-24 11:00", author: "Fernanda Martins (RH)", role: "RH / SST (NR-18)", action: "Aprovação RH", comment: "Desligamento no ERP Sienge gera bloqueio automático em até 2 horas." }
-            ],
-            evidenceFiles: [
-              { name: "Fluxo_Offboarding_AD_Catracas.pdf", type: "PDF", size: "1.2 MB", date: "2026-10-24", verified: true }
-            ]
-          },
-          { 
-            id: 3, 
-            process: "Atendimento a Direitos dos Compradores (DSAR LGPD Art. 18)", 
-            secops: "C", 
-            executive: "I", 
-            legal: "A", 
-            hr: "R",
-            history: [
-              { date: "2026-10-23 16:30", author: "Dra. Mariana Costa", role: "DPO / Jurídico", action: "SLA Jurídico", comment: "Prazo legal de 15 dias corridos monitorado via painel DSAR." }
-            ],
-            evidenceFiles: [
-              { name: "Manual_Atendimento_Titulares_LGPD.pdf", type: "PDF", size: "1.7 MB", date: "2026-10-23", verified: true }
-            ]
-          },
-          { 
-            id: 4, 
-            process: "Gestão de Catracas e Biometria Facial nos Canteiros (Art. 11)", 
-            secops: "A", 
-            executive: "I", 
-            legal: "C", 
-            hr: "R",
-            history: [
-              { date: "2026-10-22 14:00", author: "Carlos Silva", role: "SecOps Lead", action: "Auditoria Canteiros", comment: "Catracas operando offline com sincronismo unidirecional cifrado via TLS." }
-            ],
-            evidenceFiles: [
-              { name: "Laudo_Seguranca_Catracas_Facial.pdf", type: "PDF", size: "2.3 MB", date: "2026-10-22", verified: true }
-            ]
-          },
-          { 
-            id: 5, 
-            process: "Compartilhamento de Dossiê Financeiro com Agentes (Caixa)", 
-            secops: "C", 
-            executive: "A", 
-            legal: "R", 
-            hr: "-",
-            history: [
-              { date: "2026-10-20 10:00", author: "Dr. Roberto Albuquerque", role: "Diretoria C-Level", action: "Normatização", comment: "Envio de dossiês exclusivamente por canal criptografado credenciado Caixa." }
-            ],
-            evidenceFiles: [
-              { name: "Protocolo_Integracao_Caixa_LGPD.pdf", type: "PDF", size: "1.4 MB", date: "2026-10-20", verified: true }
-            ]
-          },
-          { 
-            id: 6, 
-            process: "Homologação LGPD & SST de Empreiteiras de Obra (NR-18)", 
-            secops: "C", 
-            executive: "A", 
-            legal: "R", 
-            hr: "R",
-            history: [
-              { date: "2026-10-18 15:00", author: "Suprimentos & Obras", role: "Gestor Obra", action: "Homologação", comment: "Nenhum operário terceirizado entra sem ASO validado e DPA assinado." }
-            ],
-            evidenceFiles: [
-              { name: "Checklist_Homologacao_Subcontratadas.pdf", type: "PDF", size: "950 KB", date: "2026-10-18", verified: true }
-            ]
-          },
-          { 
-            id: 7, 
-            process: "Backup Imutável e Proteção de Projetos de Engenharia (BIM/CAD)", 
-            secops: "A", 
-            executive: "I", 
-            legal: "-", 
-            hr: "-",
-            history: [
-              { date: "2026-10-15 08:30", author: "Carlos Silva", role: "SecOps Lead", action: "Teste de Restauração", comment: "Restauração de cópia imutável AWS S3 Object Lock concluída em 38 minutos." }
-            ],
-            evidenceFiles: [
-              { name: "Relatorio_Teste_DRP_BIM_2026.pdf", type: "PDF", size: "2.0 MB", date: "2026-10-15", verified: true }
-            ]
-          },
-          { 
-            id: 8, 
-            process: "Revisão Anual da PSI e Termos de Não Repasse de Leads (Cyrela)", 
-            secops: "R", 
-            executive: "A", 
-            legal: "C", 
-            hr: "-",
-            history: [
-              { date: "2026-10-10 11:00", author: "Dr. Roberto Albuquerque", role: "Diretoria C-Level", action: "Homologação Anual", comment: "Vedação expressa de repasse de contatos de compradores a terceiros parceiros." }
-            ],
-            evidenceFiles: [
-              { name: "Termo_Compromisso_Anti_Repasse_Leads.pdf", type: "PDF", size: "1.1 MB", date: "2026-10-10", verified: true }
-            ]
-          }
-        ],
-
-        // 3. Políticas da AC Engenharia
-        policies: [
-          { 
-            id: "PSI-001", 
-            title: "Política Geral de Segurança da Informação da AC Engenharia", 
-            version: "v3.2", 
-            status: "Vigente", 
-            adoption: "97.2%", 
-            updated: "15/01/2026", 
-            obra_local: "Global / Todas as Obras",
-            description: "Normas mandatórias aplicadas a colaboradores da sede e equipes de campo em canteiros de obra.",
-            history: [
-              { date: "2026-01-15 10:00", author: "Dr. Roberto Albuquerque", role: "Diretoria C-Level", action: "Homologação Oficial", comment: "Política geral de segurança aprovada e publicada no portal corporativo." }
-            ],
-            evidenceFiles: [
-              { name: "PSI_Geral_AC_Engenharia_2026.pdf", type: "PDF", size: "4.8 MB", date: "2026-01-15", verified: true }
-            ]
-          },
-          { 
-            id: "PCA-002", 
-            title: "Controle de Acesso Lógico e Físico (Catracas & AD)", 
-            version: "v2.1", 
-            status: "Vigente", 
-            adoption: "98.1%", 
-            updated: "02/03/2026", 
-            obra_local: "Sede & Canteiros",
-            description: "MFA obrigatório para VPN e ERP, rotação trimestral de credenciais e catracas integradas ao Sienge.",
-            history: [
-              { date: "2026-03-02 14:00", author: "Carlos Silva", role: "SecOps Lead", action: "Revisão", comment: "Inclusão de MFA nas conexões com o servidor BIM." }
-            ],
-            evidenceFiles: [
-              { name: "Norma_Acesso_Logico_Fisico_v2.pdf", type: "PDF", size: "2.3 MB", date: "2026-03-02", verified: true }
-            ]
-          },
-          { 
-            id: "PCOM-003", 
-            title: "Privacidade Comercial, Estandes e Não Repasse de Leads", 
-            version: "v2.0", 
-            status: "Vigente", 
-            adoption: "100%", 
-            updated: "10/05/2026", 
-            obra_local: "Comercial / Estandes",
-            description: "Vedação expressa de compartilhamento de dados de compradores com parceiros externos (marcenarias, decoradores) sem opt-in explícito (Prevenção ao Risco Cyrela).",
-            history: [
-              { date: "2026-05-10 09:30", author: "Dra. Mariana Costa", role: "DPO / Jurídico", action: "Publicação", comment: "Assinatura obrigatória por 100% dos corretores credenciados e imobiliárias parceiras." }
-            ],
-            evidenceFiles: [
-              { name: "Diretriz_Nao_Repasse_Leads_Cyrela.pdf", type: "PDF", size: "1.6 MB", date: "2026-05-10", verified: true }
-            ]
-          },
-          { 
-            id: "PBIO-004", 
-            title: "Diretriz de Coleta e Descarte de Biometria em Canteiros", 
-            version: "v1.5", 
-            status: "Vigente", 
-            adoption: "94.0%", 
-            updated: "20/06/2026", 
-            obra_local: "Canteiros de Obra",
-            description: "Procedimentos do Art. 11 da LGPD para reconhecimento facial nas catracas e rotina obrigatória de expurgo na desmobilização do canteiro pós-Habite-se.",
-            history: [
-              { date: "2026-06-20 15:00", author: "Comitê LGPD", role: "DPO / Jurídico", action: "Revisão Legal", comment: "Enquadramento em Prevenção à Fraude e Segurança (Art. 11, II, g)." }
-            ],
-            evidenceFiles: [
-              { name: "Diretriz_Biometria_Canteiros_Art11.pdf", type: "PDF", size: "2.7 MB", date: "2026-06-20", verified: true }
-            ]
-          },
-          { 
-            id: "PSST-005", 
-            title: "Sigilo de Dados Médicos Ocupacionais e ASO (NR-07)", 
-            version: "v1.8", 
-            status: "Vigente", 
-            adoption: "97.5%", 
-            updated: "12/04/2026", 
-            obra_local: "RH / SST (NR-18)",
-            description: "Restrição estrita de visualização de prontuários médicos de operários; engenheiros residentes têm acesso exclusivo ao status de aptidão física (Apto/Inapto).",
-            history: [
-              { date: "2026-04-12 11:20", author: "Fernanda Martins (RH)", role: "RH / SST (NR-18)", action: "Homologação SST", comment: "Adequação dos formulários de triagem médica à NR-07 e NR-18." }
-            ],
-            evidenceFiles: [
-              { name: "Protocolo_Sigilo_ASO_Medicina_Trabalho.pdf", type: "PDF", size: "1.9 MB", date: "2026-04-12", verified: true }
-            ]
-          }
-        ],
-        policyLogs: [
-          { id: 1, user: "Eng. Marcos Valério (Residente Horizon)", dept: "Engenharia de Obras", policyId: "PBIO-004", version: "v1.5", date: "26/10/2026 08:14", ip: "192.168.40.12", hash: "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" },
-          { id: 2, user: "Mariana Costa Santos", dept: "Comercial / Vendas", policyId: "PCOM-003", version: "v2.0", date: "25/10/2026 14:22", ip: "192.168.10.12", hash: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8" },
-          { id: 3, user: "Roberto Albuquerque", dept: "Diretoria C-Level", policyId: "PCOM-003", version: "v2.0", date: "24/10/2026 11:05", ip: "192.168.10.5", hash: "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a" },
-          { id: 4, user: "Dra. Fernanda Martins", dept: "RH / SST (NR-18)", policyId: "PSST-005", version: "v1.8", date: "23/10/2026 09:30", ip: "192.168.10.29", hash: "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d" }
-        ],
-
-        // 4. Riscos com Separação Inerente e Residual focados em Construção Civil (Descentralizados por Obra)
-        risks: [
-          { 
-            id: "RSK-001", 
-            asset: "Servidor de Projetos BIM (Revit Vault)", 
-            threat: "Ransomware criptografando modelos executivos de obra", 
-            vuln: "Portas SMB e falta de segmentação da rede de engenharia", 
-            category: "Engenharia & BIM", 
-            obra_local: "Obra Horizon",
-            inherentProb: 4, inherentImp: 5, inherentScore: 20,
-            control: "A.5.1 Política SGSI + EDR Wazuh + Segregação de Rede",
-            residualProb: 2, residualImp: 4, residualScore: 8,
-            strategy: "Mitigar", 
-            responsible: "SecOps / Coord. BIM",
-            directorApproval: { approved: true, director: "Dr. Roberto Albuquerque (Diretor Obras)", timestamp: "2026-10-25 14:30:10" },
-            history: [
-              { date: "2026-10-25 14:30", author: "Dr. Roberto Albuquerque", role: "Diretoria C-Level", action: "Homologação de Aceite Executivo", comment: "Aceite formal homologado pelo Comitê de Obras com monitoramento de backup contínuo." },
-              { date: "2026-10-23 11:20", author: "Carlos Silva", role: "SecOps Lead", action: "Mitigação Aplicada", comment: "Instalação do agente Wazuh EDR e limitação de conexões SMB à VLAN 20 de Engenharia." },
-              { date: "2026-10-20 09:00", author: "Eng. Marcos Valério", role: "Engenheiro Residente", action: "Identificação do Risco", comment: "Identificada vulnerabilidade em portas SMB durante transferência de modelos Revit no canteiro." }
-            ],
-            evidenceFiles: [
-              { name: "Relatorio_Tecnico_Wazuh_BIM.pdf", type: "PDF", size: "2.4 MB", date: "2026-10-25", verified: true },
-              { name: "Termo_Homologacao_Diretoria_RSK001.pdf", type: "PDF", size: "840 KB", date: "2026-10-25", verified: true }
-            ]
-          },
-          { 
-            id: "RSK-002", 
-            asset: "Base de Leads e Compradores de Imóveis", 
-            threat: "Repasse indevido de contatos para marcenarias e decoradores (Risco Cyrela)", 
-            vuln: "Falta de controle formal de opt-out comercial nos contratos de compra e estandes", 
-            category: "Conformidade LGPD", 
-            obra_local: "Obra Horizon",
-            inherentProb: 4, inherentImp: 5, inherentScore: 20,
-            control: "PCOM-003 Política Comercial + Cláusula Opt-in + NDA Corretores",
-            residualProb: 2, residualImp: 3, residualScore: 6,
-            strategy: "Mitigar", 
-            responsible: "DPO / Jurídico",
-            directorApproval: { approved: true, director: "Dr. Roberto Albuquerque (Diretoria C-Level)", timestamp: "2026-10-24 16:00:00" },
-            history: [
-              { date: "2026-10-24 16:00", author: "Dr. Roberto Albuquerque", role: "Diretoria C-Level", action: "Homologação de Aceite Executivo", comment: "Aprovado controle rigoroso contra Risco Cyrela. Contratos revisados com NDA." }
-            ],
-            evidenceFiles: [
-              { name: "Auditoria_Contratos_Compradores_Cyrela.pdf", type: "PDF", size: "1.7 MB", date: "2026-10-24", verified: true }
-            ]
-          },
-          { 
-            id: "RSK-003", 
-            asset: "Catracas com Biometria Facial dos Canteiros", 
-            threat: "Retenção indefinida de dados biométricos de operários após o término da obra", 
-            vuln: "Ausência de rotina programada de expurgo seguro ao desmobilizar canteiro", 
-            category: "Conformidade LGPD", 
-            obra_local: "Obra Metropolitan",
-            inherentProb: 4, inherentImp: 4, inherentScore: 16,
-            control: "A.8.10 Eliminação de dados + Rotina de Expurgo pós-Habite-se",
-            residualProb: 1, residualImp: 4, residualScore: 4,
-            strategy: "Mitigar", 
-            responsible: "Engenharia / DPO",
-            directorApproval: { approved: true, director: "Dr. Roberto Albuquerque (Diretoria C-Level)", timestamp: "2026-10-23 10:30:00" },
-            history: [
-              { date: "2026-10-23 10:30", author: "Carlos Silva", role: "SecOps Lead", action: "Implementação de Controle", comment: "Configurado gatilho no Sienge para expurgo biométrico automático na emissão do Habite-se." }
-            ],
-            evidenceFiles: [
-              { name: "Laudo_Validacao_Expurgo_Biometria.pdf", type: "PDF", size: "950 KB", date: "2026-10-23", verified: true }
-            ]
-          },
-          { 
-            id: "RSK-004", 
-            asset: "Sistema de Gestão de SST e ASOs (Medicina Ocupacional)", 
-            threat: "Exposição de laudos médicos confidenciais de operários da obra", 
-            vuln: "Permissão de leitura ampla para mestres de obras e engenheiros residentes", 
-            category: "Acesso & Identidade", 
-            obra_local: "Sede Corporativa",
-            inherentProb: 3, inherentImp: 5, inherentScore: 15,
-            control: "A.5.15 Controle de Acesso RBAC estrito + Sigilo NR-07",
-            residualProb: 1, residualImp: 5, residualScore: 5,
-            strategy: "Mitigar", 
-            responsible: "DPO / Medicina do Trabalho",
-            directorApproval: { approved: true, director: "Dr. Roberto Albuquerque (Diretoria C-Level)", timestamp: "2026-10-22 17:00:00" },
-            history: [
-              { date: "2026-10-22 17:00", author: "Fernanda Martins (RH)", role: "RH / SST (NR-18)", action: "Ajuste de Permissões", comment: "Acesso bloqueado para residentes; exibição restrita à aptidão física (Apto/Inapto)." }
-            ],
-            evidenceFiles: [
-              { name: "Matriz_RBAC_Prontuarios_Medicos.pdf", type: "PDF", size: "820 KB", date: "2026-10-22", verified: true }
-            ]
-          },
-          { 
-            id: "RSK-005", 
-            asset: "Empreiteiras e Subcontratadas de Canteiro", 
-            threat: "Vazamento de documentos de operários terceirizados sem DPA assinado", 
-            vuln: "Ausência de cláusula de responsabilidade solidária LGPD nas ordens de serviço", 
-            category: "Terceiros", 
-            obra_local: "Obra Horizon",
-            inherentProb: 4, inherentImp: 3, inherentScore: 12,
-            control: "A.5.19 Segurança em Terceiros + DPA Obrigatório NR-18",
-            residualProb: 2, residualImp: 2, residualScore: 4,
-            strategy: "Mitigar", 
-            responsible: "Suprimentos / Jurídico",
-            directorApproval: { approved: true, director: "Dr. Roberto Albuquerque (Diretoria C-Level)", timestamp: "2026-10-21 14:10:00" },
-            history: [
-              { date: "2026-10-21 14:10", author: "Dra. Mariana Costa", role: "DPO / Jurídico", action: "Controle de Terceiros", comment: "100% das ordens de serviço agora vinculadas à assinatura prévia do DPA." }
-            ],
-            evidenceFiles: [
-              { name: "Auditoria_DPA_Empreiteiras_Q3.pdf", type: "PDF", size: "2.5 MB", date: "2026-10-21", verified: true }
-            ]
-          },
-          { 
-            id: "RSK-006", 
-            asset: "Notebooks de Engenheiros e Fiscais de Obra", 
-            threat: "Furto ou perda de computadores portáteis com plantas e orçamentos sigilosos", 
-            vuln: "BitLocker inativo em laptops de campo", 
-            category: "Endpoint", 
-            obra_local: "Obra Metropolitan",
-            inherentProb: 3, inherentImp: 4, inherentScore: 12,
-            control: "A.8.1 Dispositivos de usuários finais + BitLocker forçado via GPO",
-            residualProb: 1, residualImp: 3, residualScore: 3,
-            strategy: "Mitigar", 
-            responsible: "Suporte TI",
-            directorApproval: { approved: true, director: "Dr. Roberto Albuquerque (Diretoria C-Level)", timestamp: "2026-10-20 09:40:00" },
-            history: [
-              { date: "2026-10-20 09:40", author: "Carlos Silva", role: "SecOps Lead", action: "Auditoria BitLocker", comment: "GPO aplicada no Active Directory forçando criptografia de disco em 100% da frota." }
-            ],
-            evidenceFiles: [
-              { name: "Relatorio_Criptografia_Dispositivos_GLPI.pdf", type: "PDF", size: "1.4 MB", date: "2026-10-20", verified: true }
-            ]
-          },
-          { 
-            id: "RSK-007", 
-            asset: "Estandes de Vendas / Wi-Fi de Plantão", 
-            threat: "Interceptação de dados financeiros de clientes em simulação de crédito", 
-            vuln: "Rede Wi-Fi aberta sem isolamento de clientes (Client Isolation / 802.1X)", 
-            category: "Infraestrutura", 
-            obra_local: "Obra Horizon",
-            inherentProb: 3, inherentImp: 4, inherentScore: 12,
-            control: "A.8.20 Segurança de redes + MikroTik VLAN 40 com Client Isolation",
-            residualProb: 1, residualImp: 4, residualScore: 4,
-            strategy: "Mitigar", 
-            responsible: "Adm Redes",
-            directorApproval: { approved: true, director: "Dr. Roberto Albuquerque (Diretoria C-Level)", timestamp: "2026-10-19 11:20:00" },
-            history: [
-              { date: "2026-10-19 11:20", author: "Adm Redes", role: "SecOps Lead", action: "Segregação Wi-Fi", comment: "Wi-Fi dos estandes configurado com isolamento total e rede visitante segregada." }
-            ],
-            evidenceFiles: [
-              { name: "Laudo_Seguranca_Wifi_Estandes.pdf", type: "PDF", size: "1.1 MB", date: "2026-10-19", verified: true }
-            ]
-          },
-          { 
-            id: "RSK-008", 
-            asset: "Drones e Câmeras CFTV de Fiscalização de Obras", 
-            threat: "Captação de imagens de pedestres e vizinhança sem aviso de privacidade", 
-            vuln: "Falta de placas informativas no perímetro da construção", 
-            category: "Conformidade LGPD", 
-            obra_local: "Canteiro Alphaville",
-            inherentProb: 3, inherentImp: 2, inherentScore: 6,
-            control: "A.7.4 Monitoramento físico + Placas LGPD padronizadas",
-            residualProb: 1, residualImp: 2, residualScore: 2,
-            strategy: "Mitigar", 
-            responsible: "Segurança Patrimonial",
-            directorApproval: { approved: true, director: "Dr. Roberto Albuquerque (Diretoria C-Level)", timestamp: "2026-10-18 16:45:00" },
-            history: [
-              { date: "2026-10-18 16:45", author: "Eng. Marcos Valério", role: "Engenheiro Residente", action: "Conclusão", comment: "Placas informativas instaladas em todo o perímetro do canteiro." }
-            ],
-            evidenceFiles: [
-              { name: "Fotos_Placas_Aviso_Canteiro_Alphaville.pdf", type: "PDF", size: "3.2 MB", date: "2026-10-18", verified: true }
-            ]
-          }
-        ],
-
-        // 5. RoPA LGPD para AC Engenharia (Art. 37) com Tabela de Temporalidade
-        ropa: [
-          { 
-            id: "ROPA-01", 
-            process: "Admissão e Controle de Trabalhadores de Obra (CLT/EPI)", 
-            obra_local: "Obra Horizon",
-            data: "Nome, CPF, RG, ASO, Biometria Facial, Ficha EPI", 
-            subjects: "Operários de Obra e Colaboradores", 
-            legalBasis: "Obrigação Legal (Art. 7, II - NR-18)", 
-            storage: "ERP Sienge + Armário Físico Obra", 
-            security: "AES-256 e catraca criptografada", 
-            retention: "20 anos (Previdenciário / Trabalhista)",
-            history: [
-              { date: "2026-10-24 10:00", author: "Fernanda Martins (RH / SST)", role: "RH / SST (NR-18)", action: "Auditoria RoPA", comment: "Coleta limitada rigorosamente às exigências da NR-18 e eSocial." }
-            ],
-            evidenceFiles: [
-              { name: "Mapeamento_Dados_NR18_Operarios.pdf", type: "PDF", size: "2.1 MB", date: "2026-10-24", verified: true },
-              { name: "Termo_Consentimento_Biometria_Facial.pdf", type: "PDF", size: "900 KB", date: "2026-10-24", verified: true }
-            ]
-          },
-          { 
-            id: "ROPA-02", 
-            process: "Acesso Biométrico ao Canteiro de Obras", 
-            obra_local: "Obra Horizon",
-            data: "Geometria facial, CPF, Nome, Foto digital", 
-            subjects: "Operários Próprios e Terceirizados", 
-            legalBasis: "Garantia de Prevenção à Fraude e Segurança (Art. 11, II, g)", 
-            storage: "Terminal Hikvision Local + Servidor SGSI", 
-            security: "Hash biométrico irreversível, VLAN 30 isolada", 
-            retention: "Expurgo imediato na entrega da obra (Habite-se) ou rescisão",
-            history: [
-              { date: "2026-10-23 11:00", author: "Carlos Silva", role: "SecOps Lead", action: "Revisão Criptográfica", comment: "Verificação de armazenamento exclusivo em hash unidirecional no terminal." }
-            ],
-            evidenceFiles: [
-              { name: "Certificado_Criptografia_Hikvision_VLAN30.pdf", type: "PDF", size: "1.3 MB", date: "2026-10-23", verified: true }
-            ]
-          },
-          { 
-            id: "ROPA-03", 
-            process: "Medicina Ocupacional e Atestados (ASO / PCMSO)", 
-            obra_local: "Sede Corporativa",
-            data: "Exames clínicos, ASO, Atestados médicos, CID, Exposição a riscos", 
-            subjects: "Operários e Colaboradores", 
-            legalBasis: "Cumprimento de Obrigação Legal / Saúde (Art. 11, II, a)", 
-            storage: "Prontuário Médico Cifrado + ERP Medicina", 
-            security: "Acesso restrito ao médico examinador + AES-256", 
-            retention: "20 anos após desligamento (NR-07 e Lei 8.213/91)",
-            history: [
-              { date: "2026-10-22 09:30", author: "Dra. Fernanda Martins", role: "RH / SST (NR-18)", action: "Conformidade NR-07", comment: "Fluxo validado pelo médico coordenador do PCMSO." }
-            ],
-            evidenceFiles: [
-              { name: "Parecer_Medico_PCMSO_Sigilo_ASO.pdf", type: "PDF", size: "1.8 MB", date: "2026-10-22", verified: true }
-            ]
-          },
-          { 
-            id: "ROPA-04", 
-            process: "Contratos de Compra e Venda de Imóveis", 
-            obra_local: "Sede Corporativa",
-            data: "Nome, CPF, RG, Estado Civil, Renda familiar, Endereço fiscal", 
-            subjects: "Compradores de Unidades / Clientes", 
-            legalBasis: "Execução de Contrato (Art. 7, V)", 
-            storage: "ERP Sienge + Pasta Segura Jurídica", 
-            security: "RBAC estrito + Trilha de Auditoria SHA-256", 
-            retention: "10 anos após o Habite-se (Código Civil Art. 618 - Solidez da Obra)",
-            history: [
-              { date: "2026-10-20 14:00", author: "Dra. Mariana Costa", role: "DPO / Jurídico", action: "Tabela de Temporalidade", comment: "Retenção alinhada à garantia legal decenal do construtor (CC Art. 618)." }
-            ],
-            evidenceFiles: [
-              { name: "Parecer_Juridico_Prazo_Decenal_CC618.pdf", type: "PDF", size: "1.5 MB", date: "2026-10-20", verified: true }
-            ]
-          },
-          { 
-            id: "ROPA-05", 
-            process: "Análise de Crédito e Financiamento Habitacional (Caixa)", 
-            obra_local: "Obra Horizon",
-            data: "Extratos bancários, IRPF, Holerite, FGTS, Certidão de casamento", 
-            subjects: "Proponentes Compradores", 
-            legalBasis: "Execução de Contrato / Procedimentos Preliminares (Art. 7, V)", 
-            storage: "Dossiê Digital Cifrado em Nuvem AWS Brasil", 
-            security: "Criptografia TLS 1.3 em repouso e trânsito", 
-            retention: "5 anos fiscais ou até quitação da dívida",
-            history: [
-              { date: "2026-10-19 10:15", author: "Comitê Financeiro", role: "DPO / Jurídico", action: "Revisão Caixa", comment: "Dossiê com descarte programado pós-quitação do financiamento habitacional." }
-            ],
-            evidenceFiles: [
-              { name: "Manual_Dossie_Credito_Habitacional_LGPD.pdf", type: "PDF", size: "2.2 MB", date: "2026-10-19", verified: true }
-            ]
-          },
-          { 
-            id: "ROPA-06", 
-            process: "Captação de Leads em Estandes de Vendas", 
-            obra_local: "Obra Horizon",
-            data: "Nome, E-mail, Telefone/WhatsApp, Faixa de renda estimada", 
-            subjects: "Visitantes de Estandes / Prospects", 
-            legalBasis: "Consentimento Específico (Art. 7, I)", 
-            storage: "CRM Comercial Sienge / CV (Construtor de Vendas)", 
-            security: "Opt-in obrigatório + Não repasse a terceiros (Cyrela)", 
-            retention: "12 meses após último contato ativo ou opt-out imediato",
-            history: [
-              { date: "2026-10-18 16:00", author: "Comercial / Vendas", role: "DPO / Jurídico", action: "Auditoria de Estandes", comment: "Opt-in auditado em 100% dos formulários digitais de estande." }
-            ],
-            evidenceFiles: [
-              { name: "Termo_Consentimento_Estandes_Vendas.pdf", type: "PDF", size: "890 KB", date: "2026-10-18", verified: true }
-            ]
-          }
-        ],
-
-        // 6. DSAR Imobiliário (Art. 18 da LGPD - SLA 15 Dias)
-        dsar: [
-          { id: "DSAR-2026-001", holder: "Dr. Gustavo Nogueira (Comprador Apt 1204 - Horizon)", type: "Acesso aos Dados (Art. 18, II)", openDate: "2026-10-22", daysElapsed: 4, status: "Em Análise", priority: "Normal", notes: "Solicitou relatório de todos os dados cadastrados no contrato de compra do Edifício Horizon." },
-          { id: "DSAR-2026-002", holder: "Ana Paula Ribeiro (Compradora Apt 502 - Horizon)", type: "Confirmação & Não Repasse (Risco Cyrela)", openDate: "2026-10-20", daysElapsed: 6, status: "Em Análise", priority: "Alta", notes: "Solicitou certidão comprovando que seus contatos não foram transferidos para parceiros comerciais (marcenarias/decoradores)." },
-          { id: "DSAR-2026-003", holder: "Marcos Vinicius Souza (Visitante Estande Metropolitan)", type: "Revogação de Consentimento / Opt-out", openDate: "2026-10-15", daysElapsed: 11, status: "Em Análise", priority: "Alta", notes: "Opt-out de contatos de corretores no CV. Restam 4 dias para encerramento do prazo regulamentar." }
-        ],
-
-        // 7. Fornecedores e Operadores DPA da Construtora
-        thirdParties: [
-          { name: "Sienge Softplan (ERP Construção Civil)", service: "Gestão de Obras, Medições e Folha", dataShared: "Dados fiscais, folha de operários, contratos", dpaStatus: "Vigente & Assinado", validity: "12/2027", risk: "Baixo" },
-          { name: "Estruturas Horizonte Ltda (Empreiteira Alvenaria)", service: "Execução de Estrutura e Concreto (NR-18)", dataShared: "Documentação de operários, ASOs e EPIs", dpaStatus: "Vigente & Assinado", validity: "08/2027", risk: "Médio" },
-          { name: "Marcenaria & Design Decorações (Parceiro Comercial)", service: "Oferta de Móveis Planejados para Compradores", dataShared: "Bloqueado sem Opt-in Explícito (Risco Cyrela)", dpaStatus: "Pendente de Homologação", validity: "Sob Revisão", risk: "Alto" },
-          { name: "Caixa Econômica Federal (Agente Financeiro)", service: "Financiamento Habitacional / Repasse", dataShared: "Dossiês de crédito de compradores", dpaStatus: "Vigente BACEN", validity: "Contínuo", risk: "Baixo" }
-        ],
-
-        // 8. Wazuh SIEM Alertas Reais de Construtora
-        wazuhAlerts: [
-          { id: "WZ-8921", rule: "Multiple SSH Failed Logins followed by Success on BIM Vault", severity: 12, host: "srv-bim-vault", ip: "192.168.20.14", mitre: "T1110 - Brute Force", status: "Novo Alerta", timestamp: "26/10 09:32" },
-          { id: "WZ-8922", rule: "Tentativa de Acesso Não Autorizado ao Servidor de Catracas Faciais", severity: 10, host: "catraca-horizon", ip: "192.168.40.50", mitre: "T1078 - Valid Accounts", status: "Novo Alerta", timestamp: "26/10 08:45" },
-          { id: "WZ-8923", rule: "Dispositivo Não Homologado Conectado na VLAN de Estande de Vendas", severity: 8, host: "ap-estande-horizon", ip: "192.168.50.1", mitre: "T1200 - Hardware Additions", status: "Novo Alerta", timestamp: "25/10 17:10" },
-          { id: "WZ-8924", rule: "Modificação Suspeita em Diretório de Projetos DWG no Canteiro", severity: 7, host: "nbk-eng-horizon", ip: "192.168.40.12", mitre: "T1486 - Data Encrypted for Impact", status: "Tratado", timestamp: "25/10 14:20" }
-        ],
-
-        // 9. Ativos de Construtora (Sede + Canteiros de Obra + Catracas)
-        assets: [
-          { id: 1, hostname: "nbk-eng-horizon", user: "eng.marcos.valerio (Horizon)", ip: "192.168.40.12", vlan: "10", dot1x: "Autenticado EAP-TLS", bitlocker: "Criptografado", os: "Win 11 Pro", glpiAgent: "10.0.12" },
-          { id: 2, hostname: "nbk-eng-metro", user: "eng.leticia.prado (Metropolitan)", ip: "192.168.42.15", vlan: "10", dot1x: "Autenticado EAP-TLS", bitlocker: "Criptografado", os: "Win 11 Pro", glpiAgent: "10.0.12" },
-          { id: 3, hostname: "catraca-facial-horizon", user: "Canteiro Horizon (Portaria)", ip: "192.168.40.50", vlan: "30", dot1x: "Autenticado EAP-TLS", bitlocker: "Firmware Cifrado", os: "Embedded Linux", glpiAgent: "10.0.12" },
-          { id: 4, hostname: "srv-bim-vault", user: "Coordenação BIM (Sede)", ip: "192.168.20.14", vlan: "20", dot1x: "Autenticado EAP-TLS", bitlocker: "Criptografado", os: "Windows Server 2022", glpiAgent: "10.0.12" },
-          { id: 5, hostname: "ap-estande-horizon", user: "Plantão de Vendas Horizon", ip: "192.168.50.1", vlan: "40", dot1x: "Autenticado EAP-TLS", bitlocker: "RouterOS v7", os: "MikroTik RouterOS", glpiAgent: "10.0.12" }
-        ],
-
-        // 10. Incidentes CSIRT de Construtora (com Monitoramento ANPD 3 Dias Úteis)
-        incidents: [
-          { id: "INC-2026-001", title: "Tentativa de Criptografia em Lote de Arquivos DWG na Obra Horizon", phase: "Contenção", severity: "Crítico", source: "Wazuh (WZ-8921)", owner: "Carlos Silva (SecOps)", date: "26/10 09:35", notes: "Notebook do engenheiro isolado na VLAN 99 e processo de ransomware interrompido sem exfiltração." },
-          { id: "INC-2026-002", title: "Alerta de Exfiltração de Planilha de Leads no CRM Comercial", phase: "Investigação", severity: "Alto", source: "Wazuh (WZ-8923)", owner: "Carlos Silva (SecOps)", date: "25/10 17:30", notes: "Avaliação de risco grave aos titulares. Cronômetro de 3 dias úteis para comunicação à ANPD ativo (Resolução CD/ANPD nº 15/2024)." }
-        ],
-
-        // 11. Trilha de Auditoria com Hash Encadeado (Merkle Blockchain)
-        auditLogs: [
-          {
-            id: "BLK-0004",
-            timestamp: "2026-10-26T09:36:00.000Z",
-            role: "Analista SecOps / DPO",
-            module: "ANPD_INCIDENT",
-            action: "INCIDENTE_CRIADO: Alerta WZ-8921 promovido a INC-2026-001 com contagem de 3 dias úteis para ANPD",
-            ip: "192.168.30.15",
-            previousHash: "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-            hash: "9e107d9d372bb6826bd81d3542a419d6dae10d3222d67c962f416d21197a022c"
-          },
-          {
-            id: "BLK-0003",
-            timestamp: "2026-10-26T08:14:22.000Z",
-            role: "Analista SecOps / DPO",
-            module: "CANTEIRO_BIOMETRIA",
-            action: "EXPURGO_BIOMETRIA_CANTEIRO: Canteiro 'Obra Horizon' programou auditoria de expurgo pós-Habite-se",
-            ip: "192.168.40.12",
-            previousHash: "b21e8e2e92c282eb111db4be89dd6aa0fa6a8d3e925915cfc7c00c7f76634d58",
-            hash: "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
-          },
-          {
-            id: "BLK-0002",
-            timestamp: "2026-10-25T17:20:05.000Z",
-            role: "Diretoria (Executivo)",
-            module: "COMMERCIAL_PRIVACY",
-            action: "TERMO_CORRETOR_ASSINADO: Thiago Ramos Mendonça (CRECI 45.120-F) assinou NDA de Não Repasse",
-            ip: "192.168.10.5",
-            previousHash: "1a8f9c0e27145b4686cf4e0060914e7b1e507746905a8f9c0e27145b4686cf4e",
-            hash: "b21e8e2e92c282eb111db4be89dd6aa0fa6a8d3e925915cfc7c00c7f76634d58"
-          },
-          {
-            id: "BLK-0001",
-            timestamp: "2026-10-25T08:00:00.000Z",
-            role: "Sistema (Gênese)",
-            module: "SYSTEM",
-            action: "BLOCO_GENESE: Inicialização do SGSI da AC Engenharia com escopo Sede e Canteiros de Obras",
-            ip: "127.0.0.1",
-            previousHash: "0000000000000000000000000000000000000000000000000000000000000000",
-            hash: "1a8f9c0e27145b4686cf4e0060914e7b1e507746905a8f9c0e27145b4686cf4e"
-          }
-        ]
-      };
-
       // Base Padrão Limpa (Início do Zero para a AC Engenharia - Mantendo apenas o Esqueleto Normativo Essencial)
       const CLEAN_PRODUCTION_DB = {
         soaControls: [
@@ -7436,32 +6604,6 @@ openssl ts -reply -in response.tsr -text</pre>
         localStorage.setItem("AC_ENGENHARIA_SGSI_DB_V1", raw);
       }
 
-      async function resetPrototypeData() {
-        const ok = await showConfirmDialog({
-          title: "Restaurar Dados Modelo",
-          message: "Deseja restaurar os dados modelo de demonstração corporativa?",
-          detail: "Atenção: Os cadastros recentes serão substituídos pela base de referência do SGSI.",
-          confirmText: "Restaurar Base",
-          cancelText: "Cancelar",
-          type: "warning"
-        });
-        if (!ok) return;
-
-        const rawDemo = JSON.stringify(DEMO_DB);
-        window._sgsiDbRaw = rawDemo;
-        window._sgsiDbCache = JSON.parse(rawDemo);
-        localStorage.setItem("AC_ENGENHARIA_SGSI_DB_V1", rawDemo);
-        if (window.DEMO_EVIDENCE) {
-          localStorage.setItem("AC_ENGENHARIA_EVIDENCE_V1", JSON.stringify(window.DEMO_EVIDENCE));
-        }
-        if (window.StorageManager && typeof window.StorageManager.syncToServer === "function") {
-          window.StorageManager.syncToServer(true);
-        }
-        showToast("Dados padrão de demonstração restaurados!", "info");
-        initApp();
-        if (typeof renderEvidenceModule === 'function') renderEvidenceModule();
-      }
-
       async function clearToProductionData() {
         const ok = await showConfirmDialog({
           title: "Limpar e Iniciar do Zero",
@@ -7499,7 +6641,6 @@ openssl ts -reply -in response.tsr -text</pre>
       }
 
       window.clearToProductionData = clearToProductionData;
-      window.resetPrototypeData = resetPrototypeData;
 
       // =========================================================================
       // [BLOCO 2: API_SERVICES] -> Funções assíncronas, Hash Encadeado e SoA
@@ -10710,8 +9851,8 @@ openssl ts -reply -in response.tsr -text</pre>
                   <p class="text-xs font-bold text-slate-800">Nenhum alerta de segurança pendente</p>
                   <p class="text-[11px] text-slate-500">O sensor SIEM Wazuh e EDR estão operando sem detecções críticas no momento.</p>
                   <button onclick="openModal('modal-simulate-wazuh')" class="mt-2 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all inline-flex items-center gap-1.5 cursor-pointer border border-slate-200">
-                    <i data-lucide="play" class="w-3.5 h-3.5 text-[#004b93]"></i>
-                    <span>Simular Evento de Teste</span>
+                    <i data-lucide="plus" class="w-3.5 h-3.5 text-[#004b93]"></i>
+                    <span>Registrar Alerta Manual</span>
                   </button>
                 </div>
               </td>

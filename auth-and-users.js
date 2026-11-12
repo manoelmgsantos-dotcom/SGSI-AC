@@ -212,36 +212,32 @@ function resetSessionIdleTimer() {
 })();
 
 function initAuth() {
+  // Sincroniza o GOOGLE_CLIENT_ID definido no .env do servidor
+  fetch("/api/auth/config")
+    .then(r => (r.ok ? r.json() : null))
+    .then(cfg => {
+      if (cfg && cfg.googleClientId) {
+        GOOGLE_SSO_CONFIG.serverClientId = String(cfg.googleClientId).trim();
+      }
+    })
+    .catch(() => {});
+
   const users = getStoredUsers();
   const sessionUser = getStoredSessionUser();
   const isSessionAuthenticated = sessionStorage.getItem("AC_ACTIVE_LOGIN_SESSION_V4") === "true";
+  const hasSignedToken = Boolean(sessionStorage.getItem("AC_AUTH_JWT_TOKEN_V1"));
 
-  if (isSessionAuthenticated && sessionUser) {
-    // Valida se o usuário ainda existe no cadastro
-    const currentValid = users.find(u => u.id === sessionUser.id) || users[0];
+  if (isSessionAuthenticated && sessionUser && hasSignedToken) {
+    const currentValid = users.find(u => u.id === sessionUser.id) || sessionUser;
     AuthState.currentUser = currentValid;
     AuthState.isLoggedIn = true;
     applyUserSession(currentValid);
     hideLoginModal();
     resetSessionIdleTimer();
-
-    // Se ainda não possui token assinado na sessão (ex: após recarregamento), revalida via SSO silencioso se aplicável
-    if (!sessionStorage.getItem("AC_AUTH_JWT_TOKEN_V1") && currentValid && currentValid.email) {
-      fetch("/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: currentValid.email, name: currentValid.name })
-      })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data && data.token) {
-            sessionStorage.setItem("AC_AUTH_JWT_TOKEN_V1", data.token);
-          }
-        })
-        .catch(() => {});
-    }
   } else {
     // Exige passagem obrigatória pelo Portal de Login Full-Screen antes de carregar o sistema
+    sessionStorage.removeItem("AC_ACTIVE_LOGIN_SESSION_V4");
+    sessionStorage.removeItem("AC_AUTH_JWT_TOKEN_V1");
     AuthState.currentUser = null;
     AuthState.isLoggedIn = false;
     showLoginModal();
@@ -266,8 +262,9 @@ function initAuth() {
 // CONFIGURAÇÃO DO GOOGLE WORKSPACE SSO & DOMÍNIO CORPORATIVO
 // ============================================================================
 const GOOGLE_SSO_CONFIG = {
+  serverClientId: "",
   get clientId() {
-    return localStorage.getItem("AC_GOOGLE_CLIENT_ID") || "";
+    return (localStorage.getItem("AC_GOOGLE_CLIENT_ID") || this.serverClientId || "").trim();
   },
   set clientId(val) {
     if (val) localStorage.setItem("AC_GOOGLE_CLIENT_ID", val.trim());
@@ -316,12 +313,70 @@ function parseJwt(token) {
   }
 }
 
-// Inicia fluxo de autenticação com o Google Workspace
-function handleGoogleSignIn() {
-  const clientId = GOOGLE_SSO_CONFIG.clientId;
+// Inicia fluxo real de autenticação OAuth 2.0 com o Google Workspace
+async function handleGoogleSignIn() {
+  let clientId = GOOGLE_SSO_CONFIG.clientId;
 
-  // Se houver Google Client ID configurado e o SDK estiver pronto
-  if (clientId && window.google?.accounts?.id) {
+  if (!clientId) {
+    try {
+      const res = await fetch("/api/auth/config");
+      if (res.ok) {
+        const cfg = await res.json();
+        if (cfg && cfg.googleClientId) {
+          GOOGLE_SSO_CONFIG.serverClientId = String(cfg.googleClientId).trim();
+          clientId = GOOGLE_SSO_CONFIG.clientId;
+        }
+      }
+    } catch (_) {}
+  }
+
+  if (!clientId) {
+    const box = document.getElementById("admin-password-login-box");
+    const chevron = document.getElementById("admin-login-chevron");
+    if (box && box.classList.contains("hidden")) {
+      box.classList.remove("hidden");
+      if (chevron) chevron.style.transform = "rotate(180deg)";
+    }
+    if (window.showConfirmDialog) {
+      await window.showConfirmDialog({
+        title: "Google OAuth 2.0: Client ID Necessário",
+        message: "Para autenticar com o Google Workspace, configure o <strong>GOOGLE_CLIENT_ID</strong> no arquivo <code>.env</code> da VPS ou nas configurações de SSO do painel administrativo.",
+        detail: "Acesse com o Login do Administrador Principal (abaixo) e informe o Google OAuth Client ID em Controle de Acessos -> Configurar Domínio & SSO, ou defina GOOGLE_CLIENT_ID no arquivo .env.",
+        confirmText: "Entendido",
+        cancelText: "Fechar",
+        type: "warning"
+      });
+    } else if (window.showToast) {
+      window.showToast("Configure o GOOGLE_CLIENT_ID no .env ou acesse pelo Login do Administrador Principal.", "warning");
+    }
+    return;
+  }
+
+  // Prioriza o popup oficial OAuth 2.0 do Google Identity Services (compatível com todos os navegadores)
+  if (window.google?.accounts?.oauth2) {
+    try {
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: "openid email profile",
+        prompt: "select_account",
+        callback: (tokenResponse) => {
+          if (tokenResponse && tokenResponse.access_token) {
+            completeGoogleAuth({ accessToken: tokenResponse.access_token });
+          } else if (tokenResponse && tokenResponse.error) {
+            if (window.showToast) {
+              window.showToast("Autenticação Google cancelada ou não autorizada.", "warning");
+            }
+          }
+        }
+      });
+      tokenClient.requestAccessToken({ prompt: "select_account" });
+      return;
+    } catch (e) {
+      console.warn("Erro ao iniciar Google OAuth2 TokenClient, tentando Google ID Prompt:", e);
+    }
+  }
+
+  if (window.google?.accounts?.id) {
     try {
       window.google.accounts.id.initialize({
         client_id: clientId,
@@ -332,13 +387,13 @@ function handleGoogleSignIn() {
       window.google.accounts.id.prompt();
       return;
     } catch (e) {
-      console.warn("Aviso ao abrir Google GIS, abrindo seletor corporativo:", e);
+      console.warn("Erro ao inicializar Google Identity Services:", e);
     }
   }
 
-  // Se não houver Client ID oficial inserido ou em ambiente de desenvolvimento:
-  // Abre o Seletor Corporativo do Google Workspace da AC Engenharia
-  openGoogleAccountPicker();
+  if (window.showToast) {
+    window.showToast("A biblioteca oficial do Google Identity Services ainda está carregando. Aguarde um instante e tente novamente.", "warning");
+  }
 }
 
 function handleGoogleCredentialResponse(response) {
@@ -360,164 +415,97 @@ function handleGoogleCredentialResponse(response) {
 }
 
 async function completeGoogleAuth(profile) {
-  const email = String(profile.email || "").toLowerCase().trim();
-  const name = String(profile.name || email.split("@")[0]).trim();
-  const picture = profile.picture || null;
-  const credential = profile.credential || null;
+  const credential = profile?.credential || null;
+  const accessToken = profile?.accessToken || null;
 
-  if (!email) {
-    if (window.showToast) window.showToast("E-mail não fornecido pela conta Google.", "warning");
-    return;
-  }
-
-  const emailDomain = email.split("@")[1];
-
-  // 1. VALIDAÇÃO ESTRITA DE DOMÍNIO CORPORATIVO
-  if (!isEmailDomainAllowed(email)) {
-    const allowedStr = GOOGLE_SSO_CONFIG.allowedDomains.map(d => `@${d.replace(/^@/, '')}`).join(" ou ");
-    const errorMsg = `Acesso Negado! O e-mail "${escapeHtml(email)}" não pertence ao domínio corporativo da AC Engenharia (${escapeHtml(allowedStr)}). O acesso ao SGSI é restrito exclusivamente a colaboradores da empresa.`;
-
-    if (window.showConfirmDialog) {
-      await window.showConfirmDialog({
-        title: "Domínio Não Autorizado",
-        message: `<span class="text-rose-600 font-bold">${errorMsg}</span>`,
-        detail: "Para acessar o sistema corporativo da AC Engenharia, certifique-se de selecionar sua conta institucional do Google Workspace.",
-        confirmText: "Compreendido",
-        cancelText: "Fechar",
-        type: "danger"
-      });
-    } else if (window.showToast) {
-      window.showToast(errorMsg, "warning");
-    } else {
-      alert(errorMsg);
-    }
-    return;
-  }
-
-  // 2. BUSCA NO CATÁLOGO OU SERVIDOR (EXIGÊNCIA DE CONVITE PRÉVIO)
-  let users = getStoredUsers();
-  let user = users.find(u => u.email.toLowerCase() === email);
-
-  // Se não estiver em cache local, consulta a API/PostgreSQL em tempo real
-  if (!user) {
-    try {
-      const uRes = await fetch('/api/users');
-      if (uRes.ok) {
-        const uData = await uRes.json();
-        if (Array.isArray(uData.users)) {
-          users = uData.users.map(u => sanitizeClientUser(u));
-          localStorage.setItem("AC_USERS_DB_V2", JSON.stringify(users));
-          user = users.find(u => u.email.toLowerCase() === email);
-        }
-      }
-    } catch (_) {}
-  }
-
-  const isSuperAdmin = (email === "manoelmgsantos@acengenhariase.com.br" || email === "admin@acengenhariase.com.br");
-
-  // EXIGÊNCIA ESTRITA: O usuário precisa ter sido CONVIDADO / PRÉ-CADASTRADO pelo Administrador!
-  if (!user && !isSuperAdmin) {
-    const noInviteMsg = `O e-mail corporativo <strong>${escapeHtml(email)}</strong> pertence ao domínio da AC Engenharia, mas <strong>ainda não possui um convite de acesso</strong> ativo no sistema.<br><br>
-    Para garantir a governança e segregação de funções (ISO/IEC 27001 Cláusula A.5.15), solicite seu convite ao <strong>Administrador Principal (Manoel Martins)</strong> para que seu perfil de acesso e canteiro de obras sejam liberados.`;
-
-    if (window.showConfirmDialog) {
-      await window.showConfirmDialog({
-        title: "Acesso Não Autorizado: Convite Necessário",
-        message: `<div class="text-slate-800 leading-relaxed text-xs">${noInviteMsg}</div>`,
-        detail: "Apenas colaboradores previamente convidados e homologados pelo Administrador podem ingressar na plataforma CyberGRC & SGSI.",
-        confirmText: "Entendido",
-        cancelText: "Fechar",
-        type: "warning"
-      });
-    } else if (window.showToast) {
-      window.showToast("Acesso não autorizado: seu e-mail corporativo ainda não possui um convite do Administrador.", "warning");
-    } else {
-      alert("Acesso não autorizado: seu e-mail corporativo ainda não possui um convite do Administrador.");
-    }
-    return;
-  }
-
-  // Se for o SuperAdmin acessando pela primeira vez sem registro prévio
-  if (!user && isSuperAdmin) {
-    user = {
-      id: "usr-admin",
-      name: name || "Manoel Martins",
-      email: email,
-      role: "secops",
-      roleName: "Administrador Geral & SecOps SGSI",
-      department: "Diretoria de Tecnologia & Governança SGSI",
-      location: "Escritório Central (Matriz)",
-      avatar: "MM",
-      color: "blue",
-      status: "Ativo",
-      isSuperAdmin: true,
-      registeredVia: "google_sso"
-    };
-    users.push(user);
-  }
-
-  // Verifica bloqueio
-  if (user.status === "Inativo" || user.status === "Bloqueado") {
+  if (!credential && !accessToken) {
     if (window.showToast) {
-      window.showToast(`Sua conta corporativa está com status [${user.status}]. Acesso bloqueado pelo Administrador.`, "warning");
+      window.showToast("Autenticação negada: token OAuth 2.0 do Google ausente.", "warning");
     }
     return;
   }
 
-  // 3. VALIDA E REGISTRA SESSÃO NO BACKEND (EMITE TOKEN CRIPTOGRÁFICO ASSINADO)
-  let wasInviteAccepted = false;
+  // Validação criptográfica obrigatória no Backend junto aos servidores do Google
+  let authData = null;
   try {
     const authRes = await fetch("/api/auth/google", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user.email, name: user.name, picture: user.picture, credential })
+      body: JSON.stringify({ credential, accessToken })
     });
+
     if (!authRes.ok) {
       const errData = await authRes.json().catch(() => ({}));
-      const errMsg = errData.error || "Falha na validação de convite com o servidor.";
-      if (window.showToast) window.showToast(errMsg, "warning");
-      else alert(errMsg);
+      const errMsg = errData.error || "Acesso não autorizado pelo servidor SGSI.";
+      if (window.showConfirmDialog) {
+        await window.showConfirmDialog({
+          title: "Acesso Corporativo Não Autorizado",
+          message: `<span class="text-rose-600 font-bold">${escapeHtml(errMsg)}</span>`,
+          detail: "O acesso ao SGSI é exclusivo para contas do Google Workspace da AC Engenharia previamente convidadas pelo Administrador Principal.",
+          confirmText: "Compreendido",
+          cancelText: "Fechar",
+          type: "danger"
+        });
+      } else if (window.showToast) {
+        window.showToast(errMsg, "warning");
+      } else {
+        alert(errMsg);
+      }
       return;
     }
-    const authData = await authRes.json().catch(() => ({}));
-    if (authData.token) {
-      sessionStorage.setItem("AC_AUTH_JWT_TOKEN_V1", authData.token);
-    }
-    if (authData.wasInviteAccepted) {
-      wasInviteAccepted = true;
-    }
-  } catch (_) {}
 
-  // VERIFICA SE ESTAVA COM CONVITE PENDENTE (PRIMEIRO ACESSO DO COLABORADOR CONVIDADO)
-  if (user.status === "Convite Pendente") {
-    user.status = "Ativo";
-    user.acceptedInviteAt = new Date().toISOString();
-    user.registeredVia = "google_sso";
-    if (name && (!user.name || user.name === email.split("@")[0])) {
-      user.name = name;
+    authData = await authRes.json();
+  } catch (_) {
+    if (window.showToast) {
+      window.showToast("Erro de comunicação com o servidor de autenticação.", "warning");
     }
-    if (picture) user.picture = picture;
-    wasInviteAccepted = true;
-    saveStoredUsers(users);
-    if (typeof renderAdminUsersTable === 'function') renderAdminUsersTable();
-  } else if (picture && !user.picture) {
-    user.picture = picture;
-    saveStoredUsers(users);
+    return;
   }
 
-  // 4. ATIVA SESSÃO
+  if (!authData || !authData.user || !authData.token) {
+    if (window.showToast) {
+      window.showToast("Resposta de autenticação inválida do servidor.", "warning");
+    }
+    return;
+  }
+
+  sessionStorage.setItem("AC_AUTH_JWT_TOKEN_V1", authData.token);
+
+  const verifiedEmail = String(authData.user.email || "").toLowerCase().trim();
+  const emailDomain = verifiedEmail.split("@")[1] || "acengenhariase.com.br";
+  const wasInviteAccepted = Boolean(authData.wasInviteAccepted);
+
+  let users = getStoredUsers();
+  let user = users.find(u => u.email.toLowerCase() === verifiedEmail);
+
+  if (user) {
+    user = sanitizeClientUser({ ...user, ...authData.user, status: "Ativo" });
+    const idx = users.findIndex(u => u.email.toLowerCase() === verifiedEmail);
+    if (idx !== -1) users[idx] = user;
+  } else {
+    user = sanitizeClientUser({
+      ...authData.user,
+      status: "Ativo",
+      avatar: authData.user.avatar || String(authData.user.name || "US").substring(0, 2).toUpperCase()
+    });
+    users.push(user);
+  }
+
+  saveStoredUsers(users);
+  if (typeof renderAdminUsersTable === "function") renderAdminUsersTable();
+
+  // Ativa sessão autenticada
   AuthState.currentUser = user;
   AuthState.isLoggedIn = true;
   sessionStorage.setItem("AC_ACTIVE_LOGIN_SESSION_V4", "true");
   saveStoredSessionUser(user);
   applyUserSession(user);
   hideLoginModal();
-  closeGoogleAccountPicker();
   resetSessionIdleTimer();
 
   const welcomeMsg = wasInviteAccepted
-    ? `🎉 Convite aceito com sucesso! Bem-vindo(a), ${user.name}! Seu acesso foi ativado com o perfil [${user.roleName}] no canteiro [${user.location}].`
-    : `Bem-vindo(a) de volta, ${user.name}! Sessão autenticada via Google Workspace.`;
+    ? `Convite aceito com sucesso! Bem-vindo(a), ${user.name}! Seu acesso foi ativado com o perfil [${user.roleName || user.role}].`
+    : `Bem-vindo(a), ${user.name}! Sessão autenticada via Google Workspace.`;
 
   if (window.showToast) {
     window.showToast(welcomeMsg, "success");
@@ -529,79 +517,11 @@ async function completeGoogleAuth(profile) {
       severity: "INFO",
       actor: `${user.name} <${user.email}>`,
       description: wasInviteAccepted
-        ? `Convite corporativo aceito via Google SSO. Usuário ${user.name} ativado com perfil [${user.roleName}] no canteiro [${user.location}].`
-        : `Autenticação corporativa via Google SSO (@${emailDomain}). Perfil: [${user.roleName}].`,
+        ? `Convite corporativo aceito via Google SSO. Usuário ${user.name} ativado com perfil [${user.roleName || user.role}].`
+        : `Autenticação corporativa via Google SSO (@${emailDomain}). Perfil: [${user.roleName || user.role}].`,
       target_module: "Segurança de Acesso"
     });
   }
-}
-
-// Funções do Seletor de Contas Google (Sanitizado contra DOM XSS)
-function openGoogleAccountPicker() {
-  const modal = document.getElementById("modal-google-sso-picker");
-  if (!modal) return;
-
-  const domainBadge = document.getElementById("google-picker-allowed-domain-text");
-  if (domainBadge) {
-    domainBadge.textContent = `@${GOOGLE_SSO_CONFIG.allowedDomains[0]}`;
-  }
-
-  // Renderiza dinamicamente as contas da organização que estão autorizadas / convidadas
-  const accountsContainer = document.getElementById("google-picker-accounts-container");
-  if (accountsContainer) {
-    const users = getStoredUsers();
-    accountsContainer.innerHTML = users.map(u => {
-      const isPending = u.status === "Convite Pendente";
-      const isMasterAdmin = Boolean(u.isSuperAdmin || u.id === 'usr-admin' || u.email === 'manoelmgsantos@acengenhariase.com.br');
-      const badgeText = isPending ? "🟡 Convite Pronto" : (isMasterAdmin ? "⭐ Admin Principal" : (u.roleName || "Colaborador"));
-      const badgeClass = isPending 
-        ? "bg-amber-50 text-amber-800 border-amber-200" 
-        : (isMasterAdmin ? "bg-blue-50 text-[#004b93] border-blue-200" : "bg-slate-100 text-slate-700 border-slate-200");
-      const safeEmail = escapeHtml(u.email);
-      const safeName = escapeHtml(u.name);
-      const safeAvatar = escapeHtml(u.avatar || (u.name || "US").substring(0, 2).toUpperCase());
-
-      return `
-        <button type="button" data-email="${safeEmail}" data-name="${safeName}" onclick="selectGoogleQuickAccount(this.getAttribute('data-email'), this.getAttribute('data-name'))" class="w-full p-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 cursor-pointer">
-          <div class="w-8 h-8 rounded-full ${isMasterAdmin ? 'bg-blue-700' : (isPending ? 'bg-amber-600' : 'bg-[#0f2942]')} text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
-            ${safeAvatar}
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="font-bold text-slate-900 truncate text-xs flex items-center gap-1.5">
-              <span>${safeName}</span>
-              ${isPending ? `<span class="px-1.5 py-0.2 rounded text-[9px] bg-amber-100 text-amber-800 font-semibold animate-pulse">Pendente de Ativação</span>` : ''}
-            </div>
-            <div class="text-[11px] text-slate-500 font-mono truncate">${safeEmail}</div>
-          </div>
-          <span class="text-[10px] font-semibold px-2 py-0.5 rounded border shrink-0 ${badgeClass}">
-            ${escapeHtml(badgeText)}
-          </span>
-        </button>
-      `;
-    }).join("");
-  }
-
-  modal.classList.remove("hidden");
-  if (window.lucide) window.lucide.createIcons();
-}
-
-function closeGoogleAccountPicker() {
-  const modal = document.getElementById("modal-google-sso-picker");
-  if (modal) modal.classList.add("hidden");
-}
-
-function selectGoogleQuickAccount(email, name) {
-  completeGoogleAuth({ email, name });
-}
-
-function submitCustomGoogleAccount(e) {
-  if (e && e.preventDefault) e.preventDefault();
-  const emailInput = document.getElementById("google-picker-custom-email");
-  const nameInput = document.getElementById("google-picker-custom-name");
-  const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
-  const name = nameInput ? nameInput.value.trim() : "";
-  if (!email) return;
-  completeGoogleAuth({ email, name: name || email.split("@")[0] });
 }
 
 // =========================================================================
@@ -850,10 +770,6 @@ function saveGoogleSsoSettings(e) {
 
 window.GOOGLE_SSO_CONFIG = GOOGLE_SSO_CONFIG;
 window.handleGoogleSignIn = handleGoogleSignIn;
-window.openGoogleAccountPicker = openGoogleAccountPicker;
-window.closeGoogleAccountPicker = closeGoogleAccountPicker;
-window.selectGoogleQuickAccount = selectGoogleQuickAccount;
-window.submitCustomGoogleAccount = submitCustomGoogleAccount;
 window.openInviteUserModal = openInviteUserModal;
 window.closeInviteUserModal = closeInviteUserModal;
 window.handleSendUserInvite = handleSendUserInvite;
@@ -863,14 +779,6 @@ window.toggleAdminLoginForm = toggleAdminLoginForm;
 window.openGoogleSsoSettingsModal = openGoogleSsoSettingsModal;
 window.closeGoogleSsoSettingsModal = closeGoogleSsoSettingsModal;
 window.saveGoogleSsoSettings = saveGoogleSsoSettings;
-
-async function computeSha256Hex(text) {
-  if (window.crypto && window.crypto.subtle) {
-    const buf = await window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
-  }
-  return "";
-}
 
 async function loginWithForm(e) {
   if (e && e.preventDefault) e.preventDefault();
@@ -938,8 +846,7 @@ async function loginWithForm(e) {
     return;
   }
 
-  // Autenticação Criptográfica no Servidor (bcrypt + Proteção Anti-Força Bruta + Emissão de Token HMAC-SHA256)
-  let serverAuthenticated = false;
+  // Autenticação Criptográfica Obrigatória no Servidor (bcrypt + Proteção Anti-Força Bruta + Emissão de Token HMAC-SHA256)
   try {
     const loginRes = await fetch("/api/auth/login", {
       method: "POST",
@@ -956,27 +863,21 @@ async function loginWithForm(e) {
     }
 
     const loginData = await loginRes.json();
-    if (loginData.token) {
-      sessionStorage.setItem("AC_AUTH_JWT_TOKEN_V1", loginData.token);
-    }
-    if (loginData.user) {
-      found = sanitizeClientUser({ ...(found || DEFAULT_AC_USERS[0]), ...loginData.user });
-    }
-    serverAuthenticated = true;
-  } catch (_) {
-    // Fallback Offline Criptográfico via Digest SHA-256 Unidirecional (Sem senha em texto plano)
-    const digest = await computeSha256Hex(pass);
-    const expectedAdminDigest = "712f23210b3058bf1c6626be550291689a39f1e98f91ca1593c985e5cb36bc03";
-    if (digest !== expectedAdminDigest) {
-      if (window.showToast) window.showToast("Senha do Administrador incorreta.", "warning");
-      else alert("Senha do Administrador incorreta.");
+    if (!loginData || !loginData.token) {
+      if (window.showToast) window.showToast("Erro ao emitir token de sessão.", "warning");
       return;
     }
-    found = found || sanitizeClientUser(DEFAULT_AC_USERS[0]);
-  }
 
-  if (!found && !serverAuthenticated) {
-    if (window.showToast) window.showToast("Credenciais de Administrador inválidas.", "warning");
+    sessionStorage.setItem("AC_AUTH_JWT_TOKEN_V1", loginData.token);
+    if (loginData.user) {
+      found = sanitizeClientUser({ ...(found || DEFAULT_AC_USERS[0]), ...loginData.user });
+    } else {
+      found = found || sanitizeClientUser(DEFAULT_AC_USERS[0]);
+    }
+  } catch (_) {
+    const errMsg = "Não foi possível conectar ao servidor de autenticação (/api/auth/login). Verifique se o backend está online.";
+    if (window.showToast) window.showToast(errMsg, "warning");
+    else alert(errMsg);
     return;
   }
 
@@ -1155,17 +1056,6 @@ function togglePasswordVisibility() {
     window.lucide.createIcons();
   }
 }
-
-function fillLoginCredentials(email, password) {
-  const eInput = document.getElementById("login-input-email");
-  const pInput = document.getElementById("login-input-password");
-  if (eInput) eInput.value = email || "";
-  if (pInput && password) pInput.value = password;
-  if (window.showToast) {
-    window.showToast(`E-mail preenchido para ${email}`, "info");
-  }
-}
-window.fillLoginCredentials = fillLoginCredentials;
 
 function openUserProfileModal() {
   const user = AuthState.currentUser || getStoredUsers()[0];

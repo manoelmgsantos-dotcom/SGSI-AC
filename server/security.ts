@@ -398,3 +398,36 @@ export async function verifyGoogleCredentialToken(credentialJwt: string): Promis
     return null;
   }
 }
+
+export async function verifyGoogleAccessToken(accessToken: string): Promise<{
+  email: string;
+  name: string;
+  picture: string | null;
+  emailVerified: boolean;
+} | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) return null;
+    const data = (await response.json()) as Record<string, unknown>;
+
+    const email = String(data.email || '').toLowerCase().trim();
+    const emailVerified = data.email_verified === 'true' || data.email_verified === true;
+    if (!email || !emailVerified) return null;
+
+    return {
+      email,
+      name: String(data.name || email.split('@')[0]),
+      picture: data.picture ? String(data.picture) : null,
+      emailVerified,
+    };
+  } catch {
+    return null;
+  }
+}
