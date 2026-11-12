@@ -19,6 +19,7 @@ const clientAssets = rootFiles.filter(f => {
   if (f.endsWith('.js') && !f.includes('config')) return true;
   if (f === 'manifest.json') return true;
   if (f.startsWith('favicon.') || f.startsWith('icon-') || f.startsWith('apple-touch-icon.')) return true;
+  if (f.startsWith('app-logo.') || f.startsWith('shield-')) return true;
   return false;
 });
 
