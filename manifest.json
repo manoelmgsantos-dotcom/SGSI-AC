@@ -1,0 +1,32 @@
+{
+  "name": "AC Engenharia - CyberGRC & SGSI Enterprise Platform",
+  "short_name": "SGSI AC",
+  "description": "Plataforma unificada de Governança Cibernética, Riscos e SGSI (ISO/IEC 27001:2022 & LGPD) da AC Engenharia.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#004b93",
+  "background_color": "#071322",
+  "categories": ["business", "productivity", "security"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

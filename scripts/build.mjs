@@ -9,20 +9,25 @@ console.log('🚀 [Build] Iniciando compilação de produção CyberGRC & SGSI..
 console.log('📦 [1/3] Compilando frontend com Vite...');
 execSync('node ./node_modules/vite/bin/vite.js build', { stdio: 'inherit' });
 
-// 2. Cópia dos scripts modulares para dist/
-console.log('📂 [2/3] Copiando módulos JavaScript do cliente para dist/...');
+// 2. Cópia dos scripts modulares e assets de branding para dist/
+console.log('📂 [2/3] Copiando módulos JavaScript e assets visuais (ícones/manifest) para dist/...');
 const distDir = resolve(process.cwd(), 'dist');
 if (!existsSync(distDir)) mkdirSync(distDir, { recursive: true });
 
 const rootFiles = readdirSync(process.cwd());
-const jsClientFiles = rootFiles.filter(f => f.endsWith('.js') && !f.includes('config'));
+const clientAssets = rootFiles.filter(f => {
+  if (f.endsWith('.js') && !f.includes('config')) return true;
+  if (f === 'manifest.json') return true;
+  if (f.startsWith('favicon.') || f.startsWith('icon-') || f.startsWith('apple-touch-icon.')) return true;
+  return false;
+});
 
-for (const file of jsClientFiles) {
+for (const file of clientAssets) {
   const src = resolve(process.cwd(), file);
   const dest = resolve(distDir, file);
   copyFileSync(src, dest);
 }
-console.log(`  -> ${jsClientFiles.length} arquivos JavaScript copiados para dist/.`);
+console.log(`  -> ${clientAssets.length} arquivos estáticos (scripts, ícones, manifest) copiados para dist/.`);
 
 // 3. Build do Backend com esbuild
 console.log('⚙️ [3/3] Compilando backend Express/TypeScript com esbuild...');
