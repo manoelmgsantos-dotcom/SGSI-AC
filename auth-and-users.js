@@ -314,11 +314,16 @@ function initAuth() {
 const GOOGLE_SSO_CONFIG = {
   serverClientId: "",
   get clientId() {
-    return (localStorage.getItem("AC_GOOGLE_CLIENT_ID") || this.serverClientId || "").trim();
+    return (this.serverClientId || localStorage.getItem("AC_GOOGLE_CLIENT_ID") || "").trim();
   },
   set clientId(val) {
-    if (val) localStorage.setItem("AC_GOOGLE_CLIENT_ID", val.trim());
-    else localStorage.removeItem("AC_GOOGLE_CLIENT_ID");
+    if (val) {
+      this.serverClientId = val.trim();
+      localStorage.setItem("AC_GOOGLE_CLIENT_ID", val.trim());
+    } else {
+      this.serverClientId = "";
+      localStorage.removeItem("AC_GOOGLE_CLIENT_ID");
+    }
   },
   get allowedDomains() {
     try {
@@ -481,7 +486,13 @@ async function completeGoogleAuth(profile) {
     const authRes = await fetch("/api/auth/google", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ credential, accessToken })
+      body: JSON.stringify({
+        credential,
+        accessToken,
+        clientId: GOOGLE_SSO_CONFIG.clientId,
+        email: profile?.email || null,
+        name: profile?.name || null
+      })
     });
 
     if (!authRes.ok) {

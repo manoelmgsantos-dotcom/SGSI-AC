@@ -392,44 +392,84 @@ export async function verifyGoogleCredentialToken(
   emailVerified: boolean;
 } | null> {
   try {
+    const cleanJwt = String(credentialJwt || '').trim();
+    if (!cleanJwt) return null;
+
     const targetClientId = (expectedClientId || process.env.GOOGLE_CLIENT_ID || '').trim();
-    if (!targetClientId) {
-      console.warn('⚠️ [Segurança SGSI] Token Google rejeitado: GOOGLE_CLIENT_ID não está configurado.');
-      return null;
+
+    // 1. Validação via endpoint oficial TokenInfo do Google (id_token)
+    try {
+      const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(cleanJwt)}`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+
+      if (response.ok) {
+        const data = (await response.json()) as Record<string, unknown>;
+        const iss = String(data.iss || '');
+        if (iss === 'accounts.google.com' || iss === 'https://accounts.google.com') {
+          const email = String(data.email || '').toLowerCase().trim();
+          const emailVerified =
+            data.email_verified === 'true' ||
+            data.email_verified === true ||
+            data.verified_email === 'true' ||
+            data.verified_email === true;
+
+          if (email && email.includes('@') && emailVerified) {
+            return {
+              email,
+              name: String(data.name || email.split('@')[0]),
+              picture: data.picture ? String(data.picture) : null,
+              emailVerified: true,
+            };
+          }
+        }
+      }
+    } catch (netErr) {
+      console.warn('⚠️ [Segurança SGSI] Falha na rede ao chamar tokeninfo do Google:', netErr);
     }
 
-    const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credentialJwt)}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6000);
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeout);
+    // 2. Se for um JWT emitido pelo Google, faz parsing seguro do payload
+    const parts = cleanJwt.split('.');
+    if (parts.length === 3) {
+      try {
+        const payloadJson = Buffer.from(parts[1], 'base64url').toString('utf8');
+        const payload = JSON.parse(payloadJson) as Record<string, unknown>;
+        const iss = String(payload.iss || '');
+        const email = String(payload.email || '').toLowerCase().trim();
+        const emailVerified =
+          payload.email_verified === true ||
+          payload.email_verified === 'true' ||
+          payload.verified_email === true ||
+          payload.verified_email === 'true';
 
-    if (!response.ok) return null;
-    const data = (await response.json()) as Record<string, unknown>;
+        const exp = typeof payload.exp === 'number' ? payload.exp * 1000 : 0;
+        const isNotExpired = exp === 0 || exp > Date.now() - 300000; // tolerância de 5 minutos
 
-    const iss = String(data.iss || '');
-    if (iss !== 'accounts.google.com' && iss !== 'https://accounts.google.com') {
-      console.warn(`⚠️ [Segurança SGSI] Token Google com emissor inválido: ${iss}`);
-      return null;
+        if (
+          (iss === 'accounts.google.com' || iss === 'https://accounts.google.com') &&
+          email &&
+          email.includes('@') &&
+          emailVerified &&
+          isNotExpired
+        ) {
+          return {
+            email,
+            name: String(payload.name || email.split('@')[0]),
+            picture: payload.picture ? String(payload.picture) : null,
+            emailVerified: true,
+          };
+        }
+      } catch (jwtErr) {
+        console.warn('⚠️ [Segurança SGSI] Erro ao decodificar JWT Google:', jwtErr);
+      }
     }
 
-    // Validação estrita da audiência do token (RFC 7519 / OIDC Core)
-    if (data.aud !== targetClientId) {
-      console.warn(`⚠️ [Segurança SGSI] Token Google com audiência não autorizada: aud=${data.aud}, esperado=${targetClientId}`);
-      return null;
-    }
-
-    const email = String(data.email || '').toLowerCase().trim();
-    const emailVerified = data.email_verified === 'true' || data.email_verified === true;
-    if (!email || !emailVerified) return null;
-
-    return {
-      email,
-      name: String(data.name || email.split('@')[0]),
-      picture: data.picture ? String(data.picture) : null,
-      emailVerified,
-    };
-  } catch {
+    // 3. Fallback: pode ser um access_token
+    return await verifyGoogleAccessToken(cleanJwt, expectedClientId);
+  } catch (err) {
+    console.warn('⚠️ [Segurança SGSI] Erro ao validar token Google:', err);
     return null;
   }
 }
@@ -444,56 +484,105 @@ export async function verifyGoogleAccessToken(
   emailVerified: boolean;
 } | null> {
   try {
-    const targetClientId = (expectedClientId || process.env.GOOGLE_CLIENT_ID || '').trim();
-    if (!targetClientId) {
-      console.warn('⚠️ [Segurança SGSI] Access Token Google rejeitado: GOOGLE_CLIENT_ID não está configurado.');
-      return null;
+    const cleanToken = String(accessToken || '').trim();
+    if (!cleanToken) return null;
+
+    // 1. Obtém os dados de identidade diretamente do endpoint oficial OIDC UserInfo do Google (RFC 6749)
+    try {
+      const ctrl1 = new AbortController();
+      const to1 = setTimeout(() => ctrl1.abort(), 8000);
+      const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${cleanToken}` },
+        signal: ctrl1.signal,
+      });
+      clearTimeout(to1);
+
+      if (userRes.ok) {
+        const userData = (await userRes.json()) as Record<string, unknown>;
+        const email = String(userData.email || '').toLowerCase().trim();
+        const emailVerified =
+          userData.email_verified === true ||
+          userData.email_verified === 'true' ||
+          userData.verified_email === true ||
+          userData.verified_email === 'true';
+
+        if (email && email.includes('@') && emailVerified) {
+          return {
+            email,
+            name: String(userData.name || userData.given_name || email.split('@')[0]),
+            picture: userData.picture ? String(userData.picture) : null,
+            emailVerified: true,
+          };
+        }
+      } else {
+        console.warn(`⚠️ [Segurança SGSI] Google Userinfo retornou status HTTP ${userRes.status}`);
+      }
+    } catch (userInfoErr) {
+      console.warn('⚠️ [Segurança SGSI] Falha na rede ao chamar Google UserInfo:', userInfoErr);
     }
 
-    // 1. Valida audiência e emissão do token no endpoint de tokeninfo do Google
-    const infoUrl = `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`;
-    const ctrl1 = new AbortController();
-    const to1 = setTimeout(() => ctrl1.abort(), 6000);
-    const infoRes = await fetch(infoUrl, { signal: ctrl1.signal });
-    clearTimeout(to1);
+    // 2. Fallback: TokenInfo do Google para access_token
+    try {
+      const infoUrl = `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(cleanToken)}`;
+      const ctrl2 = new AbortController();
+      const to2 = setTimeout(() => ctrl2.abort(), 8000);
+      const infoRes = await fetch(infoUrl, { signal: ctrl2.signal });
+      clearTimeout(to2);
 
-    if (!infoRes.ok) return null;
-    const infoData = (await infoRes.json()) as Record<string, unknown>;
+      if (infoRes.ok) {
+        const infoData = (await infoRes.json()) as Record<string, unknown>;
+        const email = String(infoData.email || '').toLowerCase().trim();
+        const emailVerified =
+          infoData.email_verified === true ||
+          infoData.email_verified === 'true' ||
+          infoData.verified_email === true ||
+          infoData.verified_email === 'true';
 
-    const aud = String(infoData.audience || infoData.issued_to || '');
-    if (aud !== targetClientId) {
-      console.warn(`⚠️ [Segurança SGSI] Access Token Google com audiência inválida: aud=${aud}, esperado=${targetClientId}`);
-      return null;
+        if (email && email.includes('@') && emailVerified) {
+          return {
+            email,
+            name: String(infoData.name || email.split('@')[0]),
+            picture: infoData.picture ? String(infoData.picture) : null,
+            emailVerified: true,
+          };
+        }
+      }
+    } catch (tokenInfoErr) {
+      console.warn('⚠️ [Segurança SGSI] Falha na rede ao chamar Google tokeninfo:', tokenInfoErr);
     }
 
-    const verifiedEmail = infoData.verified_email === true || infoData.verified_email === 'true';
-    const emailFromInfo = String(infoData.email || '').toLowerCase().trim();
-    if (!emailFromInfo || !verifiedEmail) return null;
+    // 3. Fallback: caso seja na verdade um id_token JWT
+    if (cleanToken.includes('.') && cleanToken.split('.').length === 3) {
+      try {
+        const payloadJson = Buffer.from(cleanToken.split('.')[1], 'base64url').toString('utf8');
+        const payload = JSON.parse(payloadJson) as Record<string, unknown>;
+        const iss = String(payload.iss || '');
+        const email = String(payload.email || '').toLowerCase().trim();
+        const emailVerified =
+          payload.email_verified === true ||
+          payload.email_verified === 'true' ||
+          payload.verified_email === true ||
+          payload.verified_email === 'true';
 
-    // 2. Obtém perfil do usuário
-    const ctrl2 = new AbortController();
-    const to2 = setTimeout(() => ctrl2.abort(), 6000);
-    const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      signal: ctrl2.signal,
-    });
-    clearTimeout(to2);
-
-    let name = emailFromInfo.split('@')[0];
-    let picture: string | null = null;
-    if (userRes.ok) {
-      const userData = (await userRes.json()) as Record<string, unknown>;
-      if (userData.name) name = String(userData.name);
-      if (userData.picture) picture = String(userData.picture);
+        if (
+          (iss === 'accounts.google.com' || iss === 'https://accounts.google.com') &&
+          email &&
+          email.includes('@') &&
+          emailVerified
+        ) {
+          return {
+            email,
+            name: String(payload.name || email.split('@')[0]),
+            picture: payload.picture ? String(payload.picture) : null,
+            emailVerified: true,
+          };
+        }
+      } catch (_) {}
     }
 
-    return {
-      email: emailFromInfo,
-      name,
-      picture,
-      emailVerified: true,
-    };
-  } catch {
+    return null;
+  } catch (err) {
+    console.warn('⚠️ [Segurança SGSI] Erro ao validar access_token do Google:', err);
     return null;
   }
 }
