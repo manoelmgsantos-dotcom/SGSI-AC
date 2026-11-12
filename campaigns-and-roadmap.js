@@ -3,7 +3,7 @@
 // Módulo: Plano Priorizado de Tarefas (19+5 Tarefas) & Campanhas ANPD (52 Semanas)
 // =========================================================================
 
-// 1. Catálogo Completo das 24 Tarefas do Plano Priorizado (Fase 1 a Fase 4)
+// 1. Catálogo Oficial das 19 Tarefas do Plano de Ação LGPD & Segurança (Fase 1 a Fase 4)
 const ROADMAP_TASKS = [
   // FASE 1: CUSTO ZERO
   {
@@ -14,25 +14,27 @@ const ROADMAP_TASKS = [
     desc: "Manter programa anual de envio de avisos sobre LGPD e Segurança",
     cost: "Zero",
     effort: "Baixo",
-    howTo: "Usar e-mail, intranet ou WhatsApp corporativo para enviar pílulas semanais (dicas de senhas, phishing). Registrar confirmações de leitura.",
-    obs: "Campanha semanal das 52 semanas conectada à aba de Campanhas ANPD.",
+    status: "Em Andamento",
+    completed: false,
+    howTo: "Usar e-mail, intranet ou grupo de comunicação interna para enviar pílulas semanais (dicas de senhas, phishing). Registrar listas de presença ou confirmações de leitura.",
+    obs: "Campanha semanal será iniciada",
     linkModule: "raci",
-    subtab: "campaigns",
-    completed: false
+    subtab: "campaigns"
   },
   {
     id: 2,
     phase: 1,
     phaseName: "Fase 1: Custo Zero",
-    title: "Comitê, Políticas e Matriz RACI para Incidentes",
+    title: "Comitê, Políticas e Plano de Resposta a Incidentes",
     desc: "Criar documentos e definir responsáveis para casos de vazamento",
     cost: "Zero (Tempo)",
     effort: "Médio",
-    howTo: "Agendar reunião com a diretoria/RH/TI. Redigir Matriz RACI para incidentes (quem aciona a ANPD, quem avalia o servidor, etc.) e aprovar.",
+    status: "Em Andamento",
+    completed: false,
+    howTo: "Agendar reunião com a diretoria/RH/TI. Redigir um documento simples definindo uma Matriz RACI para incidentes (quem aciona a ANPD, quem avalia o servidor, etc.) e aprovar.",
     obs: "Documentado na Matriz RACI e Política PSI-001.",
     linkModule: "raci",
-    subtab: "matrix",
-    completed: false
+    subtab: "matrix"
   },
   {
     id: 3,
@@ -42,25 +44,27 @@ const ROADMAP_TASKS = [
     desc: "Retirar privilégios de administrador das máquinas dos usuários",
     cost: "Zero",
     effort: "Médio",
-    howTo: "No Active Directory (AD) ou no gerenciamento local do Windows, alterar o perfil do usuário de 'Administrador' para 'Usuário Padrão'. Aplicar GPOs.",
-    obs: "Reduz em 85% o risco de execução de ransomware em estações.",
+    status: "Em Andamento",
+    completed: false,
+    howTo: "No Active Directory (AD) ou no gerenciamento local do Windows, alterar o perfil do usuário de 'Administrador' para 'Usuário Padrão'. Aplicar GPOs se usar AD.",
+    obs: "Reduz drasticamente o risco de execução de malwares e ransomwares.",
     linkModule: "raci",
-    subtab: "policies",
-    completed: false
+    subtab: "policies"
   },
   {
     id: 4,
     phase: 1,
     phaseName: "Fase 1: Custo Zero",
-    title: "Criptografia de Disco Nativa (BitLocker / FileVault)",
-    desc: "Ativar criptografia nativa e gratuita nos notebooks de engenheiros e fiscais",
+    title: "Criptografia de Disco (BitLocker / FileVault)",
+    desc: "Ativar criptografia nativa e gratuita nos notebooks",
     cost: "Zero",
     effort: "Baixo",
-    howTo: "No Windows Pro, pesquisar por 'Gerenciar BitLocker' e ativar na unidade C:. Salvar as chaves de recuperação no AD ou em cofre de senhas.",
-    obs: "Item obrigatório para equipamentos de canteiro que saem a campo.",
+    status: "Pendente",
+    completed: false,
+    howTo: "No Windows Pro, pesquisar por 'Gerenciar BitLocker' e ativar na unidade C:. Salvar as chaves de recuperação no AD ou em cofre de senhas. No Mac, ativar o 'FileVault'.",
+    obs: "Proteção obrigatória para notebooks corporativos em caso de perda ou furto.",
     linkModule: "secops",
-    subtab: "assets",
-    completed: false
+    subtab: "assets"
   },
   {
     id: 5,
@@ -70,283 +74,228 @@ const ROADMAP_TASKS = [
     desc: "Forçar duplo fator em contas do Google Workspace ou Microsoft 365",
     cost: "Zero",
     effort: "Baixo",
-    howTo: "No painel de administração (Google Workspace ou Microsoft 365), acessar as políticas de segurança e forçar a 'Verificação em duas etapas' para todos os usuários.",
-    obs: "Protege o e-mail corporativo contra invasão e envio de boletos falsos.",
+    status: "Pendente",
+    completed: false,
+    howTo: "No painel de administração (Google Workspace ou Microsoft 365), acessar as políticas de segurança e forçar a 'Verificação em duas etapas' (MFA) para todos os usuários.",
+    obs: "Previne comprometimento de credenciais e invasão de e-mails corporativos.",
     linkModule: "raci",
-    subtab: "policies",
-    completed: false
+    subtab: "policies"
   },
   {
     id: 6,
     phase: 1,
     phaseName: "Fase 1: Custo Zero",
     title: "Mapeamento de Dados (ROPA) e RIPD",
-    desc: "Fazer inventário de dados pessoais da construtora (Art. 37 LGPD)",
+    desc: "Fazer inventário de dados pessoais (pode ser via planilhas)",
     cost: "Zero (Tempo)",
     effort: "Alto",
-    howTo: "Mapear: Setor, Qual o dado pessoal, Finalidade, Onde é armazenado e Quem acessa. Entrevistar gestores de RH/SST, Vendas e Obras.",
-    obs: "Alimentado no módulo LGPD & RoPA com prazos decenais e NR-07.",
+    status: "Pendente",
+    completed: false,
+    howTo: "Criar uma planilha mapeando: Setor, Qual o dado pessoal, Finalidade, Onde é armazenado e Quem acessa. Entrevistar gestores de cada área para preencher.",
+    obs: "Exigência expressa do Art. 37 da LGPD para comprovação de conformidade.",
     linkModule: "lgpd",
-    subtab: "ropa",
-    completed: false
+    subtab: "ropa"
   },
   {
     id: 7,
     phase: 1,
     phaseName: "Fase 1: Custo Zero",
-    title: "Criptografia em Trânsito (TLS / HTTPS)",
+    title: "Criptografia em Trânsito (TLS)",
     desc: "Garantir HTTPS e certificados gratuitos em sites e sistemas internos",
     cost: "Zero",
     effort: "Baixo",
-    howTo: "Em servidores web ou painéis de hospedagem, emitir certificados gratuitos via Let's Encrypt e configurar redirecionamento forçado de HTTP para HTTPS.",
-    obs: "Evita interceptação de dados de compradores em formulários.",
+    status: "Pendente",
+    completed: false,
+    howTo: "Em servidores web ou painéis de hospedagem (como cPanel), emitir certificados gratuitos via Let's Encrypt e configurar o redirecionamento forçado de HTTP para HTTPS.",
+    obs: "Garante a confidencialidade das comunicações e tráfego seguro de dados.",
     linkModule: "secops",
-    subtab: "assets",
-    completed: false
-  },
-  {
-    id: 8,
-    phase: 1,
-    phaseName: "Fase 1: Custo Zero",
-    title: "Nomeação Formal do DPO e Divulgação Pública do Canal (Art. 41 LGPD)",
-    desc: "Portaria interna de designação e publicação do e-mail do encarregado de dados",
-    cost: "Zero",
-    effort: "Baixo",
-    howTo: "Elaborar portaria assinada pela Diretoria nomeando o DPO (ex: dpo@acengenhariase.com.br) e publicar em página visível no site institucional e estandes.",
-    obs: "Exigência direta de fiscalização obrigatória da ANPD.",
-    linkModule: "lgpd",
-    subtab: "dsar",
-    completed: false
-  },
-  {
-    id: 9,
-    phase: 1,
-    phaseName: "Fase 1: Custo Zero",
-    title: "Fluxo de Comunicação de Incidentes à ANPD em 3 Dias Úteis",
-    desc: "Procedimento operacional para cumprimento da Resolução CD/ANPD nº 15/2024",
-    cost: "Zero",
-    effort: "Médio",
-    howTo: "Definir gatilho no CSIRT: ao identificar vazamento com risco relevante a titulares, abrir contagem de 3 dias úteis para preenchimento do formulário da ANPD.",
-    obs: "Resolução CD/ANPD nº 15/2024 substituiu o prazo genérico anterior.",
-    linkModule: "secops",
-    subtab: "incidents",
-    completed: false
-  },
-  {
-    id: 10,
-    phase: 1,
-    phaseName: "Fase 1: Custo Zero",
-    title: "Termo de Não Repasse de Leads e NDA Comercial (Prevenção Risco Cyrela)",
-    desc: "Vedação expressa de repasse de contatos de clientes para decoradores/marcenarias",
-    cost: "Zero",
-    effort: "Baixo",
-    howTo: "Aditar contratos com imobiliárias parceiras e corretores de estande com cláusula de proibição de repasse de dados de compradores sem opt-in explícito.",
-    obs: "Evita sanções idênticas à condenação histórica da Cyrela no TJSP.",
-    linkModule: "raci",
-    subtab: "policies",
-    completed: false
+    subtab: "assets"
   },
 
   // FASE 2: CUSTO BAIXO A MÉDIO
   {
-    id: 11,
+    id: 8,
     phase: 2,
     phaseName: "Fase 2: Custo Baixo a Médio",
     title: "Ajuste de Regras de Firewall e VPN",
     desc: "Revisar regras, fechar portas desnecessárias e configurar VPN com MFA",
     cost: "Tempo Técnico",
     effort: "Baixo",
-    howTo: "Acessar o console do firewall/MikroTik, desativar regras 'Any-Any', bloquear portas não utilizadas (RDP 3389 para fora) e exigir MFA na VPN.",
-    obs: "Isola os canteiros da internet pública.",
+    status: "Pendente",
+    completed: false,
+    howTo: "Acessar o console do firewall, desativar regras 'Any-Any' (abertas), bloquear acesso a portas não utilizadas (ex: RDP 3389 para fora) e configurar a VPN para exigir duplo fator.",
+    obs: "Evita exposição indevida da infraestrutura interna à internet pública.",
     linkModule: "secops",
-    subtab: "assets",
-    completed: false
+    subtab: "assets"
+  },
+  {
+    id: 9,
+    phase: 2,
+    phaseName: "Fase 2: Custo Baixo a Médio",
+    title: "Segmentação de Rede (VLANs)",
+    desc: "Separar redes via configuração nos switches atuais gerenciáveis",
+    cost: "Tempo Técnico",
+    effort: "Médio",
+    status: "Pendente",
+    completed: false,
+    howTo: "Acessar a interface dos switches de rede (gerenciáveis). Criar redes lógicas separadas (ex: VLAN 10 para Servidores, VLAN 20 para Estações) e isolar o tráfego entre elas.",
+    obs: "Impede movimentação lateral de ameaças na rede interna corporativa.",
+    linkModule: "secops",
+    subtab: "assets"
+  },
+  {
+    id: 10,
+    phase: 2,
+    phaseName: "Fase 2: Custo Baixo a Médio",
+    title: "Logs e Trilhas de Auditoria",
+    desc: "Configurar retenção de logs em sistemas atuais (Windows, Linux, ERP)",
+    cost: "Tempo Técnico",
+    effort: "Médio",
+    status: "Pendente",
+    completed: false,
+    howTo: "Ativar Políticas de Grupo (GPOs) de auditoria no Windows Server (Logon/Logoff, Acesso a Objetos). Nos sistemas (ERP), checar se as trilhas de log nativas estão ligadas.",
+    obs: "Atende aos requisitos de rastreabilidade do Art. 37 da LGPD e ISO 27001.",
+    linkModule: "audit",
+    subtab: ""
+  },
+  {
+    id: 11,
+    phase: 2,
+    phaseName: "Fase 2: Custo Baixo a Médio",
+    title: "Controle de Terceiros (Contratos)",
+    desc: "Adicionar cláusulas de LGPD em contratos com apoio do jurídico",
+    cost: "Apoio Jurídico",
+    effort: "Médio",
+    status: "Pendente",
+    completed: false,
+    howTo: "Solicitar ao jurídico um 'Aditivo de LGPD' padrão. Enviar para todos os fornecedores que processam dados da empresa assinarem e embutir em novas contratações.",
+    obs: "Garante a responsabilidade solidária/subsidiária prevista na LGPD.",
+    linkModule: "lgpd",
+    subtab: "dpa"
   },
   {
     id: 12,
     phase: 2,
     phaseName: "Fase 2: Custo Baixo a Médio",
-    title: "Segmentação de Rede (VLANs nos Canteiros e Sede)",
-    desc: "Separar redes via switches gerenciáveis (VLAN 10 Engenharia, 20 ERP, 30 Catracas)",
-    cost: "Tempo Técnico",
-    effort: "Médio",
-    howTo: "Criar redes lógicas separadas isolando o tráfego de operários, câmeras CFTV e sistemas corporativos. Bloquear roteamento entre VLAN de catracas e rede de escritório.",
-    obs: "Controlado no módulo SecOps & Ativos.",
-    linkModule: "secops",
-    subtab: "assets",
-    completed: false
-  },
-  {
-    id: 13,
-    phase: 2,
-    phaseName: "Fase 2: Custo Baixo a Médio",
-    title: "Logs e Trilhas de Auditoria",
-    desc: "Configurar retenção de logs em sistemas atuais (Windows, Linux, ERP Sienge)",
-    cost: "Tempo Técnico",
-    effort: "Médio",
-    howTo: "Ativar Políticas de Grupo (GPOs) de auditoria no Windows Server (Logon/Logoff, Acesso a Objetos). Nos sistemas (ERP), checar se as trilhas nativas estão ligadas.",
-    obs: "Integrado à Trilha de Auditoria Forense SHA-256 encadeada.",
-    linkModule: "audit",
-    subtab: "",
-    completed: false
-  },
-  {
-    id: 14,
-    phase: 2,
-    phaseName: "Fase 2: Custo Baixo a Médio",
-    title: "Controle de Terceiros e DPA em Contratos de Empreiteiras",
-    desc: "Adicionar cláusulas de LGPD em contratos de empreiteiras (NR-18)",
-    cost: "Apoio Jurídico",
-    effort: "Médio",
-    howTo: "Solicitar ao jurídico um 'Aditivo de LGPD' (DPA) padrão. Enviar para todos os fornecedores e empreiteiras que processam dados de operários assinarem.",
-    obs: "Mapeado na aba Operadores & DPA.",
-    linkModule: "lgpd",
-    subtab: "dpa",
-    completed: false
-  },
-  {
-    id: 15,
-    phase: 2,
-    phaseName: "Fase 2: Custo Baixo a Médio",
     title: "RBAC (Controle de Acesso Baseado em Função)",
-    desc: "Limitar acessos sistêmicos por função no ERP Sienge e CRM CV",
+    desc: "Limitar acessos sistêmicos por função (ERP, CRM)",
     cost: "Tempo Técnico",
     effort: "Alto",
-    howTo: "Mapear perfis no Sienge e CV. Em vez de dar permissões individuais, criar grupos (ex: 'RH_Leitura', 'Fin_Edicao', 'Engenharia_Obras') e vincular aos cargos.",
-    obs: "Evita que engenheiros tenham acesso a prontuários médicos ou dados de renda de clientes.",
+    status: "Pendente",
+    completed: false,
+    howTo: "Mapear perfis no sistema (ex: ERP). Em vez de dar permissões individuais, criar grupos (ex: 'RH_Leitura', 'Fin_Edição') e adicionar os usuários aos grupos correspondentes.",
+    obs: "Aplica o princípio do menor privilégio a nível sistêmico.",
     linkModule: "raci",
-    subtab: "matrix",
-    completed: false
-  },
-  {
-    id: 16,
-    phase: 2,
-    phaseName: "Fase 2: Custo Baixo a Médio",
-    title: "Rotina de Expurgo de Biometria Facial pós-Habite-se (Art. 11 LGPD)",
-    desc: "Eliminação segura de templates biométricos ao término da obra",
-    cost: "Tempo Técnico",
-    effort: "Médio",
-    howTo: "Criar rotina formal para que, na emissão do Habite-se ou desmobilização do canteiro, o gestor de obra e a TI façam o reset de fábrica e expurgo das catracas.",
-    obs: "Evita passivo trabalhista e vazamento de dados sensíveis de ex-operários.",
-    linkModule: "raci",
-    subtab: "policies",
-    completed: false
-  },
-  {
-    id: 17,
-    phase: 2,
-    phaseName: "Fase 2: Custo Baixo a Médio",
-    title: "Canal e SLA de Atendimento aos Direitos dos Titulares em 15 Dias (Art. 18)",
-    desc: "Fluxo formal para responder solicitações de titulares no prazo da LGPD",
-    cost: "Tempo Técnico",
-    effort: "Médio",
-    howTo: "Padronizar respostas no módulo DSAR para confirmação de dados, exclusão ou revogação de consentimento, garantindo resposta em até 15 dias corridos.",
-    obs: "Monitorado no painel DSAR com contagem regressiva de dias decorridos.",
-    linkModule: "lgpd",
-    subtab: "dsar",
-    completed: false
+    subtab: "matrix"
   },
 
   // FASE 3: CUSTO MÉDIO
   {
-    id: 18,
+    id: 13,
     phase: 3,
     phaseName: "Fase 3: Custo Médio",
     title: "EDR/XDR (Endpoint Detection and Response)",
-    desc: "Substituir antivírus comum por EDR contra ransomware em servidores BIM e Sienge",
+    desc: "Substituir antivírus por EDR (OPEX - assinatura por máquina)",
     cost: "Licença Mensal",
     effort: "Baixo",
-    howTo: "Contratar ferramenta EDR (ex: Wazuh Agent, Defender for Business). Distribuir agente nas estações de engenheiros e servidores e configurar bloqueio automático.",
-    obs: "Monitorado em tempo real no console de alertas Wazuh.",
+    status: "Pendente",
+    completed: false,
+    howTo: "Contratar uma ferramenta EDR (ex: Microsoft Defender for Business, Kaspersky). Distribuir o agente de instalação nos computadores e configurar bloqueio automático no console web.",
+    obs: "Detecção proativa de anomalias comportamentais e resposta rápida a incidentes.",
     linkModule: "secops",
-    subtab: "wazuh",
-    completed: false
+    subtab: "wazuh"
   },
   {
-    id: 19,
+    id: 14,
     phase: 3,
     phaseName: "Fase 3: Custo Médio",
-    title: "Proxy / Web Filter em Nuvem (DNS Seguro)",
+    title: "Proxy / Web Filter em Nuvem",
     desc: "Assinar serviço DNS em nuvem para bloqueio de sites e phishing",
     cost: "Licença Mensal",
     effort: "Baixo",
-    howTo: "Assinar serviço de DNS seguro (NextDNS, Cisco Umbrella). Mudar apontamentos de DNS do DHCP/MikroTik para a nuvem do serviço e criar políticas bloqueando phishing.",
-    obs: "Protege o ambiente de canteiro contra cliques em links falsos.",
+    status: "Pendente",
+    completed: false,
+    howTo: "Assinar um serviço de DNS seguro (ex: Cisco Umbrella, NextDNS). Mudar os apontamentos de DNS do DHCP/Roteador para a nuvem do serviço e criar políticas bloqueando sites nocivos.",
+    obs: "Bloqueia tentativas de phishing e comunicação com servidores maliciosos de comando e controle.",
     linkModule: "secops",
-    subtab: "assets",
-    completed: false
+    subtab: "assets"
   },
   {
-    id: 20,
+    id: 15,
     phase: 3,
     phaseName: "Fase 3: Custo Médio",
     title: "Mascaramento e Anonimização de BD",
-    desc: "Aplicar anonimização em ambientes de homologação e teste do Sienge/CV",
+    desc: "Aplicar em ambientes de teste, exige ferramentas ou desenvolvimento",
     cost: "Licença/Desenvolvimento",
     effort: "Alto",
-    howTo: "Utilizar scripts SQL ou ferramentas de Data Masking para embaralhar nomes, e-mails e CPFs de clientes ao clonar o banco de produção para testes de novos módulos.",
-    obs: "Atende ao Art. 12 da LGPD (dados anonimizados não são considerados dados pessoais).",
+    status: "Pendente",
+    completed: false,
+    howTo: "Utilizar scripts em SQL ou ferramentas de Data Masking para embaralhar nomes, e-mails e CPFs ao clonar o banco de dados de produção para o ambiente de desenvolvimento/testes.",
+    obs: "Atende aos artigos 5º, XI e 12 da LGPD, descaracterizando dados pessoais.",
     linkModule: "lgpd",
-    subtab: "ropa",
-    completed: false
+    subtab: "ropa"
   },
 
   // FASE 4: ALTO CUSTO / ALTA COMPLEXIDADE
   {
-    id: 21,
+    id: 16,
     phase: 4,
-    phaseName: "Fase 4: Alto Custo / Complexidade",
+    phaseName: "Fase 4: Alto Custo / Alta Complexidade",
     title: "Criptografia de Dados em Repouso (TDE)",
-    desc: "Criptografar arquivos de banco de dados corporativo em disco",
+    desc: "Exige licenças 'Enterprise' caras de banco de dados (ex: SQL, Oracle)",
     cost: "Licença Enterprise",
     effort: "Alto",
-    howTo: "Em bancos compatíveis (SQL Server/Oracle Enterprise), gerar Master Key, criar certificado e executar comando para habilitar TDE (Transparent Data Encryption).",
-    obs: "Protege o banco contra roubo físico ou cópia não autorizada do arquivo .mdf/.db.",
+    status: "Pendente",
+    completed: false,
+    howTo: "Em bancos de dados compatíveis (SQL Server/Oracle Enterprise), gerar uma Master Key, criar certificado e executar o comando para habilitar o TDE (Transparent Data Encryption).",
+    obs: "Protege os arquivos de dados (.mdf/.ldf) contra vazamento ou extração direta do disco.",
     linkModule: "secops",
-    subtab: "assets",
-    completed: false
+    subtab: "assets"
   },
   {
-    id: 22,
+    id: 17,
     phase: 4,
-    phaseName: "Fase 4: Alto Custo / Complexidade",
-    title: "IPS/IDS Dedicado de Borda",
-    desc: "Solução de prevenção ativa de invasão por hardware e licença dedicada",
+    phaseName: "Fase 4: Alto Custo / Alta Complexidade",
+    title: "IPS/IDS Dedicado",
+    desc: "Soluções de prevenção que demandam hardware específico e licenças",
     cost: "Hardware (CAPEX)",
     effort: "Alto",
-    howTo: "Adquirir e configurar licenças de IPS/IDS no firewall físico/virtual. Mudar perfis de inspeção de tráfego de 'Monitoramento' para 'Prevenção/Bloqueio Ativo'.",
-    obs: "Protege o gateway da sede contra scanners e tentativas de exploração externa.",
+    status: "Pendente",
+    completed: false,
+    howTo: "Adquirir e configurar as licenças de IPS/IDS no firewall físico/virtual. Mudar os perfis de inspeção de tráfego de 'Monitoramento' para 'Prevenção/Bloqueio'.",
+    obs: "Inspeção profunda de pacotes com bloqueio automático de assinaturas de ataque.",
     linkModule: "secops",
-    subtab: "wazuh",
-    completed: false
+    subtab: "wazuh"
   },
   {
-    id: 23,
+    id: 18,
     phase: 4,
-    phaseName: "Fase 4: Alto Custo / Complexidade",
+    phaseName: "Fase 4: Alto Custo / Alta Complexidade",
     title: "DLP (Data Loss Prevention) Corporativo",
-    desc: "Ferramenta para impedir envio de projetos DWG e planilhas por pen drives ou e-mails pessoais",
+    desc: "Ferramentas complexas para impedir envio de e-mails, uso de pen drives",
     cost: "Licença Alta",
     effort: "Alto",
-    howTo: "Instalar agentes DLP nas estações de trabalho e integrar ao e-mail. Criar regras buscando padrões (extensões .dwg, .rvt e regex de CPF) e bloquear extração USB.",
-    obs: "Impede vazamento de propriedade intelectual de projetos de engenharia e orçamentos.",
+    status: "Pendente",
+    completed: false,
+    howTo: "Instalar agentes DLP nas estações de trabalho e integrar ao e-mail (Exchange/Google). Criar regras buscando padrões (ex: regex para CPF) e bloquear extração (USB, e-mail).",
+    obs: "Evita exfiltração não autorizada de dados pessoais e propriedade intelectual.",
     linkModule: "secops",
-    subtab: "assets",
-    completed: false
+    subtab: "assets"
   },
   {
-    id: 24,
+    id: 19,
     phase: 4,
-    phaseName: "Fase 4: Alto Custo / Complexidade",
-    title: "802.1X (Autenticação de Porta e Certificados Digitais)",
-    desc: "Exigência de certificado digital de máquina antes de liberar acesso à rede física",
-    cost: "Hardware/Servidor",
+    phaseName: "Fase 4: Alto Custo / Alta Complexidade",
+    title: "802.1X (Autenticação de Porta)",
+    desc: "Pode exigir troca de switches e servidor Radius/NPS",
+    cost: "Hardware (CAPEX)",
     effort: "Alto",
-    howTo: "Subir servidor Radius/NPS no Windows Server. Configurar switches gerenciáveis para usar 802.1X, exigindo certificado do computador antes de liberar a porta ethernet.",
-    obs: "Evita que visitantes conectem notebooks pessoais nos pontos de rede da obra ou sede.",
+    status: "Pendente",
+    completed: false,
+    howTo: "Subir um servidor de autenticação Radius (ex: NPS no Windows). Configurar os switches para usar o protocolo 802.1X, exigindo certificado do computador antes de liberar a rede.",
+    obs: "Controle de acesso à rede física (NAC) restringindo conexões apenas a ativos corporativos autorizados.",
     linkModule: "secops",
-    subtab: "assets",
-    completed: false
+    subtab: "assets"
   }
 ];
 
@@ -413,7 +362,12 @@ const ANPD_CAMPAIGNS_DATA = [
 function getStoredRoadmapTasks() {
   try {
     const saved = localStorage.getItem("AC_ENGENHARIA_ROADMAP_V1");
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length === ROADMAP_TASKS.length) {
+        return parsed;
+      }
+    }
   } catch (e) {
     console.warn("Falha ao ler roadmap tasks", e);
   }
@@ -430,6 +384,11 @@ function toggleRoadmapTask(taskId) {
   const task = tasks.find(t => t.id === taskId);
   if (task) {
     task.completed = !task.completed;
+    if (task.completed) {
+      task.status = "Concluído";
+    } else {
+      task.status = (task.id <= 3 ? "Em Andamento" : "Pendente");
+    }
     saveStoredRoadmapTasks(tasks);
     renderRoadmapUI();
     const actorName = window.AuthState && window.AuthState.currentUser ? window.AuthState.currentUser.name : "Operador SGSI";
@@ -438,11 +397,37 @@ function toggleRoadmapTask(taskId) {
         category: "PLANO_DE_ACAO",
         severity: "INFO",
         actor: actorName,
-        description: `Tarefa [ID #${task.id}] "${task.title}" marcada como [${task.completed ? 'CONCLUÍDA' : 'PENDENTE'}].`,
+        description: `Tarefa [ID #${task.id}] "${task.title}" marcada como [${(task.status || 'PENDENTE').toUpperCase()}].`,
         target_module: "Plano de Ação e Roadmap"
       });
     }
-    showToast(`Tarefa [${task.id}] ${task.completed ? 'concluída' : 'marcada como pendente'}!`, task.completed ? "success" : "info");
+    if (window.showToast) {
+      window.showToast(`Tarefa [${task.id}] ${task.completed ? 'concluída' : 'marcada como ' + task.status}!`, task.completed ? "success" : "info");
+    }
+  }
+}
+
+function setRoadmapTaskStatus(taskId, newStatus) {
+  const tasks = getStoredRoadmapTasks();
+  const task = tasks.find(t => t.id === taskId);
+  if (task) {
+    task.status = newStatus;
+    task.completed = (newStatus === "Concluído");
+    saveStoredRoadmapTasks(tasks);
+    renderRoadmapUI();
+    const actorName = window.AuthState && window.AuthState.currentUser ? window.AuthState.currentUser.name : "Operador SGSI";
+    if (window.ApiService && window.ApiService.addAuditRecord) {
+      window.ApiService.addAuditRecord({
+        category: "PLANO_DE_ACAO",
+        severity: "INFO",
+        actor: actorName,
+        description: `Tarefa [ID #${task.id}] "${task.title}" teve status atualizado para [${newStatus.toUpperCase()}].`,
+        target_module: "Plano de Ação e Roadmap"
+      });
+    }
+    if (window.showToast) {
+      window.showToast(`Status da tarefa #${task.id} alterado para "${newStatus}"!`, task.completed ? "success" : "info");
+    }
   }
 }
 
@@ -527,23 +512,18 @@ const TASK_ROLES_MAP = {
   5: ['secops'],
   6: ['dpo', 'rh_sst'],
   7: ['secops'],
-  8: ['dpo', 'diretoria'],
-  9: ['secops', 'dpo'],
-  10: ['dpo', 'gestor_obra'],
-  11: ['secops', 'gestor_obra'],
+  8: ['secops', 'gestor_obra'],
+  9: ['secops', 'gestor_obra'],
+  10: ['secops', 'dpo'],
+  11: ['dpo', 'diretoria'],
   12: ['secops', 'gestor_obra'],
   13: ['secops', 'dpo'],
-  14: ['dpo', 'gestor_obra'],
-  15: ['secops', 'rh_sst'],
-  16: ['gestor_obra', 'rh_sst'],
-  17: ['dpo'],
+  14: ['secops', 'gestor_obra'],
+  15: ['secops', 'dpo'],
+  16: ['secops'],
+  17: ['secops'],
   18: ['secops', 'gestor_obra'],
-  19: ['secops', 'gestor_obra'],
-  20: ['secops', 'dpo'],
-  21: ['secops'],
-  22: ['secops'],
-  23: ['secops', 'gestor_obra'],
-  24: ['secops', 'gestor_obra']
+  19: ['secops', 'gestor_obra']
 };
 
 let activeRoadmapPhase = 1;
@@ -580,13 +560,13 @@ function setRoadmapPhaseTab(phaseNum) {
 
 function setRoadmapStatusFilter(filter) {
   activeRoadmapStatusFilter = filter;
-  ['all', 'pending', 'done'].forEach(f => {
+  ['all', 'in_progress', 'pending', 'done'].forEach(f => {
     const btn = document.getElementById(`btn-roadmap-filter-${f}`);
     if (btn) {
       if (f === filter) {
-        btn.className = "px-2.5 py-1 font-bold rounded-lg bg-[#004b93] text-white text-[11px] transition-colors cursor-pointer shadow-2xs";
+        btn.className = "px-2.5 py-1 font-bold rounded-md bg-[#004b93] text-white text-[11px] transition-colors cursor-pointer shadow-2xs";
       } else {
-        btn.className = "px-2.5 py-1 font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-200 text-[11px] transition-colors cursor-pointer";
+        btn.className = "px-2.5 py-1 font-medium rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-200 text-[11px] transition-colors cursor-pointer";
       }
     }
   });
@@ -596,7 +576,8 @@ function setRoadmapStatusFilter(filter) {
 function renderRoadmapUI() {
   const tasks = getStoredRoadmapTasks();
   const total = tasks.length;
-  const done = tasks.filter(t => t.completed).length;
+  const done = tasks.filter(t => t.completed || t.status === "Concluído").length;
+  const inProgress = tasks.filter(t => t.status === "Em Andamento" && !t.completed).length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   // Top Progress in Full Roadmap Card
@@ -604,7 +585,7 @@ function renderRoadmapUI() {
   const bar = document.getElementById("roadmap-progress-bar");
   const badge = document.getElementById("roadmap-badge-status");
 
-  if (txt) txt.textContent = `${done} de ${total} Concluídos (${pct}%)`;
+  if (txt) txt.textContent = `${done} de ${total} Concluídas (${pct}%) • ${inProgress} Em Andamento`;
   if (bar) {
     bar.style.width = `${pct}%`;
     bar.className = pct === 100 
@@ -617,7 +598,7 @@ function renderRoadmapUI() {
       badge.textContent = "100% Concluído";
     } else {
       badge.className = "px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200";
-      badge.textContent = `${pct}% Concluído`;
+      badge.textContent = `${pct}% Concluído (${inProgress} Em Andamento)`;
     }
   }
 
@@ -635,20 +616,24 @@ function renderRoadmapUI() {
   // Phase Tab Counts
   for (let p = 1; p <= 4; p++) {
     const phaseTasks = tasks.filter(t => t.phase === p);
-    const pDone = phaseTasks.filter(t => t.completed).length;
+    const pDone = phaseTasks.filter(t => t.completed || t.status === "Concluído").length;
     const badgeEl = document.getElementById(`phase-badge-count-${p}`);
     if (badgeEl) badgeEl.textContent = `${pDone}/${phaseTasks.length}`;
   }
 
   // Update Filter Buttons Text with Counts for Active Phase
   const currentPhaseAll = tasks.filter(t => t.phase === activeRoadmapPhase);
-  const currentPhasePending = currentPhaseAll.filter(t => !t.completed);
-  const currentPhaseDone = currentPhaseAll.filter(t => t.completed);
+  const currentPhaseInProgress = currentPhaseAll.filter(t => t.status === "Em Andamento" && !t.completed);
+  const currentPhasePending = currentPhaseAll.filter(t => (t.status === "Pendente" || !t.status) && !t.completed);
+  const currentPhaseDone = currentPhaseAll.filter(t => t.completed || t.status === "Concluído");
 
   const btnAll = document.getElementById("btn-roadmap-filter-all");
+  const btnInProgress = document.getElementById("btn-roadmap-filter-in_progress");
   const btnPending = document.getElementById("btn-roadmap-filter-pending");
   const btnDone = document.getElementById("btn-roadmap-filter-done");
+
   if (btnAll) btnAll.textContent = `Todas (${currentPhaseAll.length})`;
+  if (btnInProgress) btnInProgress.textContent = `Em Andamento (${currentPhaseInProgress.length})`;
   if (btnPending) btnPending.textContent = `Pendentes (${currentPhasePending.length})`;
   if (btnDone) btnDone.textContent = `Concluídas (${currentPhaseDone.length})`;
 
@@ -662,41 +647,72 @@ function renderRoadmapUI() {
     if (activeRoadmapOnlyRole) {
       filteredTasks = filteredTasks.filter(t => (TASK_ROLES_MAP[t.id] || []).includes(currentRole));
     }
-    if (activeRoadmapStatusFilter === 'pending') {
-      filteredTasks = filteredTasks.filter(t => !t.completed);
+    if (activeRoadmapStatusFilter === 'in_progress') {
+      filteredTasks = filteredTasks.filter(t => t.status === "Em Andamento" && !t.completed);
+    } else if (activeRoadmapStatusFilter === 'pending') {
+      filteredTasks = filteredTasks.filter(t => (t.status === "Pendente" || !t.status) && !t.completed);
     } else if (activeRoadmapStatusFilter === 'done') {
-      filteredTasks = filteredTasks.filter(t => t.completed);
+      filteredTasks = filteredTasks.filter(t => t.completed || t.status === "Concluído");
     }
 
     if (filteredTasks.length === 0) {
       container.innerHTML = `
         <div class="p-6 text-center text-xs text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
           <i data-lucide="inbox" class="w-6 h-6 mx-auto mb-1 text-slate-400"></i>
-          Nenhuma tarefa encontrada neste filtro (${activeRoadmapOnlyRole ? 'nenhuma tarefa desta fase para o seu papel' : activeRoadmapStatusFilter === 'pending' ? 'todas estão concluídas!' : 'nenhuma tarefa'}).
+          Nenhuma tarefa encontrada neste filtro.
         </div>
       `;
     } else {
       filteredTasks.forEach(task => {
-        const isDone = task.completed;
+        const isDone = Boolean(task.completed || task.status === "Concluído");
+        const isInProgress = task.status === "Em Andamento" && !isDone;
         const itemEl = document.createElement("div");
-        itemEl.className = `p-3.5 rounded-xl border transition-all ${isDone ? 'bg-emerald-50/30 border-emerald-200/90' : 'bg-white border-slate-200/90 hover:border-blue-300 shadow-2xs'}`;
+        itemEl.className = `p-3.5 rounded-xl border transition-all ${
+          isDone
+            ? 'bg-emerald-50/40 border-emerald-300'
+            : isInProgress
+            ? 'bg-amber-50/40 border-amber-300 shadow-2xs'
+            : 'bg-white border-slate-200 hover:border-blue-300 shadow-2xs'
+        }`;
 
-        const costBadgeColor = task.cost.includes("Zero") ? "bg-emerald-100 text-emerald-800 border-emerald-200" : task.cost.includes("Tempo") ? "bg-blue-100 text-[#004b93] border-blue-200" : "bg-purple-100 text-purple-800 border-purple-200";
-        const effortBadgeColor = task.effort === "Baixo" ? "bg-slate-100 text-slate-700" : task.effort === "Médio" ? "bg-amber-100 text-amber-800" : "bg-rose-100 text-rose-800";
+        const costBadgeColor = task.cost.includes("Zero")
+          ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+          : task.cost.includes("Tempo")
+          ? "bg-blue-100 text-[#004b93] border-blue-200"
+          : "bg-purple-100 text-purple-800 border-purple-200";
+
+        const effortBadgeColor = task.effort === "Baixo"
+          ? "bg-slate-100 text-slate-700"
+          : task.effort === "Médio"
+          ? "bg-amber-100 text-amber-800"
+          : "bg-rose-100 text-rose-800";
+
+        const statusBadgeColor = isDone
+          ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+          : isInProgress
+          ? "bg-amber-100 text-amber-900 border-amber-300"
+          : "bg-slate-100 text-slate-700 border-slate-300";
 
         itemEl.innerHTML = `
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-start gap-3 flex-1 min-w-0">
-              <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleRoadmapTask(${task.id})" class="mt-1 w-4 h-4 rounded text-[#004b93] focus:ring-[#004b93] border-slate-300 cursor-pointer shrink-0" title="${isDone ? 'Marcar como pendente' : 'Marcar como concluída'}" />
+              <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleRoadmapTask(${task.id})" class="mt-1 w-4 h-4 rounded text-[#004b93] focus:ring-[#004b93] border-slate-300 cursor-pointer shrink-0" title="${isDone ? 'Marcar como não concluída' : 'Marcar como concluída'}" />
               <div class="min-w-0 flex-1 space-y-1">
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-[10px] font-mono px-1.5 py-0.2 rounded font-bold ${isDone ? 'bg-emerald-200/60 text-emerald-900' : 'bg-slate-200 text-slate-700'}">ID #${task.id}</span>
                   <h4 class="text-xs font-bold ${isDone ? 'line-through text-slate-400' : 'text-slate-900'}">${task.title}</h4>
+
+                  <!-- Seletor Rápido de Status -->
+                  <select onchange="setRoadmapTaskStatus(${task.id}, this.value)" class="text-[10px] font-bold px-2 py-0.5 rounded-full border cursor-pointer focus:outline-none transition-colors ${statusBadgeColor}" title="Alterar status operacional">
+                    <option value="Em Andamento" ${isInProgress ? 'selected' : ''}>⏳ Em Andamento</option>
+                    <option value="Pendente" ${!isInProgress && !isDone ? 'selected' : ''}>⚪ Pendente</option>
+                    <option value="Concluído" ${isDone ? 'selected' : ''}>✅ Concluído</option>
+                  </select>
                 </div>
                 <p class="text-xs text-slate-600 leading-snug">${task.desc}</p>
                 
-                <!-- Passo a passo colapsável com <details> para não poluir visualmente a tela -->
-                <details class="group mt-1.5">
+                <!-- Passo a passo colapsável com <details> -->
+                <details class="group mt-1.5" ${isInProgress ? 'open' : ''}>
                   <summary class="text-[11px] font-semibold text-[#004b93] hover:text-[#003d78] cursor-pointer flex items-center gap-1 select-none py-0.5">
                     <i data-lucide="chevron-right" class="w-3.5 h-3.5 transition-transform group-open:rotate-90 text-[#004b93]"></i>
                     <span>Ver Passo a Passo & Instruções Técnicas</span>
@@ -707,7 +723,7 @@ function renderRoadmapUI() {
                       <span>Como Fazer / Passo a Passo:</span>
                     </div>
                     <p class="text-slate-600 leading-relaxed">${task.howTo}</p>
-                    ${task.obs ? `<div class="text-[10px] text-blue-900 font-medium pt-0.5">💡 <em>${task.obs}</em></div>` : ''}
+                    ${task.obs ? `<div class="text-[10px] text-blue-900 font-medium pt-0.5">💡 <em>Observação: ${task.obs}</em></div>` : ''}
                   </div>
                 </details>
               </div>
@@ -735,13 +751,14 @@ function renderRoadmapUI() {
     }
   }
 
-  // Render Top 3 Pending Tasks in Executive Cockpit Mini-Widget
+  // Render Top 3 In Progress / Pending Tasks in Executive Cockpit Mini-Widget
   const cockpitTasksContainer = document.getElementById("roadmap-cockpit-tasks");
   if (cockpitTasksContainer) {
     cockpitTasksContainer.innerHTML = "";
     const currentRole = (window.State && window.State.currentRole) || 'gestor_obra';
-    const rolePendingList = tasks.filter(t => !t.completed && (TASK_ROLES_MAP[t.id] || []).includes(currentRole));
-    const pendingList = rolePendingList.length > 0 ? rolePendingList.slice(0, 3) : tasks.filter(t => !t.completed).slice(0, 3);
+    const activeTasks = tasks.filter(t => !t.completed && t.status !== "Concluído");
+    const roleActiveList = activeTasks.filter(t => (TASK_ROLES_MAP[t.id] || []).includes(currentRole));
+    const pendingList = roleActiveList.length > 0 ? roleActiveList.slice(0, 3) : activeTasks.slice(0, 3);
     if (pendingList.length === 0) {
       cockpitTasksContainer.innerHTML = `
         <div class="p-3 text-center text-xs text-emerald-800 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-center gap-2">
@@ -751,14 +768,18 @@ function renderRoadmapUI() {
       `;
     } else {
       pendingList.forEach(t => {
+        const isProg = t.status === "Em Andamento";
         const row = document.createElement("div");
-        row.className = "p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/80 hover:bg-blue-50/40 hover:border-blue-200 transition-all flex items-start gap-2.5 text-xs shadow-2xs";
+        row.className = `p-2.5 rounded-xl border transition-all flex items-start gap-2.5 text-xs shadow-2xs ${
+          isProg ? 'bg-amber-50/50 border-amber-300' : 'bg-slate-50/90 border-slate-200/80 hover:bg-blue-50/40'
+        }`;
         row.innerHTML = `
           <input type="checkbox" onchange="toggleRoadmapTask(${t.id})" class="mt-0.5 w-4 h-4 rounded text-[#004b93] border-slate-300 cursor-pointer shrink-0" title="Marcar como concluída" />
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold bg-blue-100/70 text-[#004b93]">Fase ${t.phase}</span>
+              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold ${isProg ? 'bg-amber-100 text-amber-800' : 'bg-blue-100/70 text-[#004b93]'}">Fase ${t.phase}</span>
               <h5 class="font-bold text-slate-800 text-[11px] truncate">${t.title}</h5>
+              ${isProg ? '<span class="text-[9px] font-bold text-amber-700">⏳ Em Andamento</span>' : ''}
             </div>
             <p class="text-[10px] text-slate-500 truncate mt-0.5">${t.desc}</p>
           </div>
@@ -916,6 +937,7 @@ window.clearCampaignFilters = clearCampaignFilters;
 window.setRoadmapPhaseTab = setRoadmapPhaseTab;
 window.setRoadmapStatusFilter = setRoadmapStatusFilter;
 window.toggleRoadmapTask = toggleRoadmapTask;
+window.setRoadmapTaskStatus = setRoadmapTaskStatus;
 window.renderRoadmapUI = renderRoadmapUI;
 window.handleCreateTask = handleCreateTask;
 window.deleteRoadmapTask = deleteRoadmapTask;

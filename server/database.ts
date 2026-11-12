@@ -110,6 +110,32 @@ export async function checkAndInitializePostgres(): Promise<boolean> {
           }
         }
       }
+    } else {
+      // Migração automática: se grc_records contiver o catálogo legado (> 19 tarefas no roadmap), atualiza para o plano oficial de 19 tarefas LGPD
+      try {
+        const oldTasksRes = await pool.query(
+          "SELECT COUNT(*)::int AS cnt FROM grc_records WHERE collection = 'roadmapTasks' AND record_id ~ '^[0-9]+$' AND record_id::int > 19"
+        );
+        if ((oldTasksRes.rows[0]?.cnt ?? 0) > 0) {
+          await pool.query("DELETE FROM grc_records WHERE collection = 'roadmapTasks'");
+          const initialCleanData = await readLocalDiskDB();
+          const tasks = initialCleanData.roadmapTasks;
+          if (Array.isArray(tasks)) {
+            for (let i = 0; i < tasks.length; i++) {
+              const item = tasks[i] as Record<string, unknown>;
+              const recId = String(item.id || i + 1);
+              await pool.query(
+                `INSERT INTO grc_records (collection, record_id, payload, sort_order)
+                 VALUES ('roadmapTasks', $1, $2, $3)
+                 ON CONFLICT (collection, record_id) DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()`,
+                [recId, JSON.stringify(item), i],
+              );
+            }
+          }
+        }
+      } catch {
+        // Ignora silenciosamente
+      }
     }
 
     postgresOnline = true;
