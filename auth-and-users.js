@@ -883,32 +883,6 @@ async function loginWithForm(e) {
   }
 }
 
-  AuthState.currentUser = found;
-  AuthState.isLoggedIn = true;
-  sessionStorage.setItem("AC_ACTIVE_LOGIN_SESSION_V4", "true");
-  saveStoredSessionUser(found);
-  applyUserSession(found);
-  hideLoginModal();
-  resetSessionIdleTimer();
-
-  if (passInput) passInput.value = "";
-
-  if (window.showToast) {
-    window.showToast(`Bem-vindo, Administrador ${found.name}! Modo de Configuração SGSI Ativo.`, "success");
-  }
-
-  // Registro na trilha forense
-  if (window.ApiService && typeof window.ApiService.addAuditRecord === 'function') {
-    window.ApiService.addAuditRecord({
-      category: "AUTENTICAÇÃO_RBAC",
-      severity: "INFO",
-      actor: `${found.name} <${found.email}>`,
-      description: `Autenticação corporativa com sucesso. Perfil [${found.roleName}], setor [${found.department}], lotação [${found.location || 'Sede Central'}].`,
-      target_module: "Segurança de Acesso"
-    });
-  }
-}
-
 function logout() {
   if (idleTimeoutTimer) {
     clearTimeout(idleTimeoutTimer);
