@@ -789,68 +789,15 @@ async function loginWithForm(e) {
 
   if (!email || !pass) {
     if (window.showToast) {
-      window.showToast("Informe o e-mail do Administrador Principal e a senha mestra.", "warning");
+      window.showToast("Informe o e-mail do Administrador e a senha mestra.", "warning");
     } else {
-      alert("Informe o e-mail do Administrador Principal e a senha mestra.");
-    }
-    return;
-  }
-
-  let users = getStoredUsers();
-  let found = users.find(u => u.email.toLowerCase() === email);
-
-  // Se o usuário não estiver em cache no navegador local, consulta a API/PostgreSQL em tempo real
-  if (!found) {
-    try {
-      const uRes = await fetch('/api/users');
-      if (uRes.ok) {
-        const uData = await uRes.json();
-        if (Array.isArray(uData.users) && uData.users.length > 0) {
-          users = uData.users.map(u => sanitizeClientUser(u));
-          localStorage.setItem("AC_USERS_DB_V2", JSON.stringify(users));
-          found = users.find(u => u.email.toLowerCase() === email);
-          if (typeof renderAdminUsersTable === 'function') renderAdminUsersTable();
-        }
-      }
-    } catch (_) {}
-  }
-
-  // VALIDAÇÃO ESTRITA: Login por senha é restrito ao Administrador Principal de Configuração
-  const isExplicitlyNonAdmin = Boolean(
-    found &&
-    !found.isSuperAdmin &&
-    found.id !== 'usr-admin' &&
-    found.role !== 'secops' &&
-    found.role !== 'diretoria' &&
-    email !== 'manoelmgsantos@acengenhariase.com.br'
-  );
-  if (isExplicitlyNonAdmin) {
-    const blockMsg = "Acesso Negado: O login por senha é exclusivo para o Administrador Principal de Configuração. Todos os demais colaboradores devem acessar pelo botão 'Continuar com Google Workspace'.";
-    if (window.showConfirmDialog) {
-      await window.showConfirmDialog({
-        title: "Autenticação Obrigatória via Google",
-        message: `<span class="text-rose-600 font-bold">${blockMsg}</span>`,
-        detail: "A política corporativa de segurança da AC Engenharia exige login com conta institucional Google Workspace.",
-        confirmText: "Entendi",
-        cancelText: "Fechar",
-        type: "warning"
-      });
-    } else if (window.showToast) {
-      window.showToast(blockMsg, "warning");
-    } else {
-      alert(blockMsg);
-    }
-    return;
-  }
-
-  if (found && (found.status === "Inativo" || found.status === "Bloqueado")) {
-    if (window.showToast) {
-      window.showToast(`Esta conta está com status [${found.status}]. Acesso bloqueado.`, "warning");
+      alert("Informe o e-mail do Administrador e a senha mestra.");
     }
     return;
   }
 
   // Autenticação Criptográfica Obrigatória no Servidor (bcrypt + Proteção Anti-Força Bruta + Emissão de Token HMAC-SHA256)
+  let found = null;
   try {
     const loginRes = await fetch("/api/auth/login", {
       method: "POST",
@@ -861,8 +808,20 @@ async function loginWithForm(e) {
     if (!loginRes.ok) {
       const errBody = await loginRes.json().catch(() => ({}));
       const errMsg = errBody.error || "Credenciais de Administrador inválidas.";
-      if (window.showToast) window.showToast(errMsg, "warning");
-      else alert(errMsg);
+      if (window.showConfirmDialog) {
+        await window.showConfirmDialog({
+          title: "Acesso Negado",
+          message: `<span class="text-rose-600 font-bold">${escapeHtml(errMsg)}</span>`,
+          detail: "Verifique se o e-mail e a senha mestra conferem com as credenciais do Administrador configuradas no servidor.",
+          confirmText: "Entendido",
+          cancelText: "Fechar",
+          type: "danger"
+        });
+      } else if (window.showToast) {
+        window.showToast(errMsg, "warning");
+      } else {
+        alert(errMsg);
+      }
       return;
     }
 
@@ -873,17 +832,56 @@ async function loginWithForm(e) {
     }
 
     sessionStorage.setItem("AC_AUTH_JWT_TOKEN_V1", loginData.token);
+    sessionStorage.setItem("AC_ACTIVE_LOGIN_SESSION_V4", "true");
+
+    let users = getStoredUsers();
+    found = users.find(u => u.email.toLowerCase() === email);
+
     if (loginData.user) {
-      found = sanitizeClientUser({ ...(found || DEFAULT_AC_USERS[0]), ...loginData.user });
+      found = sanitizeClientUser({ ...(found || DEFAULT_AC_USERS[0]), ...loginData.user, status: "Ativo" });
     } else {
       found = found || sanitizeClientUser(DEFAULT_AC_USERS[0]);
     }
+
+    // Atualiza base local de usuários para garantir consistência imediata
+    const idx = users.findIndex(u => u.email.toLowerCase() === email);
+    if (idx !== -1) {
+      users[idx] = found;
+    } else {
+      users.unshift(found);
+    }
+    saveStoredUsers(users);
   } catch (_) {
     const errMsg = "Não foi possível conectar ao servidor de autenticação (/api/auth/login). Verifique se o backend está online.";
     if (window.showToast) window.showToast(errMsg, "warning");
     else alert(errMsg);
     return;
   }
+
+  AuthState.currentUser = found;
+  AuthState.isLoggedIn = true;
+  saveStoredSessionUser(found);
+  applyUserSession(found);
+  hideLoginModal();
+  resetSessionIdleTimer();
+
+  if (passInput) passInput.value = "";
+
+  if (window.showToast) {
+    window.showToast(`Bem-vindo, Administrador ${found.name}! Modo de Configuração SGSI Ativo.`, "success");
+  }
+
+  // Registro na trilha forense
+  if (window.ApiService && typeof window.ApiService.addAuditRecord === 'function') {
+    window.ApiService.addAuditRecord({
+      category: "AUTENTICAÇÃO_RBAC",
+      severity: "INFO",
+      actor: `${found.name} <${found.email}>`,
+      description: `Autenticação corporativa com sucesso. Perfil [${found.roleName}], setor [${found.department}], lotação [${found.location || 'Sede Central'}].`,
+      target_module: "Segurança de Acesso"
+    });
+  }
+}
 
   AuthState.currentUser = found;
   AuthState.isLoggedIn = true;
