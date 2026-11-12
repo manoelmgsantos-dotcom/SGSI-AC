@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { Pool } from 'pg';
 import { requireEnvironment } from './config.ts';
@@ -125,5 +126,87 @@ export async function initializeDatabase() {
     console.log('✅ [CyberGRC] Conectado com sucesso ao PostgreSQL na porta 5432.');
   } else {
     console.log('ℹ️ [CyberGRC] PostgreSQL ainda não conectado na porta 5432. Operando com persistência local em disco (server/data/cybergrc-local-db.json) até a inicialização do banco.');
+  }
+}
+
+export interface AuditLogEntry {
+  category: 'AUTENTICACAO_SUCESSO' | 'AUTENTICACAO_FALHA' | 'CONTROLE_ACESSO' | 'CONFIGURACAO' | string;
+  module: string;
+  action: string;
+  severity: 'INFO' | 'WARN' | 'CRITICAL';
+  actor: string;
+  target_module: string;
+  description: string;
+  ip: string;
+}
+
+export async function appendAuditLog(entry: AuditLogEntry): Promise<void> {
+  try {
+    const timestamp = new Date().toISOString();
+    const id = `BLK-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+
+    // Obter hash do último registro para encadeamento criptográfico Merkle
+    let prevHash = '0000000000000000000000000000000000000000000000000000000000000000';
+    let sortOrder = 0;
+
+    if (postgresOnline) {
+      try {
+        const lastRow = await pool.query(
+          "SELECT payload, sort_order FROM grc_records WHERE collection = 'auditLogs' ORDER BY sort_order DESC, created_at DESC LIMIT 1"
+        );
+        if (lastRow.rows[0]) {
+          const lastPayload = typeof lastRow.rows[0].payload === 'string'
+            ? JSON.parse(lastRow.rows[0].payload)
+            : lastRow.rows[0].payload;
+          prevHash = lastPayload.hash || lastPayload.prev_hash || prevHash;
+          sortOrder = (Number(lastRow.rows[0].sort_order) || 0) + 1;
+        }
+      } catch {
+        // Fallback silencioso em caso de erro na consulta
+      }
+    }
+
+    const hash = createHash('sha256')
+      .update(`${id}|${timestamp}|${entry.category}|${entry.actor}|${entry.action}|${entry.ip}|${prevHash}`)
+      .digest('hex');
+
+    const logPayload = {
+      id,
+      timestamp,
+      role: entry.severity === 'CRITICAL' ? 'Alerta Forense' : 'Sistema SGSI',
+      category: entry.category,
+      module: entry.module,
+      action: entry.action,
+      severity: entry.severity,
+      actor: entry.actor,
+      target_module: entry.target_module,
+      description: entry.description,
+      ip: entry.ip,
+      previousHash: prevHash,
+      prev_hash: prevHash,
+      hash,
+    };
+
+    if (postgresOnline) {
+      await pool.query(
+        `INSERT INTO grc_records (collection, record_id, payload, sort_order, created_at, updated_at)
+         VALUES ('auditLogs', $1, $2, $3, NOW(), NOW())
+         ON CONFLICT (collection, record_id) DO NOTHING`,
+        [id, JSON.stringify(logPayload), sortOrder]
+      );
+    }
+
+    // Persiste também no armazenamento local em disco
+    const localDb = await readLocalDiskDB();
+    if (!Array.isArray(localDb.auditLogs)) {
+      localDb.auditLogs = [];
+    }
+    (localDb.auditLogs as Array<unknown>).push(logPayload);
+    if (localDb.auditLogs.length > 1000) {
+      localDb.auditLogs = localDb.auditLogs.slice(-1000);
+    }
+    await writeLocalDiskDB(localDb).catch(() => {});
+  } catch (err) {
+    console.warn('Aviso: falha ao persistir auditLog forense:', err);
   }
 }

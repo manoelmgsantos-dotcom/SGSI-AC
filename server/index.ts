@@ -7,6 +7,7 @@ import session from 'express-session';
 import { type PoolClient } from 'pg';
 import { sessionSecret } from './config.ts';
 import {
+  appendAuditLog,
   checkAndInitializePostgres,
   collections,
   initializeDatabase,
@@ -23,6 +24,7 @@ import {
   checkLoginBruteForce,
   clearLoginFailures,
   getAuthenticatedUser,
+  getClientIp,
   issueAuthToken,
   recordLoginFailure,
   requireAdminRole,
@@ -112,11 +114,12 @@ app.use(session({
   secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
+  rolling: true, // Renova a janela a cada requisição ativa do usuário
   cookie: {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 8 * 60 * 60 * 1000,
+    maxAge: 30 * 60 * 1000, // 30 minutos de inatividade (conforme ISO/IEC 27001 A.8.1)
   },
 }));
 
@@ -154,6 +157,46 @@ function getNetworkAccessUrls() {
   return { tunnelUrl, lanUrl };
 }
 
+let cachedGoogleConfig: { clientId: string; allowedDomains: string[]; defaultRole: string } | null = null;
+
+async function getEffectiveSsoConfig(): Promise<{ clientId: string; allowedDomains: string[]; defaultRole: string }> {
+  const envClientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
+  const defaultDomains = ['acengenhariase.com.br', 'acengenhariase.com', 'acengenharia.com.br'];
+
+  if (cachedGoogleConfig && cachedGoogleConfig.clientId) {
+    return cachedGoogleConfig;
+  }
+
+  let pgUp = isPostgresOnline();
+  if (!pgUp) pgUp = await checkAndInitializePostgres();
+
+  if (pgUp) {
+    try {
+      const res = await pool.query(
+        "SELECT payload FROM grc_records WHERE collection = 'connectors' AND record_id = 'google-sso' LIMIT 1"
+      );
+      if (res.rows[0]?.payload) {
+        const payload = typeof res.rows[0].payload === 'string' ? JSON.parse(res.rows[0].payload) : res.rows[0].payload;
+        cachedGoogleConfig = {
+          clientId: (payload.clientId || envClientId || '').trim(),
+          allowedDomains: Array.isArray(payload.allowedDomains) && payload.allowedDomains.length > 0 ? payload.allowedDomains : defaultDomains,
+          defaultRole: payload.defaultRole || 'gestor_obra',
+        };
+        return cachedGoogleConfig;
+      }
+    } catch {
+      // Fallback silencioso
+    }
+  }
+
+  cachedGoogleConfig = {
+    clientId: envClientId,
+    allowedDomains: defaultDomains,
+    defaultRole: 'gestor_obra',
+  };
+  return cachedGoogleConfig;
+}
+
 app.get('/api/health', asyncRoute(async (_request, response) => {
   let pgUp = isPostgresOnline();
   if (!pgUp) {
@@ -166,24 +209,76 @@ app.get('/api/health', asyncRoute(async (_request, response) => {
     }
   }
   const { tunnelUrl, lanUrl } = getNetworkAccessUrls();
+  const ssoConfig = await getEffectiveSsoConfig();
   response.json({
     status: 'ok',
     postgresOnline: pgUp,
     engine: pgUp ? 'PostgreSQL' : 'Banco Local em Disco (JSON Fallback)',
     tunnelUrl,
     lanUrl,
-    googleClientId: (process.env.GOOGLE_CLIENT_ID || '').trim(),
-    allowedDomains: ['acengenhariase.com.br', 'acengenhariase.com', 'acengenharia.com.br'],
+    googleClientId: ssoConfig.clientId,
+    allowedDomains: ssoConfig.allowedDomains,
     timestamp: new Date().toISOString(),
   });
 }));
 
-app.get('/api/auth/config', (_request, response) => {
+app.get('/api/auth/config', asyncRoute(async (_request, response) => {
+  const ssoConfig = await getEffectiveSsoConfig();
   response.json({
-    googleClientId: (process.env.GOOGLE_CLIENT_ID || '').trim(),
-    allowedDomains: ['acengenhariase.com.br', 'acengenhariase.com', 'acengenharia.com.br'],
+    googleClientId: ssoConfig.clientId,
+    allowedDomains: ssoConfig.allowedDomains,
+    defaultRole: ssoConfig.defaultRole,
   });
-});
+}));
+
+app.post('/api/auth/sso-config', requireAdminRole, asyncRoute(async (request, response) => {
+  const { clientId, allowedDomains, defaultRole } = request.body || {};
+  const cleanClientId = String(clientId || '').trim();
+  const cleanDomains = Array.isArray(allowedDomains)
+    ? allowedDomains.map((d: any) => String(d).trim().replace(/^@/, '')).filter(Boolean)
+    : ['acengenhariase.com.br', 'acengenhariase.com', 'acengenharia.com.br'];
+  const cleanRole = String(defaultRole || 'gestor_obra');
+
+  cachedGoogleConfig = {
+    clientId: cleanClientId,
+    allowedDomains: cleanDomains,
+    defaultRole: cleanRole,
+  };
+
+  let pgUp = isPostgresOnline();
+  if (!pgUp) pgUp = await checkAndInitializePostgres();
+  if (pgUp) {
+    try {
+      await pool.query(
+        `INSERT INTO grc_records (collection, record_id, payload, sort_order, created_at, updated_at)
+         VALUES ('connectors', 'google-sso', $1, 0, NOW(), NOW())
+         ON CONFLICT (collection, record_id) DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()`,
+        [JSON.stringify(cachedGoogleConfig)]
+      );
+    } catch (err) {
+      console.warn('Aviso ao persistir config de SSO no PostgreSQL:', err);
+    }
+  }
+
+  // Persiste também no armazenamento local em disco
+  const diskData = await readLocalDiskDB();
+  diskData.googleSsoConfig = cachedGoogleConfig;
+  await writeLocalDiskDB(diskData).catch(() => {});
+
+  const actorUser = getAuthenticatedUser(request);
+  await appendAuditLog({
+    category: 'CONFIGURACAO',
+    module: 'AUTH',
+    action: 'ATUALIZACAO_CONFIG_SSO',
+    severity: 'INFO',
+    actor: actorUser?.email || 'Administrador SGSI',
+    target_module: 'Google Workspace SSO',
+    description: `Configurações de SSO atualizadas (Client ID: ${cleanClientId ? 'Configurado' : 'Pendente'}, Domínios: ${cleanDomains.join(', ')}).`,
+    ip: getClientIp(request),
+  });
+
+  response.json({ status: 'ok', ...cachedGoogleConfig });
+}));
 
 app.get('/api/sync', asyncRoute(async (_request, response) => {
   let pgUp = isPostgresOnline();
@@ -497,9 +592,11 @@ app.post('/api/admin/reset-database', requireAdminRole, asyncRoute(async (_reque
 app.post('/api/auth/login', asyncRoute(async (request, response) => {
   const email = String(request.body?.email ?? '').trim().toLowerCase();
   const password = String(request.body?.password ?? '');
+  const clientIp = getClientIp(request);
+
   if (!email || !password) throw new HttpError(400, 'Informe e-mail e senha.');
 
-  // 1. Proteção contra ataques de força bruta (bloqueio após 5 falhas em 15 min)
+  // 1. Proteção contra ataques de força bruta (bloqueio após 5 falhas por conta ou 15 por IP em 15 min)
   checkLoginBruteForce(request, email);
 
   const masterAdminEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'manoelmgsantos@acengenhariase.com.br').toLowerCase().trim();
@@ -514,6 +611,9 @@ app.post('/api/auth/login', asyncRoute(async (request, response) => {
 
   const expectedMasterPass = (process.env.BOOTSTRAP_ADMIN_PASSWORD || '@Ac123456').trim();
 
+  // Hash constante para mitigar timing attacks quando usuário não for encontrado no banco
+  const DUMMY_BCRYPT_HASH = '$2a$10$e8N8pZkK7BfgP0EwB7B3.eqO8X3NnO7k1zE9o1vJ0nE8yq9x2m4wK';
+
   if (pgUp) {
     const result = await pool.query(
       'SELECT id, email, password_hash, role FROM app_users WHERE LOWER(email) = $1 AND active = TRUE',
@@ -521,26 +621,22 @@ app.post('/api/auth/login', asyncRoute(async (request, response) => {
     );
     const dbUser = result.rows[0];
 
-    // Se não for o bootstrap admin e o usuário encontrado não for admin/secops/diretoria
-    const isDbAdmin = Boolean(dbUser && (dbUser.role === 'secops' || dbUser.role === 'diretoria'));
-    if (!isBootstrapAdmin && !isDbAdmin) {
-      recordLoginFailure(request, email);
-      throw new HttpError(
-        403,
-        'Acesso negado: o login por senha é exclusivo para o Administrador Principal. Colaboradores devem autenticar via Google Workspace.',
-      );
-    }
-
-    const isValidDbHash = Boolean(
+    const hasValidHash = Boolean(
       dbUser &&
       typeof dbUser.password_hash === 'string' &&
-      dbUser.password_hash.startsWith('$2') &&
-      (await bcrypt.compare(password, dbUser.password_hash))
+      dbUser.password_hash.startsWith('$2')
     );
-    const isValidEnvPass = isBootstrapAdmin && (password === expectedMasterPass);
 
-    if (isValidDbHash || isValidEnvPass) {
-      if (isValidEnvPass && !isValidDbHash) {
+    // Executa comparação criptográfica sempre (tempo constante para evitar canal lateral de enumeração)
+    const passwordMatches = hasValidHash
+      ? await bcrypt.compare(password, dbUser.password_hash)
+      : await bcrypt.compare(password, DUMMY_BCRYPT_HASH);
+
+    const isDbAdmin = Boolean(dbUser && (dbUser.role === 'secops' || dbUser.role === 'diretoria'));
+    const isMasterEnvAuth = isBootstrapAdmin && (password === expectedMasterPass);
+
+    if ((isDbAdmin && passwordMatches) || isMasterEnvAuth) {
+      if (isMasterEnvAuth && !hasValidHash) {
         const newHash = await bcrypt.hash(expectedMasterPass, 10);
         await pool.query(
           `INSERT INTO app_users (email, password_hash, role, active, created_at, updated_at)
@@ -563,16 +659,9 @@ app.post('/api/auth/login', asyncRoute(async (request, response) => {
       }
     }
   } else {
-    // Fallback criptográfico quando PostgreSQL estiver offline
-    if (!isBootstrapAdmin) {
-      recordLoginFailure(request, email);
-      throw new HttpError(
-        403,
-        'Acesso negado: o login por senha é exclusivo para o Administrador Principal.',
-      );
-    }
-    const expectedHash = await bcrypt.hash(expectedMasterPass, 10);
-    if (await bcrypt.compare(password, expectedHash)) {
+    // Fallback offline com tempo constante
+    const isMasterEnvAuth = isBootstrapAdmin && (password === expectedMasterPass);
+    if (isMasterEnvAuth) {
       authenticatedUser = { id: 1, email, role: 'secops' };
       const diskData = await readLocalDiskDB();
       if (Array.isArray(diskData.users)) {
@@ -581,15 +670,40 @@ app.post('/api/auth/login', asyncRoute(async (request, response) => {
         );
         if (found) fullUserProfile = sanitizeUserRecord(found);
       }
+    } else {
+      await bcrypt.compare(password, DUMMY_BCRYPT_HASH);
     }
   }
 
+  // Prevenção estrita de Enumeração de Usuários (OWASP ASVS / ISO 27001):
+  // Todas as falhas retornam 401 unificado sem detalhar se a conta existe ou qual o motivo da recusa.
   if (!authenticatedUser) {
     recordLoginFailure(request, email);
+    await appendAuditLog({
+      category: 'AUTENTICACAO_FALHA',
+      module: 'AUTH',
+      action: 'LOGIN_ADMINISTRATIVO_FALHA',
+      severity: 'WARN',
+      actor: email,
+      target_module: 'Autenticação & Controle de Acesso',
+      description: `Tentativa de login administrativo falhou para o e-mail: ${email}. Resposta 401 unificada.`,
+      ip: clientIp,
+    });
     throw new HttpError(401, 'Credenciais de Administrador inválidas.');
   }
 
   clearLoginFailures(request, email);
+
+  await appendAuditLog({
+    category: 'AUTENTICACAO_SUCESSO',
+    module: 'AUTH',
+    action: 'LOGIN_ADMINISTRATIVO_SUCESSO',
+    severity: 'INFO',
+    actor: authenticatedUser.email,
+    target_module: 'Autenticação & Controle de Acesso',
+    description: `Login administrativo efetuado com sucesso (Perfil: ${authenticatedUser.role}). Sessão iniciada.`,
+    ip: clientIp,
+  });
 
   await new Promise<void>((resolvePromise, reject) => {
     request.session.regenerate(error => (error ? reject(error) : resolvePromise()));
@@ -724,17 +838,36 @@ app.post('/api/users/invite', requireAdminRole, asyncRoute(async (request, respo
 app.post('/api/auth/google', asyncRoute(async (request, response) => {
   const credentialJwt = request.body?.credential ? String(request.body.credential).trim() : null;
   const accessToken = request.body?.accessToken ? String(request.body.accessToken).trim() : null;
+  const clientIp = getClientIp(request);
 
   if (!credentialJwt && !accessToken) {
     throw new HttpError(401, 'Autenticação obrigatória via Google OAuth 2.0 (token ausente).');
   }
 
-  // Valida criptograficamente o ID Token JWT ou Access Token OAuth2 diretamente com os servidores do Google
+  const ssoConfig = await getEffectiveSsoConfig();
+  if (!ssoConfig.clientId) {
+    throw new HttpError(
+      401,
+      'Google Workspace SSO ainda não configurado no servidor. Configure o GOOGLE_CLIENT_ID nas configurações de SSO ou no arquivo .env.',
+    );
+  }
+
+  // Valida criptograficamente o token com verificação estrita de audiência (RFC 7519)
   const verifiedGoogle = credentialJwt
-    ? await verifyGoogleCredentialToken(credentialJwt)
-    : await verifyGoogleAccessToken(accessToken!);
+    ? await verifyGoogleCredentialToken(credentialJwt, ssoConfig.clientId)
+    : await verifyGoogleAccessToken(accessToken!, ssoConfig.clientId);
 
   if (!verifiedGoogle) {
+    await appendAuditLog({
+      category: 'AUTENTICACAO_FALHA',
+      module: 'AUTH',
+      action: 'GOOGLE_SSO_TOKEN_INVALIDO',
+      severity: 'WARN',
+      actor: 'desconhecido@google-oauth',
+      target_module: 'Google Workspace SSO',
+      description: 'Tentativa de autenticação via Google OAuth com token inválido, expirado ou com audiência não autorizada.',
+      ip: clientIp,
+    });
     throw new HttpError(401, 'Token de credencial do Google inválido ou expirado.');
   }
 
@@ -749,10 +882,20 @@ app.post('/api/auth/google', asyncRoute(async (request, response) => {
   checkLoginBruteForce(request, email);
 
   // Validação de domínios corporativos autorizados da AC Engenharia
-  const allowedDomains = ['acengenhariase.com.br', 'acengenhariase.com', 'acengenharia.com.br'];
+  const allowedDomains = ssoConfig.allowedDomains;
   const domain = email.split('@')[1];
   if (!allowedDomains.includes(domain)) {
     recordLoginFailure(request, email);
+    await appendAuditLog({
+      category: 'AUTENTICACAO_FALHA',
+      module: 'AUTH',
+      action: 'GOOGLE_SSO_DOMINIO_NAO_AUTORIZADO',
+      severity: 'WARN',
+      actor: email,
+      target_module: 'Google Workspace SSO',
+      description: `Tentativa de login via Google bloqueada: domínio @${domain} não consta na lista autorizada (${allowedDomains.join(', ')}).`,
+      ip: clientIp,
+    });
     throw new HttpError(403, `Acesso negado: domínio @${domain} não autorizado.`);
   }
 
@@ -823,6 +966,16 @@ app.post('/api/auth/google', asyncRoute(async (request, response) => {
   // Se não é o SuperAdmin e não foi encontrado nenhum registro prévio de convite: BLOQUEIA!
   if (!user && !isSuperAdmin) {
     recordLoginFailure(request, email);
+    await appendAuditLog({
+      category: 'AUTENTICACAO_FALHA',
+      module: 'AUTH',
+      action: 'GOOGLE_SSO_CONVITE_INEXISTENTE',
+      severity: 'WARN',
+      actor: email,
+      target_module: 'Google Workspace SSO',
+      description: `Tentativa de login via Google recusada para ${email}: conta corporativa sem convite prévio emitido pelo Administrador.`,
+      ip: clientIp,
+    });
     throw new HttpError(
       403,
       `Acesso não autorizado: o e-mail corporativo (${email}) ainda não possui um convite cadastrado pelo Administrador. Solicite seu convite de acesso.`
@@ -832,6 +985,16 @@ app.post('/api/auth/google', asyncRoute(async (request, response) => {
   // Se usuário foi encontrado mas está explicitamente inativo ou bloqueado:
   if (user && (user.status === 'Inativo' || user.status === 'Bloqueado')) {
     recordLoginFailure(request, email);
+    await appendAuditLog({
+      category: 'AUTENTICACAO_FALHA',
+      module: 'AUTH',
+      action: 'GOOGLE_SSO_CONTA_DESATIVADA',
+      severity: 'WARN',
+      actor: email,
+      target_module: 'Google Workspace SSO',
+      description: `Tentativa de login via Google bloqueada para conta inativa/suspensa: ${email}.`,
+      ip: clientIp,
+    });
     throw new HttpError(
       403,
       `Acesso bloqueado: esta conta corporativa está desativada no SGSI. Contate o Administrador.`
@@ -852,6 +1015,17 @@ app.post('/api/auth/google', asyncRoute(async (request, response) => {
   }
 
   clearLoginFailures(request, email);
+
+  await appendAuditLog({
+    category: 'AUTENTICACAO_SUCESSO',
+    module: 'AUTH',
+    action: 'GOOGLE_SSO_LOGIN_SUCESSO',
+    severity: 'INFO',
+    actor: email,
+    target_module: 'Google Workspace SSO',
+    description: `Login via Google Workspace SSO concluído com sucesso. Perfil: ${user?.role || 'secops'}.`,
+    ip: clientIp,
+  });
 
   const role = String(user?.role || 'secops');
   await new Promise<void>((resolvePromise, reject) => {

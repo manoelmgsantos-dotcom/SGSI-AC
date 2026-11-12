@@ -723,12 +723,25 @@ function toggleAdminLoginForm() {
 }
 
 // Configurações do Google SSO (Exclusivo para o Administrador Principal)
-function openGoogleSsoSettingsModal() {
+async function openGoogleSsoSettingsModal() {
   const modal = document.getElementById("modal-google-sso-settings");
   if (!modal) return;
   const domainsInput = document.getElementById("sso-cfg-domains");
   const clientIdInput = document.getElementById("sso-cfg-client-id");
   const roleSelect = document.getElementById("sso-cfg-default-role");
+
+  // Sincroniza com o backend para obter os valores vigentes no PostgreSQL/.env
+  try {
+    const res = await fetch("/api/auth/config");
+    if (res.ok) {
+      const cfg = await res.json();
+      if (cfg) {
+        if (cfg.googleClientId) GOOGLE_SSO_CONFIG.serverClientId = String(cfg.googleClientId).trim();
+        if (Array.isArray(cfg.allowedDomains)) GOOGLE_SSO_CONFIG.allowedDomains = cfg.allowedDomains;
+        if (cfg.defaultRole) GOOGLE_SSO_CONFIG.autoProvisionRole = cfg.defaultRole;
+      }
+    }
+  } catch (_) {}
 
   if (domainsInput) domainsInput.value = GOOGLE_SSO_CONFIG.allowedDomains.join(", ");
   if (clientIdInput) clientIdInput.value = GOOGLE_SSO_CONFIG.clientId;
@@ -743,23 +756,42 @@ function closeGoogleSsoSettingsModal() {
   if (modal) modal.classList.add("hidden");
 }
 
-function saveGoogleSsoSettings(e) {
+async function saveGoogleSsoSettings(e) {
   if (e && e.preventDefault) e.preventDefault();
   const domainsInput = document.getElementById("sso-cfg-domains");
   const clientIdInput = document.getElementById("sso-cfg-client-id");
   const roleSelect = document.getElementById("sso-cfg-default-role");
 
+  let rawList = [];
   if (domainsInput) {
-    const rawList = domainsInput.value.split(",").map(d => d.trim().replace(/^@/, '')).filter(Boolean);
+    rawList = domainsInput.value.split(",").map(d => d.trim().replace(/^@/, '')).filter(Boolean);
     if (rawList.length > 0) {
       GOOGLE_SSO_CONFIG.allowedDomains = rawList;
     }
   }
-  if (clientIdInput) {
-    GOOGLE_SSO_CONFIG.clientId = clientIdInput.value.trim();
-  }
+  const cleanClientId = clientIdInput ? clientIdInput.value.trim() : "";
+  GOOGLE_SSO_CONFIG.clientId = cleanClientId;
   if (roleSelect) {
     GOOGLE_SSO_CONFIG.autoProvisionRole = roleSelect.value;
+  }
+
+  // Persiste no backend PostgreSQL para que o servidor possa validar a audiência (aud) dos tokens JWT
+  try {
+    const token = sessionStorage.getItem("AC_AUTH_JWT_TOKEN_V1");
+    await fetch("/api/auth/sso-config", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "x-cybergrc-token": token } : {})
+      },
+      body: JSON.stringify({
+        clientId: cleanClientId,
+        allowedDomains: rawList.length > 0 ? rawList : GOOGLE_SSO_CONFIG.allowedDomains,
+        defaultRole: roleSelect ? roleSelect.value : "gestor_obra"
+      })
+    });
+  } catch (err) {
+    console.warn("Aviso ao persistir configurações de SSO no servidor:", err);
   }
 
   closeGoogleSsoSettingsModal();
@@ -808,11 +840,14 @@ async function loginWithForm(e) {
     if (!loginRes.ok) {
       const errBody = await loginRes.json().catch(() => ({}));
       const errMsg = errBody.error || "Credenciais de Administrador inválidas.";
+      const isRateLimited = loginRes.status === 429;
       if (window.showConfirmDialog) {
         await window.showConfirmDialog({
-          title: "Acesso Negado",
+          title: isRateLimited ? "Proteção Contra Força Bruta" : "Acesso Negado",
           message: `<span class="text-rose-600 font-bold">${escapeHtml(errMsg)}</span>`,
-          detail: "Verifique se o e-mail e a senha mestra conferem com as credenciais do Administrador configuradas no servidor.",
+          detail: isRateLimited
+            ? "Múltiplas tentativas inválidas consecutivas detectadas. O acesso está temporariamente bloqueado para proteção do ambiente corporativo (ISO/IEC 27001 A.8.1)."
+            : "Verifique se o e-mail e a senha mestra conferem com as credenciais administrativas configuradas no servidor.",
           confirmText: "Entendido",
           cancelText: "Fechar",
           type: "danger"

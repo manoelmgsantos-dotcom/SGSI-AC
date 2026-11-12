@@ -188,13 +188,11 @@ interface RateBucket {
 
 const apiRateBuckets = new Map<string, RateBucket>();
 const loginFailureBuckets = new Map<string, { failures: number; lockedUntil: number; lastAttempt: number }>();
+const ipLoginFailureBuckets = new Map<string, { failures: number; lockedUntil: number; lastAttempt: number }>();
 
-function getClientIp(request: Request): string {
-  const cfIp = request.get('cf-connecting-ip');
-  if (cfIp) return cfIp.trim();
-  const xff = request.get('x-forwarded-for');
-  if (xff) return xff.split(',')[0].trim();
-  return request.ip || request.socket.remoteAddress || 'unknown';
+export function getClientIp(request: Request): string {
+  // Express configurado com app.set('trust proxy', 1) extrai com segurança o IP real do cliente
+  return request.ip || request.socket?.remoteAddress || 'unknown';
 }
 
 export function apiRateLimiter(maxRequestsPerMin = 300) {
@@ -233,12 +231,25 @@ export function apiRateLimiter(maxRequestsPerMin = 300) {
 }
 
 const MAX_LOGIN_FAILURES = 5;
+const MAX_IP_LOGIN_FAILURES = 15;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutos
 
 export function checkLoginBruteForce(request: Request, email: string): void {
   const ip = getClientIp(request);
-  const key = `${ip}:${email.toLowerCase().trim()}`;
   const now = Date.now();
+
+  // 1. Proteção de IP contra password spraying distribuído
+  const ipRecord = ipLoginFailureBuckets.get(ip);
+  if (ipRecord && ipRecord.lockedUntil > now) {
+    const remainingMin = Math.ceil((ipRecord.lockedUntil - now) / 60000);
+    throw new HttpError(
+      429,
+      `Múltiplas tentativas inválidas a partir deste IP. Bloqueio temporário por ${remainingMin} minuto(s) (ISO/IEC 27001 A.8.1).`,
+    );
+  }
+
+  // 2. Proteção de conta específica e IP
+  const key = `${ip}:${email.toLowerCase().trim()}`;
   const record = loginFailureBuckets.get(key);
 
   if (record && record.lockedUntil > now) {
@@ -254,17 +265,29 @@ export function recordLoginFailure(request: Request, email: string): void {
   const ip = getClientIp(request);
   const key = `${ip}:${email.toLowerCase().trim()}`;
   const now = Date.now();
-  const existing = loginFailureBuckets.get(key);
 
+  // Bucket por conta
+  const existing = loginFailureBuckets.get(key);
   if (!existing || now - existing.lastAttempt > LOCKOUT_DURATION_MS) {
     loginFailureBuckets.set(key, { failures: 1, lockedUntil: 0, lastAttempt: now });
-    return;
+  } else {
+    existing.failures += 1;
+    existing.lastAttempt = now;
+    if (existing.failures >= MAX_LOGIN_FAILURES) {
+      existing.lockedUntil = now + LOCKOUT_DURATION_MS;
+    }
   }
 
-  existing.failures += 1;
-  existing.lastAttempt = now;
-  if (existing.failures >= MAX_LOGIN_FAILURES) {
-    existing.lockedUntil = now + LOCKOUT_DURATION_MS;
+  // Bucket por IP
+  const existingIp = ipLoginFailureBuckets.get(ip);
+  if (!existingIp || now - existingIp.lastAttempt > LOCKOUT_DURATION_MS) {
+    ipLoginFailureBuckets.set(ip, { failures: 1, lockedUntil: 0, lastAttempt: now });
+  } else {
+    existingIp.failures += 1;
+    existingIp.lastAttempt = now;
+    if (existingIp.failures >= MAX_IP_LOGIN_FAILURES) {
+      existingIp.lockedUntil = now + LOCKOUT_DURATION_MS;
+    }
   }
 }
 
@@ -358,16 +381,25 @@ export function sanitizeSnapshotData(snapshot: Record<string, unknown>): Record<
 // 5. VERIFICAÇÃO SERVER-SIDE DE CREDENCIAL GOOGLE OAUTH (JWT ID TOKEN)
 // ============================================================================
 
-export async function verifyGoogleCredentialToken(credentialJwt: string): Promise<{
+export async function verifyGoogleCredentialToken(
+  credentialJwt: string,
+  expectedClientId?: string,
+): Promise<{
   email: string;
   name: string;
   picture: string | null;
   emailVerified: boolean;
 } | null> {
   try {
+    const targetClientId = (expectedClientId || process.env.GOOGLE_CLIENT_ID || '').trim();
+    if (!targetClientId) {
+      console.warn('⚠️ [Segurança SGSI] Token Google rejeitado: GOOGLE_CLIENT_ID não está configurado.');
+      return null;
+    }
+
     const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credentialJwt)}`;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 6000);
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
 
@@ -376,11 +408,13 @@ export async function verifyGoogleCredentialToken(credentialJwt: string): Promis
 
     const iss = String(data.iss || '');
     if (iss !== 'accounts.google.com' && iss !== 'https://accounts.google.com') {
+      console.warn(`⚠️ [Segurança SGSI] Token Google com emissor inválido: ${iss}`);
       return null;
     }
 
-    const configuredClientId = process.env.GOOGLE_CLIENT_ID?.trim();
-    if (configuredClientId && data.aud !== configuredClientId) {
+    // Validação estrita da audiência do token (RFC 7519 / OIDC Core)
+    if (data.aud !== targetClientId) {
+      console.warn(`⚠️ [Segurança SGSI] Token Google com audiência não autorizada: aud=${data.aud}, esperado=${targetClientId}`);
       return null;
     }
 
@@ -399,33 +433,64 @@ export async function verifyGoogleCredentialToken(credentialJwt: string): Promis
   }
 }
 
-export async function verifyGoogleAccessToken(accessToken: string): Promise<{
+export async function verifyGoogleAccessToken(
+  accessToken: string,
+  expectedClientId?: string,
+): Promise<{
   email: string;
   name: string;
   picture: string | null;
   emailVerified: boolean;
 } | null> {
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    const targetClientId = (expectedClientId || process.env.GOOGLE_CLIENT_ID || '').trim();
+    if (!targetClientId) {
+      console.warn('⚠️ [Segurança SGSI] Access Token Google rejeitado: GOOGLE_CLIENT_ID não está configurado.');
+      return null;
+    }
+
+    // 1. Valida audiência e emissão do token no endpoint de tokeninfo do Google
+    const infoUrl = `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`;
+    const ctrl1 = new AbortController();
+    const to1 = setTimeout(() => ctrl1.abort(), 6000);
+    const infoRes = await fetch(infoUrl, { signal: ctrl1.signal });
+    clearTimeout(to1);
+
+    if (!infoRes.ok) return null;
+    const infoData = (await infoRes.json()) as Record<string, unknown>;
+
+    const aud = String(infoData.audience || infoData.issued_to || '');
+    if (aud !== targetClientId) {
+      console.warn(`⚠️ [Segurança SGSI] Access Token Google com audiência inválida: aud=${aud}, esperado=${targetClientId}`);
+      return null;
+    }
+
+    const verifiedEmail = infoData.verified_email === true || infoData.verified_email === 'true';
+    const emailFromInfo = String(infoData.email || '').toLowerCase().trim();
+    if (!emailFromInfo || !verifiedEmail) return null;
+
+    // 2. Obtém perfil do usuário
+    const ctrl2 = new AbortController();
+    const to2 = setTimeout(() => ctrl2.abort(), 6000);
+    const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
       headers: { Authorization: `Bearer ${accessToken}` },
-      signal: controller.signal,
+      signal: ctrl2.signal,
     });
-    clearTimeout(timeout);
+    clearTimeout(to2);
 
-    if (!response.ok) return null;
-    const data = (await response.json()) as Record<string, unknown>;
-
-    const email = String(data.email || '').toLowerCase().trim();
-    const emailVerified = data.email_verified === 'true' || data.email_verified === true;
-    if (!email || !emailVerified) return null;
+    let name = emailFromInfo.split('@')[0];
+    let picture: string | null = null;
+    if (userRes.ok) {
+      const userData = (await userRes.json()) as Record<string, unknown>;
+      if (userData.name) name = String(userData.name);
+      if (userData.picture) picture = String(userData.picture);
+    }
 
     return {
-      email,
-      name: String(data.name || email.split('@')[0]),
-      picture: data.picture ? String(data.picture) : null,
-      emailVerified,
+      email: emailFromInfo,
+      name,
+      picture,
+      emailVerified: true,
     };
   } catch {
     return null;
