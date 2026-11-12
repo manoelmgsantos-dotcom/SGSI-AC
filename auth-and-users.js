@@ -815,12 +815,16 @@ async function loginWithForm(e) {
     } catch (_) {}
   }
 
-  // VALIDAÇÃO ESTRITA: Login por senha é restrito EXCLUSIVAMENTE ao Administrador Principal de Configuração!
-  const isAdmin = Boolean(
-    (found && (found.isSuperAdmin || found.id === 'usr-admin')) ||
-    email === 'manoelmgsantos@acengenhariase.com.br'
+  // VALIDAÇÃO ESTRITA: Login por senha é restrito ao Administrador Principal de Configuração
+  const isExplicitlyNonAdmin = Boolean(
+    found &&
+    !found.isSuperAdmin &&
+    found.id !== 'usr-admin' &&
+    found.role !== 'secops' &&
+    found.role !== 'diretoria' &&
+    email !== 'manoelmgsantos@acengenhariase.com.br'
   );
-  if (!isAdmin) {
+  if (isExplicitlyNonAdmin) {
     const blockMsg = "Acesso Negado: O login por senha é exclusivo para o Administrador Principal de Configuração. Todos os demais colaboradores devem acessar pelo botão 'Continuar com Google Workspace'.";
     if (window.showConfirmDialog) {
       await window.showConfirmDialog({

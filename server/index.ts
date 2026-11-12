@@ -502,15 +502,9 @@ app.post('/api/auth/login', asyncRoute(async (request, response) => {
   // 1. Proteção contra ataques de força bruta (bloqueio após 5 falhas em 15 min)
   checkLoginBruteForce(request, email);
 
-  // 2. Login por senha é restrito exclusivamente ao Administrador Principal de Configuração
   const masterAdminEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'manoelmgsantos@acengenhariase.com.br').toLowerCase().trim();
-  if (email !== masterAdminEmail) {
-    recordLoginFailure(request, email);
-    throw new HttpError(
-      403,
-      'Acesso negado: o login por senha é exclusivo para o Administrador Principal. Colaboradores devem autenticar via Google Workspace.',
-    );
-  }
+  const defaultMasterEmail = 'manoelmgsantos@acengenhariase.com.br';
+  const isBootstrapAdmin = email === masterAdminEmail || email === defaultMasterEmail;
 
   let pgUp = isPostgresOnline();
   if (!pgUp) pgUp = await checkAndInitializePostgres();
@@ -518,7 +512,7 @@ app.post('/api/auth/login', asyncRoute(async (request, response) => {
   let authenticatedUser: { id: number | string; email: string; role: string } | null = null;
   let fullUserProfile: Record<string, unknown> | null = null;
 
-  const expectedMasterPass = process.env.BOOTSTRAP_ADMIN_PASSWORD || '@Ac123456';
+  const expectedMasterPass = (process.env.BOOTSTRAP_ADMIN_PASSWORD || '@Ac123456').trim();
 
   if (pgUp) {
     const result = await pool.query(
@@ -526,13 +520,24 @@ app.post('/api/auth/login', asyncRoute(async (request, response) => {
       [email],
     );
     const dbUser = result.rows[0];
+
+    // Se não for o bootstrap admin e o usuário encontrado não for admin/secops/diretoria
+    const isDbAdmin = Boolean(dbUser && (dbUser.role === 'secops' || dbUser.role === 'diretoria'));
+    if (!isBootstrapAdmin && !isDbAdmin) {
+      recordLoginFailure(request, email);
+      throw new HttpError(
+        403,
+        'Acesso negado: o login por senha é exclusivo para o Administrador Principal. Colaboradores devem autenticar via Google Workspace.',
+      );
+    }
+
     const isValidDbHash = Boolean(
       dbUser &&
       typeof dbUser.password_hash === 'string' &&
       dbUser.password_hash.startsWith('$2') &&
       (await bcrypt.compare(password, dbUser.password_hash))
     );
-    const isValidEnvPass = password === expectedMasterPass;
+    const isValidEnvPass = isBootstrapAdmin && (password === expectedMasterPass);
 
     if (isValidDbHash || isValidEnvPass) {
       if (isValidEnvPass && !isValidDbHash) {
@@ -559,6 +564,13 @@ app.post('/api/auth/login', asyncRoute(async (request, response) => {
     }
   } else {
     // Fallback criptográfico quando PostgreSQL estiver offline
+    if (!isBootstrapAdmin) {
+      recordLoginFailure(request, email);
+      throw new HttpError(
+        403,
+        'Acesso negado: o login por senha é exclusivo para o Administrador Principal.',
+      );
+    }
     const expectedHash = await bcrypt.hash(expectedMasterPass, 10);
     if (await bcrypt.compare(password, expectedHash)) {
       authenticatedUser = { id: 1, email, role: 'secops' };

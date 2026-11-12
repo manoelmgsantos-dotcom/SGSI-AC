@@ -10,6 +10,7 @@
     "tunnel": "node ./scripts/tunnel.mjs",
     "db:setup": "node scripts/setup-postgres.cjs",
     "db:reset": "node scripts/reset-db.mjs",
+    "reset-admin": "node scripts/reset-admin.mjs",
     "build": "node scripts/build.mjs",
     "build:client": "vite build",
     "build:server": "esbuild server/index.ts --bundle --platform=node --format=esm --outfile=dist-server/index.mjs --external:bcryptjs --external:pg --external:express --external:dotenv --external:express-session",
