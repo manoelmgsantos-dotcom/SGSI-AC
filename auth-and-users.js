@@ -134,6 +134,18 @@ const ROLE_DEFINITIONS = {
     color: "teal",
     badgeClass: "bg-teal-50 text-teal-700 border-teal-200",
     description: "Prontuários médicos de canteiro, NR-18, termos de colaboradores e controle de acessos de empreiteiras."
+  },
+  comercial: {
+    name: "Comercial & Estandes de Vendas",
+    color: "pink",
+    badgeClass: "bg-pink-50 text-pink-700 border-pink-200",
+    description: "Termos anti-repasse de leads, proteção de dados de compradores em estandes de vendas e sigilo financeiro."
+  },
+  suprimentos: {
+    name: "Suprimentos & Terceirização",
+    color: "indigo",
+    badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    description: "Homologação de empreiteiras, gestão de aditivos contratuais de confidencialidade (DPA) e matriz de terceirizados."
   }
 };
 
@@ -1029,6 +1041,24 @@ function applyUserSession(user) {
   if (personaLoc) personaLoc.textContent = user.location || user.department || "Sede Central";
 
   autoFillResponsibleInputs(user.name);
+
+  // Filtro Automático por Lotação/Canteiro (Escopo Geográfico de Canteiro - ISO 27001 A.5.15)
+  try {
+    if (user.location && user.location !== "Escritório Central (Matriz)" && user.location !== "Todas as Unidades" && user.location !== "Todas as Unidades (Matriz e Canteiros)") {
+      if (typeof window.setRiskObraFilter === 'function') {
+        window.setRiskObraFilter(user.location);
+      }
+      const selUnidade = document.getElementById("select-unidade-filter");
+      if (selUnidade) {
+        for (let i = 0; i < selUnidade.options.length; i++) {
+          if (selUnidade.options[i].value === user.location || selUnidade.options[i].text.includes(user.location)) {
+            selUnidade.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+  } catch (_) {}
 }
 
 function autoFillResponsibleInputs(name) {
@@ -1471,6 +1501,20 @@ function getDefaultResponsibilities(role) {
         "Gestão de Dados Pessoais de Colaboradores e Prontuários Ocupacionais (NR-18)",
         "Termos de Consentimento e Tratamento de Exames Médicos (PCMSO)",
         "Controle de Acesso de Terceirizados em Canteiros de Obra"
+      ];
+    case 'comercial':
+      return [
+        "Gestão e Fiscalização do Termo Anti-Repasse de Leads Imobiliários",
+        "Proteção de Dados Pessoais de Compradores em Estandes de Vendas",
+        "Garantia de Sigilo de Dossiês Financeiros e Simulações de Crédito",
+        "Upload de Evidências de Consentimento e Treinamento de Corretores"
+      ];
+    case 'suprimentos':
+      return [
+        "Homologação de Fornecedores e Empreiteiras Terceirizadas",
+        "Gestão de Acordos de Tratamento de Dados (DPAs) e Termos de Sigilo",
+        "Avaliação de Riscos de Terceiros e Auditoria de Subcontratadas",
+        "Registro de Evidências Contratuais e Conformidade Trabalhista"
       ];
     default:
       return ["Acesso e operação das rotinas de conformidade do SGSI"];

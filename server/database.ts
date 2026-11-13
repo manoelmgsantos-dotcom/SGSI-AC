@@ -71,7 +71,7 @@ export async function checkAndInitializePostgres(): Promise<boolean> {
         );
         ALTER TABLE app_users DROP CONSTRAINT IF EXISTS app_users_role_check;
         ALTER TABLE app_users ADD CONSTRAINT app_users_role_check CHECK (
-          role IN ('gestor_obra', 'secops', 'dpo', 'rh_sst', 'diretoria', 'auditoria', 'executivo', 'auditor')
+          role IN ('gestor_obra', 'secops', 'dpo', 'rh_sst', 'comercial', 'suprimentos', 'diretoria', 'auditoria', 'executivo', 'auditor')
         );
       EXCEPTION WHEN OTHERS THEN
         NULL;

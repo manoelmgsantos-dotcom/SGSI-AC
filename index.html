@@ -3346,9 +3346,11 @@
                 <option value="dpo">DPO / Privacidade</option>
                 <option value="secops">SecOps / T.I.</option>
                 <option value="gestor_obra">Gestor de Obras</option>
-                <option value="auditoria">Auditoria</option>
-                <option value="diretoria">Diretoria</option>
                 <option value="rh_sst">RH & SST</option>
+                <option value="comercial">Comercial & Vendas</option>
+                <option value="suprimentos">Suprimentos & Terceirização</option>
+                <option value="diretoria">Diretoria Executiva</option>
+                <option value="auditoria">Auditoria</option>
               </select>
             </div>
             <div class="flex items-center gap-2">
@@ -3467,9 +3469,11 @@
                       <option value="dpo">DPO / Encarregado(a) de Dados</option>
                       <option value="secops" selected>SecOps / Gestor de T.I.</option>
                       <option value="gestor_obra">Gestor de Obra / Eng. Residente</option>
-                      <option value="auditoria">Auditor Líder ISO 27001 & ANPD</option>
-                      <option value="diretoria">Diretoria Executiva / C-Level</option>
                       <option value="rh_sst">RH & SST (NR-18)</option>
+                      <option value="comercial">Comercial & Estandes de Vendas</option>
+                      <option value="suprimentos">Suprimentos & Terceirização</option>
+                      <option value="diretoria">Diretoria Executiva / C-Level</option>
+                      <option value="auditoria">Auditor Líder ISO 27001 & ANPD</option>
                     </select>
                   </div>
                   <div>
@@ -4378,8 +4382,10 @@ openssl ts -reply -in response.tsr -text</pre>
                 <option value="dpo">DPO & Compliance LGPD</option>
                 <option value="secops">Gestor de T.I. & SecOps</option>
                 <option value="rh_sst">RH & SST (NR-18)</option>
-                <option value="auditoria">Auditor Líder ISO 27001</option>
+                <option value="comercial">Comercial & Estandes de Vendas</option>
+                <option value="suprimentos">Suprimentos & Terceirização</option>
                 <option value="diretoria">Diretoria Executiva / C-Level</option>
+                <option value="auditoria">Auditor Líder ISO 27001</option>
               </select>
             </div>
 
@@ -7095,8 +7101,8 @@ openssl ts -reply -in response.tsr -text</pre>
       ];
 
       const ROLE_MODULES = {
-        // Gestor de Obra / Engenheiro Residente: Canteiro, Governança/Políticas, Riscos, LGPD de campo e Evidências
-        gestor_obra: ['dashboard', 'obras', 'raci', 'risks', 'lgpd', 'evidence'],
+        // Gestor de Obra / Engenheiro Residente: Canteiro, Governança/Políticas, Riscos de campo e Evidências
+        gestor_obra: ['dashboard', 'obras', 'raci', 'risks', 'evidence'],
 
         // SecOps / Administrador Geral de T.I. & SGSI: Todos os 10 módulos operacionais e técnicos
         secops: ['dashboard', 'obras', 'users', 'raci', 'secops', 'integrations', 'risks', 'lgpd', 'evidence', 'audit'],
@@ -7106,6 +7112,12 @@ openssl ts -reply -in response.tsr -text</pre>
 
         // RH & SST (NR-18): Canteiros/Operários, Governança, Riscos ocupacionais/biométricos, LGPD e Evidências
         rh_sst: ['dashboard', 'obras', 'raci', 'risks', 'lgpd', 'evidence'],
+
+        // Comercial & Estandes de Vendas: Dashboard Comercial, LGPD (Termos de Leads/Consentimento Compradores) e Evidências
+        comercial: ['dashboard', 'lgpd', 'evidence'],
+
+        // Suprimentos & Contratos de Terceiros: Dashboard, Obras/Empreiteiras, Riscos (Terceirização), LGPD (DPAs) e Evidências
+        suprimentos: ['dashboard', 'obras', 'risks', 'lgpd', 'evidence'],
 
         // Diretoria Executiva / C-Level: Visão Executiva, Obras, Políticas/SoA, Riscos, LGPD, Evidências e Auditoria
         diretoria: ['dashboard', 'obras', 'raci', 'risks', 'lgpd', 'evidence', 'audit'],
@@ -7202,7 +7214,8 @@ openssl ts -reply -in response.tsr -text</pre>
           if (banner) banner.classList.remove("hidden");
           if (bannerText) bannerText.innerHTML = "<strong>Perfil Gestor de Obra / Eng. Residente:</strong> Visão focada nos riscos e políticas operacionais da sua obra.";
           if (sodDesc) sodDesc.textContent = "Gestor: Obra";
-          setRiskObraFilter('all');
+          const activeLoc = (activeUser && activeUser.location && activeUser.location !== "Escritório Central (Matriz)" && activeUser.location !== "Todas as Unidades") ? activeUser.location : 'all';
+          setRiskObraFilter(activeLoc);
           if (!allowedForNewRole.includes(State.currentTab)) {
             switchTab('dashboard');
           }
@@ -7227,6 +7240,20 @@ openssl ts -reply -in response.tsr -text</pre>
           if (!allowedForNewRole.includes(State.currentTab)) {
             switchTab('raci');
             switchRaciSubtab('matrix');
+          }
+        } else if (newRole === 'comercial') {
+          if (banner) banner.classList.remove("hidden");
+          if (bannerText) bannerText.innerHTML = "<strong>Perfil Comercial & Estandes:</strong> Focado em proteção de dados de compradores, contratos de venda e termos anti-repasse de leads.";
+          if (sodDesc) sodDesc.textContent = "Comercial: Vendas & Leads";
+          if (!allowedForNewRole.includes(State.currentTab)) {
+            switchTab('dashboard');
+          }
+        } else if (newRole === 'suprimentos') {
+          if (banner) banner.classList.remove("hidden");
+          if (bannerText) bannerText.innerHTML = "<strong>Perfil Suprimentos & Terceirização:</strong> Homologação de empreiteiras, gestão de aditivos DPA e conformidade contratual.";
+          if (sodDesc) sodDesc.textContent = "Suprimentos: Terceiros & DPAs";
+          if (!allowedForNewRole.includes(State.currentTab)) {
+            switchTab('obras');
           }
         } else if (newRole === 'diretoria') {
           if (banner) banner.classList.remove("hidden");
@@ -7257,6 +7284,8 @@ openssl ts -reply -in response.tsr -text</pre>
             secops: 'Administrador SecOps & T.I.',
             dpo: 'DPO / Jurídico Imobiliário',
             rh_sst: 'RH / SST (NR-18)',
+            comercial: 'Comercial & Estandes de Vendas',
+            suprimentos: 'Suprimentos & Terceirização',
             diretoria: 'Diretoria C-Level',
             auditoria: 'Auditor Líder ISO 27001'
           };
@@ -7455,6 +7484,46 @@ openssl ts -reply -in response.tsr -text</pre>
               <button onclick="switchTab('raci'); switchRaciSubtab('matrix');" class="px-2.5 py-1 text-xs font-medium rounded bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 transition-colors flex items-center gap-1 cursor-pointer">
                 <i data-lucide="git-merge" class="w-3.5 h-3.5 text-slate-500"></i>
                 <span>Matriz RACI</span>
+              </button>
+            `
+          },
+          comercial: {
+            label: "Comercial & Estandes de Vendas",
+            badgeClass: "bg-slate-100 text-slate-800 border-slate-300 font-semibold",
+            avatarBg: "bg-slate-800",
+            mission: "Proteção de dados em vendas: sigilo de leads, conformidade no CV CRM, termos com corretores e simulação habitacional.",
+            actions: `
+              <button onclick="openModal('modal-new-evidence'); prefillEvidenceModal('Estande de Vendas', 'Comercial & Vendas');" class="px-2.5 py-1 text-xs font-medium rounded bg-[#0f2942] hover:bg-[#163a5c] text-white transition-colors flex items-center gap-1 cursor-pointer">
+                <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                <span>Termo Anti-Repasse</span>
+              </button>
+              <button onclick="switchTab('lgpd'); if(typeof switchLgpdSubtab === 'function') switchLgpdSubtab('dsar');" class="px-2.5 py-1 text-xs font-medium rounded bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 transition-colors flex items-center gap-1 cursor-pointer">
+                <i data-lucide="user-check" class="w-3.5 h-3.5 text-slate-500"></i>
+                <span>Atendimento Compradores</span>
+              </button>
+              <button onclick="previewCorporateTemplate('MOD-LGP-06');" class="px-2.5 py-1 text-xs font-medium rounded bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 transition-colors flex items-center gap-1 cursor-pointer">
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-slate-500"></i>
+                <span>Minuta de Consentimento</span>
+              </button>
+            `
+          },
+          suprimentos: {
+            label: "Suprimentos & Terceirização",
+            badgeClass: "bg-slate-100 text-slate-800 border-slate-300 font-semibold",
+            avatarBg: "bg-slate-800",
+            mission: "Gestão de terceiros: homologação de empreiteiras, matriz de subcontratadas e garantia de aditivos de confidencialidade (DPA).",
+            actions: `
+              <button onclick="openModal('modal-new-dpa');" class="px-2.5 py-1 text-xs font-medium rounded bg-[#0f2942] hover:bg-[#163a5c] text-white transition-colors flex items-center gap-1 cursor-pointer">
+                <i data-lucide="file-plus" class="w-3.5 h-3.5"></i>
+                <span>Novo Aditivo DPA</span>
+              </button>
+              <button onclick="openModal('modal-new-risk'); prefillRiskModal('Todas as Obras', 'Terceiros / Fornecedores');" class="px-2.5 py-1 text-xs font-medium rounded bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 transition-colors flex items-center gap-1 cursor-pointer">
+                <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-slate-500"></i>
+                <span>Risco de Fornecedor</span>
+              </button>
+              <button onclick="switchTab('obras');" class="px-2.5 py-1 text-xs font-medium rounded bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 transition-colors flex items-center gap-1 cursor-pointer">
+                <i data-lucide="building-2" class="w-3.5 h-3.5 text-slate-500"></i>
+                <span>Ver Canteiros & Empreiteiras</span>
               </button>
             `
           },
@@ -8430,6 +8499,22 @@ openssl ts -reply -in response.tsr -text</pre>
           } else {
             openModal('modal-new-risk');
             prefillRiskModal('Obra Horizon', 'Física / Canteiro');
+          }
+          return;
+        }
+
+        if (role === 'comercial') {
+          openModal('modal-new-evidence');
+          prefillEvidenceModal('Estande de Vendas', 'Comercial & Vendas');
+          return;
+        }
+
+        if (role === 'suprimentos') {
+          if (State.currentTab === 'lgpd') {
+            openModal('modal-new-dpa');
+          } else {
+            openModal('modal-new-risk');
+            prefillRiskModal('Todas as Obras', 'Terceiros / Fornecedores');
           }
           return;
         }

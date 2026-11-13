@@ -5,6 +5,8 @@ export type UserRole =
   | 'secops'
   | 'dpo'
   | 'rh_sst'
+  | 'comercial'
+  | 'suprimentos'
   | 'diretoria'
   | 'auditoria'
   | 'executivo'

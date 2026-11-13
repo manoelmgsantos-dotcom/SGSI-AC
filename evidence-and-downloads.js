@@ -106,6 +106,17 @@ async function deleteSelectedEvidence() {
   const ids = Array.from(selectedEvidenceIds);
   if (ids.length === 0) return;
 
+  const curRole = (window.State && window.State.currentRole) || (window.AuthState && window.AuthState.currentUser && window.AuthState.currentUser.role) || "secops";
+  const isSuper = window.AuthState && window.AuthState.currentUser && (window.AuthState.currentUser.isSuperAdmin || window.AuthState.currentUser.id === "usr-admin");
+  const allowedDeleters = ['dpo', 'secops', 'diretoria'];
+
+  if (!isSuper && !allowedDeleters.includes(curRole)) {
+    if (window.showToast) {
+      window.showToast("Acesso restrito: apenas o Administrador de TI, DPO ou Diretoria podem excluir evidências com custódia digital (ISO 27001 A.8.15).", "warning");
+    }
+    return;
+  }
+
   const ok = await (window.showConfirmDialog ? window.showConfirmDialog({
     title: `Excluir ${ids.length} Evidência(s) em Lote`,
     message: `Deseja realmente remover as <strong>${ids.length} evidências selecionadas</strong> (${ids.join(", ")})?`,
@@ -263,8 +274,19 @@ function renderEvidenceModule() {
   if (window.lucide) window.lucide.createIcons();
 }
 
-// Alteração de Status de Homologação
+// Alteração de Status de Homologação (Segregação de Funções - SoD / ISO 27001 A.5.3)
 function toggleEvidenceApproval(id) {
+  const curRole = (window.State && window.State.currentRole) || (window.AuthState && window.AuthState.currentUser && window.AuthState.currentUser.role) || "secops";
+  const isSuper = window.AuthState && window.AuthState.currentUser && (window.AuthState.currentUser.isSuperAdmin || window.AuthState.currentUser.id === "usr-admin");
+  const allowedApprovers = ['dpo', 'secops', 'diretoria'];
+
+  if (!isSuper && !allowedApprovers.includes(curRole)) {
+    if (window.showToast) {
+      window.showToast("Segregação de Funções (SoD - ISO 27001 A.5.3): Apenas o DPO, Gestor de SecOps ou Diretoria possuem alçada para homologar formalmente evidências comprobatórias.", "warning");
+    }
+    return;
+  }
+
   const list = getStoredEvidence();
   const item = list.find(e => e.id === id);
   if (!item) return;
@@ -301,6 +323,17 @@ function toggleEvidenceApproval(id) {
 
 // Excluir Evidência
 async function deleteEvidence(id) {
+  const curRole = (window.State && window.State.currentRole) || (window.AuthState && window.AuthState.currentUser && window.AuthState.currentUser.role) || "secops";
+  const isSuper = window.AuthState && window.AuthState.currentUser && (window.AuthState.currentUser.isSuperAdmin || window.AuthState.currentUser.id === "usr-admin");
+  const allowedDeleters = ['dpo', 'secops', 'diretoria'];
+
+  if (!isSuper && !allowedDeleters.includes(curRole)) {
+    if (window.showToast) {
+      window.showToast("Acesso restrito: apenas o Administrador de TI, DPO ou Diretoria podem excluir evidências com custódia digital (ISO 27001 A.8.15).", "warning");
+    }
+    return;
+  }
+
   const ok = await (window.showConfirmDialog ? window.showConfirmDialog({
     title: "Excluir Evidência Comprobatória",
     message: `Deseja realmente remover a evidência <span class="font-bold text-rose-600 font-mono">${id}</span>?`,

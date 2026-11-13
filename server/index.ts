@@ -42,7 +42,7 @@ import {
 const app = express();
 app.disable('x-powered-by');
 const VALID_ROLES = new Set([
-  'gestor_obra', 'secops', 'dpo', 'rh_sst', 'diretoria', 'auditoria', 'executivo', 'auditor',
+  'gestor_obra', 'secops', 'dpo', 'rh_sst', 'comercial', 'suprimentos', 'diretoria', 'auditoria', 'executivo', 'auditor',
 ]);
 
 // Cache em memória de hashes bcrypt para evitar recomputação pesada de CPU em sincronizações repetidas
@@ -782,6 +782,8 @@ app.post('/api/users/invite', requireAdminRole, asyncRoute(async (request, respo
     secops: 'Gestor de T.I. & SecOps',
     dpo: 'DPO & Encarregado(a) Geral',
     rh_sst: 'RH & SST (NR-18)',
+    comercial: 'Comercial & Estandes de Vendas',
+    suprimentos: 'Suprimentos & Terceirização',
     diretoria: 'Diretoria Executiva / C-Level',
     auditoria: 'Auditor Líder ISO 27001'
   };
