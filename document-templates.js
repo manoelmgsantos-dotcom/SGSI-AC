@@ -550,6 +550,47 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     `
   },
   {
+    code: "MOD-OBR-03B",
+    module: "obras",
+    docType: "Termo para Assinatura",
+    requiresSignature: true,
+    title: "Termo Individual de Ciência de Controle de Acesso e Identificação em Canteiro (QR Code / Crachá - NR-18)",
+    normative: "LGPD Art. 7º, II e IX & NR-18 (Segurança na Construção Civil)",
+    evidenceCategory: "Conscientização & RH",
+    signersSummary: "Colaborador / Operário Terceirizado + RH / SST",
+    summary: "Termo de ciência para controle de acesso por QR Code e identificação fotográfica cadastral em canteiro, sem coleta de dados biométricos sensíveis.",
+    buildBody: (ctx) => `
+      <h2>1. Identificação do Trabalhador (Próprio ou Empreiteira Terceirizada)</h2>
+      <table class="data-table">
+        <tr>
+          <td width="60%"><strong>Nome Completo:</strong> ______________________________________________________</td>
+          <td width="40%"><strong>CPF:</strong> ___________________________</td>
+        </tr>
+        <tr>
+          <td><strong>Função / Cargo:</strong> ______________________________________________________</td>
+          <td><strong>Empresa / Empreiteira:</strong> ______________________</td>
+        </tr>
+        <tr>
+          <td colspan="2"><strong>Obra / Canteiro de Lotação:</strong> ${escapeDocHtml(ctx.activeUnit)}</td>
+        </tr>
+      </table>
+
+      <h2>2. Finalidade Estrita e Tratamento de Dados para Controle de Acesso</h2>
+      <ol>
+        <li><strong>Finalidade Exclusiva:</strong> O trabalhador declara estar ciente de que sua fotografia e dados cadastrais serão utilizados para a geração de credencial de acesso (QR Code) e identificação visual nas catracas, exclusivamente para controle de acesso físico à área de risco e prevenção a fraudes.</li>
+        <li><strong>Inexistência de Tratamento Biométrico Sensível:</strong> Fica expressamente cientificado que o sistema de controle de acesso da <strong>${escapeDocHtml(ctx.company)}</strong> opera unicamente por validação de credencial digital/óptica (QR Code) e conferência visual de fotografia no crachá e portaria da obra, <strong>não havendo qualquer coleta, escaneamento, leitura, extração ou armazenamento de dados biométricos faciais, digitais ou sensíveis (Art. 5º, II e Art. 11 da Lei nº 13.709/2018 - LGPD)</strong>.</li>
+        <li><strong>Base Legal (Art. 7º, II e IX da LGPD & NR-18):</strong> O tratamento dos dados cadastrais e da fotografia fundamenta-se no cumprimento de obrigação legal e regulatória trabalhista e de Segurança e Saúde no Trabalho (Normas Regulamentadoras NR-01, NR-07 e NR-18) e no legítimo interesse da Controladora na proteção da integridade física dos trabalhadores e segurança patrimonial da obra.</li>
+        <li><strong>Guarda Segura, Sigilo e Descarte da Credencial:</strong> A <strong>${escapeDocHtml(ctx.company)}</strong> assegura que a fotografia e os dados cadastrais coletados jamais serão comercializados ou cedidos a terceiros para fins publicitários ou mercadológicos. A credencial QR Code e as permissões de acesso físico serão <strong>integralmente bloqueadas e inativadas</strong> nas catracas após o desligamento do trabalhador da empreiteira ou na conclusão da respectiva etapa construtiva no canteiro.</li>
+        <li><strong>Direitos do Titular (Art. 18 LGPD):</strong> A qualquer momento, confirmação de tratamento, correções cadastrais ou esclarecimentos sobre privacidade podem ser solicitados gratuitamente ao Encarregado de Proteção de Dados (DPO) através do canal oficial: <strong>${escapeDocHtml(ctx.dpoEmail)}</strong>.</li>
+      </ol>
+
+      ${buildSignatureGridHTML([
+        { role: "Trabalhador / Titular dos Dados", name: "Assinatura do Colaborador / Operário", docLabel: "CPF: ___________________________________________" },
+        { role: "Responsável pela Integração (RH / Técnico SST — AC Engenharia)", name: "" }
+      ], false, "MOD-OBR-03B")}
+    `
+  },
+  {
     code: "MOD-OBR-04",
     module: "obras",
     docType: "Laudo / Termo",
