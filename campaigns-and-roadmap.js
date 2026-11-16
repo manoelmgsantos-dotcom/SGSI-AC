@@ -3,299 +3,286 @@
 // Módulo: Plano Priorizado de Tarefas (19+5 Tarefas) & Campanhas ANPD (52 Semanas)
 // =========================================================================
 
-// 1. Catálogo Oficial das 19 Tarefas do Plano de Ação LGPD & Segurança (Fase 1 a Fase 4)
+// 1. Catálogo Oficial das 17 Tarefas do Plano de Ação Estrutural (Fase 1 a Fase 4)
 const ROADMAP_TASKS = [
-  // FASE 1: CUSTO ZERO
+  // FASE 1: PROTEÇÃO DE INFRAESTRUTURA E IDENTIDADE (FUNDAÇÃO)
   {
     id: 1,
+    code: "1.1",
     phase: 1,
-    phaseName: "Fase 1: Custo Zero",
-    title: "Treinamento e Conscientização Contínuos",
-    desc: "Manter programa anual de envio de avisos sobre LGPD e Segurança",
-    cost: "Zero",
-    effort: "Baixo",
-    status: "Em Andamento",
-    completed: false,
-    howTo: "Usar e-mail, intranet ou grupo de comunicação interna para enviar pílulas semanais (dicas de senhas, phishing). Registrar listas de presença ou confirmações de leitura.",
-    obs: "Campanha semanal será iniciada",
-    linkModule: "raci",
-    subtab: "campaigns"
-  },
-  {
-    id: 2,
-    phase: 1,
-    phaseName: "Fase 1: Custo Zero",
-    title: "Comitê, Políticas e Plano de Resposta a Incidentes",
-    desc: "Criar documentos e definir responsáveis para casos de vazamento",
-    cost: "Zero (Tempo)",
+    phaseName: "Fase 1: Infraestrutura & Identidade (Fundação)",
+    title: "Controle de Privilégios e Identidade",
+    desc: "Aplicar o princípio do menor privilégio, garantindo que usuários comuns não tenham direitos administrativos e limitando a superfície de ataque lateral.",
+    cost: "Zero / GPO",
     effort: "Médio",
-    status: "Em Andamento",
-    completed: false,
-    howTo: "Agendar reunião com a diretoria/RH/TI. Redigir um documento simples definindo uma Matriz RACI para incidentes (quem aciona a ANPD, quem avalia o servidor, etc.) e aprovar.",
-    obs: "Documentado na Matriz RACI e Política PSI-001.",
-    linkModule: "raci",
-    subtab: "matrix"
-  },
-  {
-    id: 3,
-    phase: 1,
-    phaseName: "Fase 1: Custo Zero",
-    title: "Política de Privilégio Mínimo (Remover Admin Local)",
-    desc: "Retirar privilégios de administrador das máquinas dos usuários",
-    cost: "Zero",
-    effort: "Médio",
-    status: "Em Andamento",
-    completed: false,
-    howTo: "No Active Directory (AD) ou no gerenciamento local do Windows, alterar o perfil do usuário de 'Administrador' para 'Usuário Padrão'. Aplicar GPOs se usar AD.",
-    obs: "Reduz drasticamente o risco de execução de malwares e ransomwares.",
-    linkModule: "raci",
-    subtab: "policies"
-  },
-  {
-    id: 4,
-    phase: 1,
-    phaseName: "Fase 1: Custo Zero",
-    title: "Criptografia de Disco (BitLocker / FileVault)",
-    desc: "Ativar criptografia nativa e gratuita nos notebooks",
-    cost: "Zero",
-    effort: "Baixo",
-    status: "Pendente",
-    completed: false,
-    howTo: "No Windows Pro, pesquisar por 'Gerenciar BitLocker' e ativar na unidade C:. Salvar as chaves de recuperação no AD ou em cofre de senhas. No Mac, ativar o 'FileVault'.",
-    obs: "Proteção obrigatória para notebooks corporativos em caso de perda ou furto.",
-    linkModule: "secops",
-    subtab: "assets"
-  },
-  {
-    id: 5,
-    phase: 1,
-    phaseName: "Fase 1: Custo Zero",
-    title: "Ativação de MFA nas Contas em Nuvem",
-    desc: "Forçar duplo fator em contas do Google Workspace ou Microsoft 365",
-    cost: "Zero",
-    effort: "Baixo",
-    status: "Pendente",
-    completed: false,
-    howTo: "No painel de administração (Google Workspace ou Microsoft 365), acessar as políticas de segurança e forçar a 'Verificação em duas etapas' (MFA) para todos os usuários.",
-    obs: "Previne comprometimento de credenciais e invasão de e-mails corporativos.",
-    linkModule: "raci",
-    subtab: "policies"
-  },
-  {
-    id: 6,
-    phase: 1,
-    phaseName: "Fase 1: Custo Zero",
-    title: "Mapeamento de Dados (ROPA) e RIPD",
-    desc: "Fazer inventário de dados pessoais (pode ser via planilhas)",
-    cost: "Zero (Tempo)",
-    effort: "Alto",
-    status: "Pendente",
-    completed: false,
-    howTo: "Criar uma planilha mapeando: Setor, Qual o dado pessoal, Finalidade, Onde é armazenado e Quem acessa. Entrevistar gestores de cada área para preencher.",
-    obs: "Exigência expressa do Art. 37 da LGPD para comprovação de conformidade.",
-    linkModule: "lgpd",
-    subtab: "ropa"
-  },
-  {
-    id: 7,
-    phase: 1,
-    phaseName: "Fase 1: Custo Zero",
-    title: "Criptografia em Trânsito (TLS)",
-    desc: "Garantir HTTPS e certificados gratuitos em sites e sistemas internos",
-    cost: "Zero",
-    effort: "Baixo",
-    status: "Pendente",
-    completed: false,
-    howTo: "Em servidores web ou painéis de hospedagem (como cPanel), emitir certificados gratuitos via Let's Encrypt e configurar o redirecionamento forçado de HTTP para HTTPS.",
-    obs: "Garante a confidencialidade das comunicações e tráfego seguro de dados.",
-    linkModule: "secops",
-    subtab: "assets"
-  },
-
-  // FASE 2: CUSTO BAIXO A MÉDIO
-  {
-    id: 8,
-    phase: 2,
-    phaseName: "Fase 2: Custo Baixo a Médio",
-    title: "Ajuste de Regras de Firewall e VPN",
-    desc: "Revisar regras, fechar portas desnecessárias e configurar VPN com MFA",
-    cost: "Tempo Técnico",
-    effort: "Baixo",
-    status: "Pendente",
-    completed: false,
-    howTo: "Acessar o console do firewall, desativar regras 'Any-Any' (abertas), bloquear acesso a portas não utilizadas (ex: RDP 3389 para fora) e configurar a VPN para exigir duplo fator.",
-    obs: "Evita exposição indevida da infraestrutura interna à internet pública.",
-    linkModule: "secops",
-    subtab: "assets"
-  },
-  {
-    id: 9,
-    phase: 2,
-    phaseName: "Fase 2: Custo Baixo a Médio",
-    title: "Segmentação de Rede (VLANs)",
-    desc: "Separar redes via configuração nos switches atuais gerenciáveis",
-    cost: "Tempo Técnico",
-    effort: "Médio",
-    status: "Pendente",
-    completed: false,
-    howTo: "Acessar a interface dos switches de rede (gerenciáveis). Criar redes lógicas separadas (ex: VLAN 10 para Servidores, VLAN 20 para Estações) e isolar o tráfego entre elas.",
-    obs: "Impede movimentação lateral de ameaças na rede interna corporativa.",
-    linkModule: "secops",
-    subtab: "assets"
-  },
-  {
-    id: 10,
-    phase: 2,
-    phaseName: "Fase 2: Custo Baixo a Médio",
-    title: "Logs e Trilhas de Auditoria",
-    desc: "Configurar retenção de logs em sistemas atuais (Windows, Linux, ERP)",
-    cost: "Tempo Técnico",
-    effort: "Médio",
-    status: "Pendente",
-    completed: false,
-    howTo: "Ativar Políticas de Grupo (GPOs) de auditoria no Windows Server (Logon/Logoff, Acesso a Objetos). Nos sistemas (ERP), checar se as trilhas de log nativas estão ligadas.",
-    obs: "Atende aos requisitos de rastreabilidade do Art. 37 da LGPD e ISO 27001.",
-    linkModule: "audit",
+    status: "Concluído",
+    completed: true,
+    howTo: "Configuração de GPOs no Active Directory para gerenciar estritamente os grupos de administradores locais. Criação de contas táticas segregadas para a equipe de TI e manutenção de contas locais isoladas apenas para uso como fallback em manutenções físicas.",
+    obs: "Evidência: Relatório do AD mostrando grupos de segurança atualizados e GPOs ativas bloqueando contas e heranças não autorizadas nos endpoints. [Modelos: MOD-USR-01 e MOD-USR-03]",
+    linkModule: "users",
     subtab: ""
   },
   {
-    id: 11,
-    phase: 2,
-    phaseName: "Fase 2: Custo Baixo a Médio",
-    title: "Controle de Terceiros (Contratos)",
-    desc: "Adicionar cláusulas de LGPD em contratos com apoio do jurídico",
-    cost: "Apoio Jurídico",
+    id: 2,
+    code: "1.2",
+    phase: 1,
+    phaseName: "Fase 1: Infraestrutura & Identidade (Fundação)",
+    title: "Segregação Lógica de Redes",
+    desc: "Isolar totalmente dispositivos não gerenciados do tráfego corporativo e dos servidores internos.",
+    cost: "Zero / Firewall",
     effort: "Médio",
-    status: "Pendente",
-    completed: false,
-    howTo: "Solicitar ao jurídico um 'Aditivo de LGPD' padrão. Enviar para todos os fornecedores que processam dados da empresa assinarem e embutir em novas contratações.",
-    obs: "Garante a responsabilidade solidária/subsidiária prevista na LGPD.",
-    linkModule: "lgpd",
-    subtab: "dpa"
+    status: "Concluído",
+    completed: true,
+    howTo: "Configuração de interfaces dedicadas no roteador de borda/firewall (como o MikroTik) com pools de DHCP independentes e regras de drop restritivas que impedem o roteamento entre o range de IPs de visitantes e as sub-redes corporativas.",
+    obs: "Evidência: Tabela de regras de firewall exportada demonstrando as políticas de negação e logs de bloqueio de tráfego inter-redes. [Modelos: MOD-SEC-01 e MOD-OBR-01]",
+    linkModule: "secops",
+    subtab: "assets"
   },
   {
-    id: 12,
-    phase: 2,
-    phaseName: "Fase 2: Custo Baixo a Médio",
-    title: "RBAC (Controle de Acesso Baseado em Função)",
-    desc: "Limitar acessos sistêmicos por função (ERP, CRM)",
-    cost: "Tempo Técnico",
-    effort: "Alto",
-    status: "Pendente",
-    completed: false,
-    howTo: "Mapear perfis no sistema (ex: ERP). Em vez de dar permissões individuais, criar grupos (ex: 'RH_Leitura', 'Fin_Edição') e adicionar os usuários aos grupos correspondentes.",
-    obs: "Aplica o princípio do menor privilégio a nível sistêmico.",
-    linkModule: "raci",
-    subtab: "matrix"
-  },
-
-  // FASE 3: CUSTO MÉDIO
-  {
-    id: 13,
-    phase: 3,
-    phaseName: "Fase 3: Custo Médio",
-    title: "EDR/XDR (Endpoint Detection and Response)",
-    desc: "Substituir antivírus por EDR (OPEX - assinatura por máquina)",
-    cost: "Licença Mensal",
-    effort: "Baixo",
-    status: "Pendente",
-    completed: false,
-    howTo: "Contratar uma ferramenta EDR (ex: Microsoft Defender for Business, Kaspersky). Distribuir o agente de instalação nos computadores e configurar bloqueio automático no console web.",
-    obs: "Detecção proativa de anomalias comportamentais e resposta rápida a incidentes.",
+    id: 3,
+    code: "1.3",
+    phase: 1,
+    phaseName: "Fase 1: Infraestrutura & Identidade (Fundação)",
+    title: "Proteção e Monitoramento de Endpoints",
+    desc: "Detectar, bloquear e registrar comportamentos anômalos, malwares e tentativas de intrusão em tempo real.",
+    cost: "Licença EDR",
+    effort: "Médio",
+    status: "Concluído",
+    completed: true,
+    howTo: "Implantação de EDR (como Bitdefender) em todas as estações e servidores, com integração de logs a um SIEM/XDR (como Wazuh) para centralização e correlação de eventos de segurança.",
+    obs: "Evidência: Dashboards demonstrando a integridade dos agentes, ausência de falhas de comunicação e retenção do histórico de alertas centralizados. [Modelo: MOD-SEC-04]",
     linkModule: "secops",
     subtab: "wazuh"
   },
   {
-    id: 14,
-    phase: 3,
-    phaseName: "Fase 3: Custo Médio",
-    title: "Proxy / Web Filter em Nuvem",
-    desc: "Assinar serviço DNS em nuvem para bloqueio de sites e phishing",
-    cost: "Licença Mensal",
-    effort: "Baixo",
+    id: 4,
+    code: "1.4",
+    phase: 1,
+    phaseName: "Fase 1: Infraestrutura & Identidade (Fundação)",
+    title: "Inventário Centralizado de Ativos",
+    desc: "Manter visibilidade absoluta sobre a infraestrutura técnica. Não é possível proteger um ambiente sem mapear sua totalidade.",
+    cost: "Tempo Técnico / CMDB",
+    effort: "Alto",
     status: "Pendente",
     completed: false,
-    howTo: "Assinar um serviço de DNS seguro (ex: Cisco Umbrella, NextDNS). Mudar os apontamentos de DNS do DHCP/Roteador para a nuvem do serviço e criar políticas bloqueando sites nocivos.",
-    obs: "Bloqueia tentativas de phishing e comunicação com servidores maliciosos de comando e controle.",
+    howTo: "Levantamento exaustivo (via ferramenta de ITSM ou planilha estruturada) de todo hardware corporativo, licenças de software e serviços autorizados em nuvem.",
+    obs: "Evidência: Base de dados (CMDB) atualizada contendo hostname, endereço MAC, IP, sistema operacional e proprietário associado ao ativo. [Modelo: MOD-SEC-05]",
     linkModule: "secops",
     subtab: "assets"
   },
+
+  // FASE 2: ESTRUTURAÇÃO LGPD E FATOR HUMANO
   {
-    id: 15,
-    phase: 3,
-    phaseName: "Fase 3: Custo Médio",
-    title: "Mascaramento e Anonimização de BD",
-    desc: "Aplicar em ambientes de teste, exige ferramentas ou desenvolvimento",
-    cost: "Licença/Desenvolvimento",
+    id: 5,
+    code: "2.1",
+    phase: 2,
+    phaseName: "Fase 2: Estruturação LGPD & Fator Humano",
+    title: "Conscientização Contínua em Segurança",
+    desc: "Mitigar o risco associado a falhas humanas, engenharia social e uso inadvertido de tecnologias não homologadas.",
+    cost: "Zero / Campanha",
+    effort: "Baixo",
+    status: "Concluído",
+    completed: true,
+    howTo: "Execução de trilha de capacitação periódica (campanha anual de 52 semanas) abordando criação de senhas seguras, identificação de phishing, riscos no uso de IAs públicas e manuseio de fraudes financeiras (ex: golpes de boletos).",
+    obs: "Evidência: Cronograma documentado das campanhas executadas, listas de presença/confirmação de leitura e material de apoio arquivado. [Modelo: MOD-GOV-04]",
+    linkModule: "raci",
+    subtab: "campaigns"
+  },
+  {
+    id: 6,
+    code: "2.2",
+    phase: 2,
+    phaseName: "Fase 2: Estruturação LGPD & Fator Humano",
+    title: "Mapeamento de Fluxos de Dados",
+    desc: "Mapear o ciclo de vida da informação (coleta, uso, armazenamento e descarte) dentro dos processos de negócio.",
+    cost: "Tempo Técnico",
+    effort: "Médio",
+    status: "Concluído",
+    completed: true,
+    howTo: "Rastreamento técnico de como os dados pessoais e financeiros trafegam, com foco especial nas plataformas críticas de gestão (como ERP Sienge, ferramentas de CRM e portais de recrutamento).",
+    obs: "Evidência: Diagramas de fluxo de dados (DFD) formalizados, identificando os sistemas de origem e destino das informações críticas. [Modelo: MOD-LGP-01]",
+    linkModule: "integrations",
+    subtab: ""
+  },
+  {
+    id: 7,
+    code: "2.3",
+    phase: 2,
+    phaseName: "Fase 2: Estruturação LGPD & Fator Humano",
+    title: "ROPA (Registro de Operações de Tratamento de Dados)",
+    desc: "Cumprir o Artigo 37 da LGPD, que exige a manutenção de um registro detalhado de todas as operações de tratamento de dados pessoais.",
+    cost: "Tempo DPO",
     effort: "Alto",
     status: "Pendente",
     completed: false,
-    howTo: "Utilizar scripts em SQL ou ferramentas de Data Masking para embaralhar nomes, e-mails e CPFs ao clonar o banco de dados de produção para o ambiente de desenvolvimento/testes.",
-    obs: "Atende aos artigos 5º, XI e 12 da LGPD, descaracterizando dados pessoais.",
+    howTo: "Preenchimento de documento formal detalhando o processo de negócio, a finalidade do tratamento, a base legal aplicável (ex: execução de contrato, legítimo interesse), a categoria de dados coletados e o prazo de retenção.",
+    obs: "Evidência: Planilha ou sistema de ROPA atualizado e aprovado pela alta gestão/DPO. [Modelo: MOD-LGP-04]",
     linkModule: "lgpd",
     subtab: "ropa"
   },
-
-  // FASE 4: ALTO CUSTO / ALTA COMPLEXIDADE
   {
-    id: 16,
-    phase: 4,
-    phaseName: "Fase 4: Alto Custo / Alta Complexidade",
-    title: "Criptografia de Dados em Repouso (TDE)",
-    desc: "Exige licenças 'Enterprise' caras de banco de dados (ex: SQL, Oracle)",
-    cost: "Licença Enterprise",
+    id: 8,
+    code: "2.4",
+    phase: 2,
+    phaseName: "Fase 2: Estruturação LGPD & Fator Humano",
+    title: "Matriz de Responsabilidades (RACI)",
+    desc: "Eliminar ambiguidades sobre papéis, governança e alçadas de decisão técnica e legal.",
+    cost: "Governança",
+    effort: "Médio",
+    status: "Pendente",
+    completed: false,
+    howTo: "Criação de matriz definindo claramente quem é Responsável (R), Aprovador (A), Consultado (C) e Informado (I) para cada processo do SGSI (desde a aprovação de acessos até a resposta a vazamentos).",
+    obs: "Evidência: Documento RACI assinado e disponibilizado para consulta interna. [Modelo: MOD-GOV-06]",
+    linkModule: "raci",
+    subtab: "matrix"
+  },
+
+  // FASE 3: DOCUMENTAÇÃO E GOVERNANÇA CENTRALIZADA
+  {
+    id: 9,
+    code: "3.1",
+    phase: 3,
+    phaseName: "Fase 3: Documentação & Governança Centralizada",
+    title: "Política de Segurança da Informação (PSI)",
+    desc: "Formalizar as diretrizes e regras internas da empresa para o uso aceitável de recursos tecnológicos e proteção da propriedade intelectual.",
+    cost: "Governança",
+    effort: "Médio",
+    status: "Pendente",
+    completed: false,
+    howTo: "Redação de um documento oficial proibindo práticas de risco e detalhando as expectativas de segurança para e-mail corporativo, acesso remoto e manuseio de equipamentos físicos.",
+    obs: "Evidência: Documento mestre da PSI com termo de aceite (físico ou digital) assinado por todos os colaboradores diretos e indiretos. [Modelo: MOD-GOV-05]",
+    linkModule: "raci",
+    subtab: "policies"
+  },
+  {
+    id: 10,
+    code: "3.2",
+    phase: 3,
+    phaseName: "Fase 3: Documentação & Governança Centralizada",
+    title: "Política de Controle de Acesso",
+    desc: "Padronizar e documentar a justificativa para concessão, revisão periódica e revogação de acessos lógicos.",
+    cost: "Tempo Técnico",
+    effort: "Médio",
+    status: "Pendente",
+    completed: false,
+    howTo: "Estabelecer fluxo exigindo aprovação formal dos gestores antes da criação de contas no AD ou permissões no ERP, atrelado a processo rigoroso de bloqueio imediato no ato de desligamentos.",
+    obs: "Evidência: Histórico de tickets/requisições de acesso com aprovação formal e logs de auditoria semestral atestando a ausência de contas órfãs. [Modelos: MOD-GOV-07 e MOD-USR-02]",
+    linkModule: "users",
+    subtab: ""
+  },
+  {
+    id: 11,
+    code: "3.3",
+    phase: 3,
+    phaseName: "Fase 3: Documentação & Governança Centralizada",
+    title: "Plano de Resposta a Incidentes (PRI)",
+    desc: "Garantir uma reação estruturada, rápida e legalmente embasada durante crises cibernéticas (ransomware, invasões ou vazamentos).",
+    cost: "Tempo Técnico / DPO",
     effort: "Alto",
     status: "Pendente",
     completed: false,
-    howTo: "Em bancos de dados compatíveis (SQL Server/Oracle Enterprise), gerar uma Master Key, criar certificado e executar o comando para habilitar o TDE (Transparent Data Encryption).",
-    obs: "Protege os arquivos de dados (.mdf/.ldf) contra vazamento ou extração direta do disco.",
+    howTo: "Manual operacional listando a cadeia hierárquica de acionamento, os passos técnicos para isolamento de rede, os procedimentos de contenção, e o fluxo de notificação à ANPD em caso de incidente com dados pessoais.",
+    obs: "Evidência: Documento do PRI finalizado e relatórios de execução de exercícios de simulação de crise (Tabletop exercises). [Modelos: MOD-SEC-02 e MOD-LGP-05]",
+    linkModule: "secops",
+    subtab: "incidents"
+  },
+  {
+    id: 12,
+    code: "3.4",
+    phase: 3,
+    phaseName: "Fase 3: Documentação & Governança Centralizada",
+    title: "Política de Retenção e Descarte Seguro",
+    desc: "Evitar a manutenção de dados sensíveis além do período necessário ou permitido pela legislação, reduzindo a exposição passiva ao risco.",
+    cost: "Governança / TI",
+    effort: "Médio",
+    status: "Pendente",
+    completed: false,
+    howTo: "Definição em política dos prazos máximos para guarda de arquivos (currículos, contratos inativos, logs de sistema) e estabelecimento de procedimentos técnicos para exclusão irreversível ou destruição física de mídias de armazenamento.",
+    obs: "Evidência: Rotinas sistêmicas de deleção em massa documentadas e laudos ou recibos de destruição física de HDDs/SSDs. [Modelos: MOD-OBR-02, MOD-OBR-03B e MOD-SEC-03]",
+    linkModule: "evidence",
+    subtab: "templates"
+  },
+  {
+    id: 13,
+    code: "3.5",
+    phase: 3,
+    phaseName: "Fase 3: Documentação & Governança Centralizada",
+    title: "Processo de Due Diligence de Terceiros",
+    desc: "Avaliar preventivamente a postura de segurança de parceiros de negócio e fornecedores que se conectam ao ambiente corporativo.",
+    cost: "Jurídico / Suprimentos",
+    effort: "Médio",
+    status: "Pendente",
+    completed: false,
+    howTo: "Criação de um questionário obrigatório de avaliação de conformidade cibernética e de adequação à LGPD, aplicado como pré-requisito para contratação ou integração de sistemas.",
+    obs: "Evidência: Questionários respondidos, avaliados por risco e anexados aos contratos de prestação de serviço. [Modelos: MOD-LGP-03 e MOD-SEC-06]",
+    linkModule: "lgpd",
+    subtab: "dpa"
+  },
+
+  // FASE 4: GESTÃO DE RISCOS E CONTINUIDADE
+  {
+    id: 14,
+    code: "4.1",
+    phase: 4,
+    phaseName: "Fase 4: Gestão de Riscos & Continuidade",
+    title: "Matriz de Riscos de TI e Privacidade",
+    desc: "Identificar, classificar e tratar formalmente as ameaças ao negócio, traduzindo problemas técnicos em impacto financeiro/operacional.",
+    cost: "Governança ISO 27005",
+    effort: "Alto",
+    status: "Pendente",
+    completed: false,
+    howTo: "Mapeamento visual em formato de Heatmap (Probabilidade vs. Impacto) abordando ameaças reais, avaliando o grau de exposição e definindo se o risco será mitigado, transferido (seguro cyber), evitado ou aceito.",
+    obs: "Evidência: Matriz de riscos formalizada e atualizada, contendo os planos de ação associados a cada risco crítico. [Modelos: MOD-RSK-01 e MOD-RSK-03]",
+    linkModule: "risks",
+    subtab: "list"
+  },
+  {
+    id: 15,
+    code: "4.2",
+    phase: 4,
+    phaseName: "Fase 4: Gestão de Riscos & Continuidade",
+    title: "Relatório de Impacto à Proteção de Dados (RIPD)",
+    desc: "Demonstrar à ANPD, quando requisitado, a avaliação prévia e as salvaguardas aplicadas a operações de alto risco aos titulares.",
+    cost: "Tempo DPO / Art. 38",
+    effort: "Alto",
+    status: "Pendente",
+    completed: false,
+    howTo: "Elaboração do relatório sempre que novos sistemas, ferramentas ou processos de negócio que manipulem grande volume de dados sensíveis forem propostos.",
+    obs: "Evidência: Documentos de RIPD elaborados, preenchidos e assinados pela alta gestão. [Modelo: MOD-LGP-07]",
+    linkModule: "lgpd",
+    subtab: "ropa"
+  },
+  {
+    id: 16,
+    code: "4.3",
+    phase: 4,
+    phaseName: "Fase 4: Gestão de Riscos & Continuidade",
+    title: "Plano de Recuperação de Desastres (DRP)",
+    desc: "Garantir o retorno rápido à operação funcional após falhas críticas de infraestrutura ou ataques destrutivos.",
+    cost: "Infra / Backup AWS",
+    effort: "Alto",
+    status: "Pendente",
+    completed: false,
+    howTo: "Documentação detalhando a arquitetura de backups (frequência, retenção, isolamento lógico/físico) e o roteiro exato, passo a passo, para religamento e restauração de servidores e bancos de dados a partir do zero.",
+    obs: "Evidência: Logs evidenciando o sucesso das rotinas de backup e relatórios de testes semestrais práticos de restauração em ambiente isolado (restore tests). [Modelos: MOD-SEC-07 e MOD-SEC-08]",
     linkModule: "secops",
     subtab: "assets"
   },
   {
     id: 17,
+    code: "4.4",
     phase: 4,
-    phaseName: "Fase 4: Alto Custo / Alta Complexidade",
-    title: "IPS/IDS Dedicado",
-    desc: "Soluções de prevenção que demandam hardware específico e licenças",
-    cost: "Hardware (CAPEX)",
-    effort: "Alto",
+    phaseName: "Fase 4: Gestão de Riscos & Continuidade",
+    title: "Auditoria Contínua de Controles",
+    desc: "Prevenir a degradação da postura de segurança ao longo do tempo, garantindo que o SGSI opere como um organismo vivo.",
+    cost: "Auditoria ISO 27001",
+    effort: "Médio",
     status: "Pendente",
     completed: false,
-    howTo: "Adquirir e configurar as licenças de IPS/IDS no firewall físico/virtual. Mudar os perfis de inspeção de tráfego de 'Monitoramento' para 'Prevenção/Bloqueio'.",
-    obs: "Inspeção profunda de pacotes com bloqueio automático de assinaturas de ataque.",
-    linkModule: "secops",
-    subtab: "wazuh"
-  },
-  {
-    id: 18,
-    phase: 4,
-    phaseName: "Fase 4: Alto Custo / Alta Complexidade",
-    title: "DLP (Data Loss Prevention) Corporativo",
-    desc: "Ferramentas complexas para impedir envio de e-mails, uso de pen drives",
-    cost: "Licença Alta",
-    effort: "Alto",
-    status: "Pendente",
-    completed: false,
-    howTo: "Instalar agentes DLP nas estações de trabalho e integrar ao e-mail (Exchange/Google). Criar regras buscando padrões (ex: regex para CPF) e bloquear extração (USB, e-mail).",
-    obs: "Evita exfiltração não autorizada de dados pessoais e propriedade intelectual.",
-    linkModule: "secops",
-    subtab: "assets"
-  },
-  {
-    id: 19,
-    phase: 4,
-    phaseName: "Fase 4: Alto Custo / Alta Complexidade",
-    title: "802.1X (Autenticação de Porta)",
-    desc: "Pode exigir troca de switches e servidor Radius/NPS",
-    cost: "Hardware (CAPEX)",
-    effort: "Alto",
-    status: "Pendente",
-    completed: false,
-    howTo: "Subir um servidor de autenticação Radius (ex: NPS no Windows). Configurar os switches para usar o protocolo 802.1X, exigindo certificado do computador antes de liberar a rede.",
-    obs: "Controle de acesso à rede física (NAC) restringindo conexões apenas a ativos corporativos autorizados.",
-    linkModule: "secops",
-    subtab: "assets"
+    howTo: "Calendário periódico exigindo a revisão de regras de firewall, execução de scans de vulnerabilidade e recertificação dos acessos lógicos.",
+    obs: "Evidência: Atas de reunião da gestão de TI comprovando a revisão periódica das métricas, além de relatórios internos ou externos atestando a eficácia dos controles implantados. [Modelos: MOD-AUD-01 e MOD-AUD-02]",
+    linkModule: "audit",
+    subtab: ""
   }
 ];
 
@@ -361,7 +348,7 @@ const ANPD_CAMPAIGNS_DATA = [
 
 function getStoredRoadmapTasks() {
   try {
-    const saved = localStorage.getItem("AC_ENGENHARIA_ROADMAP_V1");
+    const saved = localStorage.getItem("AC_ENGENHARIA_ROADMAP_V3");
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length === ROADMAP_TASKS.length) {
@@ -371,12 +358,12 @@ function getStoredRoadmapTasks() {
   } catch (e) {
     console.warn("Falha ao ler roadmap tasks", e);
   }
-  localStorage.setItem("AC_ENGENHARIA_ROADMAP_V1", JSON.stringify(ROADMAP_TASKS));
+  localStorage.setItem("AC_ENGENHARIA_ROADMAP_V3", JSON.stringify(ROADMAP_TASKS));
   return JSON.parse(JSON.stringify(ROADMAP_TASKS));
 }
 
 function saveStoredRoadmapTasks(tasks) {
-  localStorage.setItem("AC_ENGENHARIA_ROADMAP_V1", JSON.stringify(tasks));
+  localStorage.setItem("AC_ENGENHARIA_ROADMAP_V3", JSON.stringify(tasks));
 }
 
 function toggleRoadmapTask(taskId) {
@@ -505,25 +492,23 @@ async function deleteRoadmapTask(taskId) {
 }
 
 const TASK_ROLES_MAP = {
-  1: ['rh_sst', 'dpo', 'diretoria'],
-  2: ['secops', 'dpo', 'diretoria'],
-  3: ['secops', 'gestor_obra'],
-  4: ['gestor_obra', 'secops'],
-  5: ['secops'],
-  6: ['dpo', 'rh_sst'],
-  7: ['secops'],
-  8: ['secops', 'gestor_obra'],
-  9: ['secops', 'gestor_obra'],
-  10: ['secops', 'dpo'],
-  11: ['dpo', 'diretoria'],
-  12: ['secops', 'gestor_obra'],
-  13: ['secops', 'dpo'],
-  14: ['secops', 'gestor_obra'],
-  15: ['secops', 'dpo'],
-  16: ['secops'],
-  17: ['secops'],
-  18: ['secops', 'gestor_obra'],
-  19: ['secops', 'gestor_obra']
+  1: ['secops', 'diretoria'],                // 1.1 Controle de Privilégios e Identidade
+  2: ['secops', 'gestor_obra'],             // 1.2 Segregação Lógica de Redes
+  3: ['secops'],                            // 1.3 Proteção e Monitoramento de Endpoints
+  4: ['secops', 'gestor_obra'],             // 1.4 Inventário Centralizado de Ativos
+  5: ['rh_sst', 'dpo', 'diretoria'],        // 2.1 Conscientização Contínua em Segurança
+  6: ['dpo', 'secops', 'comercial'],        // 2.2 Mapeamento de Fluxos de Dados
+  7: ['dpo', 'rh_sst'],                     // 2.3 ROPA (Art. 37 LGPD)
+  8: ['secops', 'dpo', 'diretoria'],        // 2.4 Matriz de Responsabilidades (RACI)
+  9: ['secops', 'dpo', 'diretoria'],        // 3.1 Política de Segurança da Informação (PSI)
+  10: ['secops', 'rh_sst', 'diretoria'],    // 3.2 Política de Controle de Acesso
+  11: ['secops', 'dpo', 'diretoria'],       // 3.3 Plano de Resposta a Incidentes (PRI)
+  12: ['dpo', 'gestor_obra', 'secops'],     // 3.4 Política de Retenção e Descarte Seguro
+  13: ['suprimentos', 'dpo'],               // 3.5 Processo de Due Diligence de Terceiros
+  14: ['secops', 'gestor_obra', 'diretoria'],// 4.1 Matriz de Riscos de TI e Privacidade
+  15: ['dpo', 'diretoria'],                 // 4.2 Relatório de Impacto à Proteção de Dados (RIPD)
+  16: ['secops', 'diretoria'],              // 4.3 Plano de Recuperação de Desastres (DRP)
+  17: ['auditoria', 'secops', 'dpo']        // 4.4 Auditoria Contínua de Controles
 };
 
 let activeRoadmapPhase = 1;
@@ -699,7 +684,7 @@ function renderRoadmapUI() {
               <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleRoadmapTask(${task.id})" class="mt-1 w-4 h-4 rounded text-[#004b93] focus:ring-[#004b93] border-slate-300 cursor-pointer shrink-0" title="${isDone ? 'Marcar como não concluída' : 'Marcar como concluída'}" />
               <div class="min-w-0 flex-1 space-y-1">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-[10px] font-mono px-1.5 py-0.2 rounded font-bold ${isDone ? 'bg-emerald-200/60 text-emerald-900' : 'bg-slate-200 text-slate-700'}">ID #${task.id}</span>
+                  <span class="text-[10px] font-mono px-1.5 py-0.2 rounded font-bold ${isDone ? 'bg-emerald-200/60 text-emerald-900' : 'bg-slate-200 text-slate-700'}">${task.code ? 'Item ' + task.code : 'ID #' + task.id}</span>
                   <h4 class="text-xs font-bold ${isDone ? 'line-through text-slate-400' : 'text-slate-900'}">${task.title}</h4>
 
                   <!-- Seletor Rápido de Status -->
