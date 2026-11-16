@@ -511,6 +511,345 @@ const TASK_ROLES_MAP = {
   17: ['auditoria', 'secops', 'dpo']        // 4.4 Auditoria Contínua de Controles
 };
 
+// ==============================================================================
+// TRILHA PRÁTICA DE INICIALIZAÇÃO (ORDEM DE EXECUÇÃO) - PLAYBOOK SECOPS
+// Orientação de alimentação sequencial para evitar sobrecarga operacional na T.I.
+// e transferir formalmente a governança para RH/SST, Suprimentos e Diretoria.
+// ==============================================================================
+const SECOPS_EXECUTION_TRACK = [
+  {
+    step: 1,
+    title: "Quebrando o Gelo Técnico (Inventário)",
+    shortTitle: "CMDB Crítico",
+    whereToGo: "Módulo 5 (CMDB - Inventário Centralizado)",
+    targetTab: "secops",
+    targetSubtab: "assets",
+    icon: "server",
+    action: "Cadastrar apenas a infraestrutura crítica que já dominamos (Roteador MikroTik, Servidor Sienge, Painel Wazuh, Servidor AD).",
+    goal: "Estabelecer o que estamos protegendo sem depender de terceiros.",
+    tacticalTip: "Não tente inventariar todos os mouses e estações de trabalho agora. Mapeie somente os 4 pilares vitais que sustentam a infraestrutura e a segurança da construtora.",
+    tag: "Fundação Técnica"
+  },
+  {
+    step: 2,
+    title: "Dando Nome aos Bois (Perfis e RACI)",
+    shortTitle: "Governança & RACI",
+    whereToGo: "Módulo 7 (Governança e Matriz RACI)",
+    targetTab: "raci",
+    targetSubtab: "raci",
+    icon: "users",
+    action: "Vincular os usuários reais aos papéis rh_sst, suprimentos e diretoria. Definir quem aprova e quem executa.",
+    goal: "Preparar o sistema para disparar cobranças automáticas para outros setores, tirando a TI do papel de 'cobradora'.",
+    tacticalTip: "A T.I. deixa de ser a cobradora solitária. Ao vincular os responsáveis reais no RACI, cada setor passa a responder formalmente pelas suas pendências.",
+    tag: "Descentralização"
+  },
+  {
+    step: 3,
+    title: "Transferindo a Burocracia Interna (PSI)",
+    shortTitle: "Políticas & PSI",
+    whereToGo: "Módulo 7 e 8 (Políticas e Biblioteca MOD-SEC-001)",
+    targetTab: "raci",
+    targetSubtab: "policies",
+    secondaryTab: "evidence",
+    icon: "file-text",
+    action: "Publicar a versão 1.0 da Política de Segurança da Informação.",
+    goal: "O sistema passa a exigir a assinatura digital de todos. A cobrança sobre quem não assinou passa a ser do painel do rh_sst.",
+    tacticalTip: "Publicando a PSI homologada pela Diretoria, a adesão torna-se norma corporativa. O painel do RH/SST assume a lista de colaboradores com assinatura pendente.",
+    tag: "Governança Interna"
+  },
+  {
+    step: 4,
+    title: "Blindagem contra Terceiros (Due Diligence)",
+    shortTitle: "LGPD & Terceiros",
+    whereToGo: "Módulo 4 e 8 (DPA Art. 39)",
+    targetTab: "lgpd",
+    targetSubtab: "thirdparties",
+    secondaryTab: "evidence",
+    icon: "shield-alert",
+    action: "Disponibilizar o Acordo de Tratamento de Dados (DPA). Acionar regra de bloqueio: TI não libera acesso ao Sienge/Rede para empreiteiras sem esse anexo.",
+    goal: "O trabalho de cobrar a empreiteira passa a ser inteiramente do setor de suprimentos.",
+    tacticalTip: "A T.I. institui a salvaguarda técnica: sem DPA assinado homologado no sistema, não há liberação de usuário no ERP ou acesso à rede para terceiros.",
+    tag: "Due Diligence"
+  },
+  {
+    step: 5,
+    title: "Mapeamento Burocrático (ROPA)",
+    shortTitle: "RoPA Art. 37",
+    whereToGo: "Módulo 4 (LGPD e ROPA Art. 37)",
+    targetTab: "lgpd",
+    targetSubtab: "ropa",
+    icon: "clipboard-list",
+    action: "Iniciar o preenchimento do Registro de Operações apenas com processos da própria TI (ex: Gestão de AD e Firewall). Expandir para o RH (Folha Sienge) no mês seguinte.",
+    goal: "Evitar paralisação por tentar mapear a empresa toda de uma vez.",
+    tacticalTip: "Inicie documentando o que já está sob domínio do SecOps. O exemplo prático servirá de modelo para o DPO e o RH preencherem os fluxos de canteiro e vendas.",
+    tag: "Conformidade LGPD"
+  },
+  {
+    step: 6,
+    title: "Repassando o Risco Legal (Matriz de Riscos)",
+    shortTitle: "Matriz & SoD",
+    whereToGo: "Módulo 3 (Gestão de Riscos Corporativos)",
+    targetTab: "risks",
+    targetSubtab: "risks",
+    icon: "alert-triangle",
+    action: "Registrar os riscos inerentes da operação (ex: paralisação do Sienge por ransomware) e enviar para aceite residual.",
+    goal: "Forçar a assinatura e aceite do perfil diretoria no log forense SHA-256, blindando a responsabilidade técnica do SecOps.",
+    tacticalTip: "A T.I. identifica as vulnerabilidades e os custos de mitigação. A responsabilidade legal e formal pelo aceite do risco residual é exclusiva do C-Level (SoD).",
+    tag: "Blindagem Jurídica"
+  }
+];
+
+function getStoredExecutionTrack() {
+  try {
+    const raw = localStorage.getItem("AC_SECOPS_EXECUTION_TRACK_V1");
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false };
+}
+
+function toggleExecutionTrackStep(stepNum) {
+  const progress = getStoredExecutionTrack();
+  progress[stepNum] = !progress[stepNum];
+  try {
+    localStorage.setItem("AC_SECOPS_EXECUTION_TRACK_V1", JSON.stringify(progress));
+  } catch (e) {
+    console.error("Erro ao salvar progresso da trilha", e);
+  }
+
+  const isDone = progress[stepNum];
+  const stepObj = SECOPS_EXECUTION_TRACK.find(s => s.step === stepNum);
+  const stepTitle = stepObj ? stepObj.title : `Passo ${stepNum}`;
+
+  if (window.showToast) {
+    window.showToast(
+      isDone 
+        ? `Passo ${stepNum} marcado como Concluído!` 
+        : `Passo ${stepNum} reaberto.`,
+      isDone ? "success" : "info"
+    );
+  }
+
+  if (window.ApiService && typeof window.ApiService.addAuditRecord === 'function') {
+    window.ApiService.addAuditRecord({
+      category: "TRILHA_SECOPS",
+      severity: "INFO",
+      actor: (window.State && window.State.currentUser && window.State.currentUser.email) || "ti@acengenhariase.com.br",
+      description: `Trilha de Inicialização SecOps: Passo ${stepNum} ("${stepTitle}") marcado como ${isDone ? 'CONCLUÍDO' : 'PENDENTE'}.`,
+      target_module: "Plano de Ação - Trilha Prática"
+    });
+  }
+
+  renderRoadmapUI();
+}
+
+function jumpToModuleFromTrack(targetTab, targetSubtab) {
+  if (typeof window.switchTab === 'function') {
+    window.switchTab(targetTab);
+  }
+  if (targetTab === 'raci' && targetSubtab && typeof window.setRaciSubtab === 'function') {
+    window.setRaciSubtab(targetSubtab);
+  }
+}
+
+function renderExecutionTrackUI() {
+  const container = document.getElementById("roadmap-execution-track-container");
+  if (!container) return;
+
+  const trackProgress = getStoredExecutionTrack();
+  const doneCount = Object.values(trackProgress).filter(Boolean).length;
+  const pct = Math.round((doneCount / 6) * 100);
+
+  let html = `
+    <!-- BANNER HERO ESTRATÉGICO DA TRILHA DE INICIALIZAÇÃO -->
+    <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-[#004b93] to-slate-900 text-white shadow-md border border-slate-700">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/15">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shrink-0 shadow-inner">
+            <i data-lucide="compass" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-base font-bold text-white tracking-tight">Trilha Prática de Inicialização (Ordem de Execução)</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-400 text-slate-950 shadow-xs uppercase tracking-wider">Playbook SecOps</span>
+            </div>
+            <p class="text-xs text-slate-200 mt-1 max-w-3xl leading-relaxed">
+              Guia tático e sequencial para orientar o papel <strong>secops</strong> sobre exatamente qual módulo alimentar primeiro. O objetivo central é <strong>evitar a sobrecarga operacional da T.I.</strong>, transferindo formalmente o peso da governança para os demais setores (RH/SST, Suprimentos e Diretoria Executiva).
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:items-end gap-1.5 shrink-0">
+          <div class="text-[11px] font-semibold text-slate-300">Progresso da Trilha Tática</div>
+          <div class="text-sm font-mono font-bold text-amber-300">${doneCount} de 6 Passos Concluídos (${pct}%)</div>
+          <div class="w-36 bg-white/20 h-2.5 rounded-full overflow-hidden border border-white/20 mt-0.5">
+            <div class="bg-amber-400 h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Métricas / Princípios da Trilha -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 text-xs">
+        <div class="bg-white/10 rounded-xl p-3 border border-white/10 flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+            <i data-lucide="shield-check" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <div class="font-bold text-white text-[11px]">Blindagem Técnica</div>
+            <div class="text-[10px] text-slate-300">TI define a salvaguarda; setores executam a cobrança.</div>
+          </div>
+        </div>
+        <div class="bg-white/10 rounded-xl p-3 border border-white/10 flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center shrink-0">
+            <i data-lucide="scale" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <div class="font-bold text-white text-[11px]">Segregação SoD</div>
+            <div class="text-[10px] text-slate-300">Diretoria homologa e assume o risco residual.</div>
+          </div>
+        </div>
+        <div class="bg-white/10 rounded-xl p-3 border border-white/10 flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0">
+            <i data-lucide="zap" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <div class="font-bold text-white text-[11px]">Adoção Gradual</div>
+            <div class="text-[10px] text-slate-300">Começa no que dominamos, sem paralisar a empresa.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LISTA DOS 6 PASSOS SEQUENCIAIS -->
+    <div class="space-y-3.5">
+  `;
+
+  SECOPS_EXECUTION_TRACK.forEach(item => {
+    const isCompleted = Boolean(trackProgress[item.step]);
+    
+    html += `
+      <div class="p-4 sm:p-5 rounded-2xl border transition-all ${
+        isCompleted
+          ? 'bg-emerald-50/50 border-emerald-300 shadow-2xs'
+          : 'bg-white border-slate-200 hover:border-blue-300 shadow-2xs'
+      }">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b ${isCompleted ? 'border-emerald-200' : 'border-slate-100'}">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
+              isCompleted
+                ? 'bg-emerald-600 text-white shadow-2xs'
+                : 'bg-[#004b93] text-white shadow-2xs'
+            }">
+              ${isCompleted ? '✓' : item.step}
+            </span>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-bold ${isCompleted ? 'text-emerald-950 line-through decoration-emerald-500' : 'text-slate-900'}">
+                  Passo ${item.step}: ${item.title}
+                </span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                  isCompleted 
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                    : 'bg-amber-100 text-amber-900 border border-amber-300'
+                }">
+                  ${isCompleted ? '✓ Concluído' : 'Pendente de Execução'}
+                </span>
+                <span class="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                  ${item.tag}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 self-end sm:self-auto">
+            <button onclick="toggleExecutionTrackStep(${item.step})" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer ${
+              isCompleted
+                ? 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs'
+            }">
+              <i data-lucide="${isCompleted ? 'rotate-ccw' : 'check'}" class="w-3.5 h-3.5"></i>
+              <span>${isCompleted ? 'Reabrir Passo' : 'Marcar Concluído'}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- GRID DE 3 COLUNAS: ONDE IR | AÇÃO PRÁTICA | META ESTRATÉGICA -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5 mt-3.5 text-xs">
+          <!-- Coluna 1: Onde Ir + Botão de Atalho -->
+          <div class="md:col-span-4 p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between space-y-2.5">
+            <div>
+              <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1">
+                <i data-lucide="map-pin" class="w-3 h-3 text-[#004b93]"></i>
+                <span>Onde Ir</span>
+              </div>
+              <div class="font-bold text-slate-800 text-xs mt-1">
+                ${item.whereToGo}
+              </div>
+            </div>
+            <div class="pt-2 border-t border-slate-200/60">
+              <button onclick="jumpToModuleFromTrack('${item.targetTab}', '${item.targetSubtab || ''}')" class="w-full py-1.5 px-2.5 rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
+                <span>Ir para ${item.shortTitle}</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Coluna 2: Ação Prática -->
+          <div class="md:col-span-4 p-3 rounded-xl bg-blue-50/50 border border-blue-200/70 flex flex-col justify-between">
+            <div>
+              <div class="text-[10px] uppercase font-bold text-blue-700 tracking-wider flex items-center gap-1">
+                <i data-lucide="wrench" class="w-3 h-3 text-blue-600"></i>
+                <span>Ação Prática</span>
+              </div>
+              <p class="text-xs text-slate-800 mt-1 leading-relaxed">
+                ${item.action}
+              </p>
+            </div>
+          </div>
+
+          <!-- Coluna 3: Meta Estratégica (Descentralização) -->
+          <div class="md:col-span-4 p-3 rounded-xl bg-amber-50/50 border border-amber-200/70 flex flex-col justify-between">
+            <div>
+              <div class="text-[10px] uppercase font-bold text-amber-800 tracking-wider flex items-center gap-1">
+                <i data-lucide="target" class="w-3 h-3 text-amber-600"></i>
+                <span>Meta Estratégica</span>
+              </div>
+              <p class="text-xs text-slate-900 font-medium mt-1 leading-relaxed">
+                ${item.goal}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dica Tática do SecOps -->
+        <div class="mt-3 p-2.5 rounded-lg bg-slate-100/80 border border-slate-200 text-[11px] text-slate-700 flex items-start gap-2">
+          <i data-lucide="lightbulb" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+          <div>
+            <strong class="text-slate-900">Orientação Tática do SecOps:</strong> ${item.tacticalTip}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  html += `
+    </div>
+
+    <!-- CARD DE RESUMO E IMPACTO OPERACIONAL -->
+    <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs text-xs space-y-2">
+      <div class="flex items-center gap-2 font-bold text-slate-900 text-sm">
+        <i data-lucide="award" class="w-4 h-4 text-[#004b93]"></i>
+        <span>Resultado Final da Trilha: Blindagem Operacional do SecOps</span>
+      </div>
+      <p class="text-slate-600 leading-relaxed text-xs">
+        Ao concluir estes 6 passos, a T.I. deixa de ser a única responsável pelo SGSI e passa a atuar como a administradora técnica da plataforma. O <strong>RH/SST</strong> assume a gestão dos colaboradores e da PSI, o setor de <strong>Suprimentos</strong> assume os DPAs com as empreiteiras, e a <strong>Diretoria Executiva</strong> formaliza o aceite dos riscos residuais no log imutável SHA-256.
+      </p>
+    </div>
+  `;
+
+  container.innerHTML = html;
+  if (window.lucide) window.lucide.createIcons();
+}
+
 let activeRoadmapPhase = 1;
 let activeRoadmapStatusFilter = 'all';
 let activeRoadmapOnlyRole = false;
@@ -534,12 +873,22 @@ function setRoadmapPhaseTab(phaseNum) {
     const btn = document.getElementById(`btn-phase-tab-${p}`);
     if (btn) {
       if (p === phaseNum) {
-        btn.className = "px-3 py-1.5 font-bold rounded-lg bg-[#004b93] text-white shadow-2xs text-xs whitespace-nowrap transition-colors";
+        btn.className = "px-3.5 py-2 font-bold rounded-lg bg-[#004b93] text-white shadow-2xs text-xs whitespace-nowrap transition-colors";
       } else {
-        btn.className = "px-3 py-1.5 font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs whitespace-nowrap transition-colors";
+        btn.className = "px-3.5 py-2 font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs whitespace-nowrap transition-colors";
       }
     }
   }
+
+  const trackBtn = document.getElementById("btn-phase-tab-execution_track");
+  if (trackBtn) {
+    if (phaseNum === 'execution_track') {
+      trackBtn.className = "px-3.5 py-2 font-bold rounded-lg bg-amber-600 text-white shadow-2xs text-xs whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer";
+    } else {
+      trackBtn.className = "px-3.5 py-2 font-bold rounded-lg text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-xs whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer";
+    }
+  }
+
   renderRoadmapUI();
 }
 
@@ -604,6 +953,32 @@ function renderRoadmapUI() {
     const pDone = phaseTasks.filter(t => t.completed || t.status === "Concluído").length;
     const badgeEl = document.getElementById(`phase-badge-count-${p}`);
     if (badgeEl) badgeEl.textContent = `${pDone}/${phaseTasks.length}`;
+  }
+
+  // Update Execution Track Badge Count
+  const trackProgress = getStoredExecutionTrack();
+  const trackDoneCount = Object.values(trackProgress).filter(Boolean).length;
+  const trackBadge = document.getElementById("phase-badge-count-track");
+  if (trackBadge) {
+    trackBadge.textContent = `${trackDoneCount}/6 Concluídos`;
+  }
+
+  const filtersRow = document.getElementById("roadmap-filters-row");
+  const tasksContainer = document.getElementById("roadmap-phase-tasks-list");
+  const trackContainer = document.getElementById("roadmap-execution-track-container");
+
+  if (activeRoadmapPhase === 'execution_track') {
+    if (filtersRow) filtersRow.classList.add("hidden");
+    if (tasksContainer) tasksContainer.classList.add("hidden");
+    if (trackContainer) {
+      trackContainer.classList.remove("hidden");
+      renderExecutionTrackUI();
+    }
+    return;
+  } else {
+    if (filtersRow) filtersRow.classList.remove("hidden");
+    if (tasksContainer) tasksContainer.classList.remove("hidden");
+    if (trackContainer) trackContainer.classList.add("hidden");
   }
 
   // Update Filter Buttons Text with Counts for Active Phase
@@ -927,6 +1302,11 @@ window.renderRoadmapUI = renderRoadmapUI;
 window.handleCreateTask = handleCreateTask;
 window.deleteRoadmapTask = deleteRoadmapTask;
 window.TASK_ROLES_MAP = TASK_ROLES_MAP;
+window.SECOPS_EXECUTION_TRACK = SECOPS_EXECUTION_TRACK;
+window.toggleExecutionTrackStep = toggleExecutionTrackStep;
+window.jumpToModuleFromTrack = jumpToModuleFromTrack;
+window.renderExecutionTrackUI = renderExecutionTrackUI;
+window.getStoredExecutionTrack = getStoredExecutionTrack;
 
 // Inicializadores
 document.addEventListener("DOMContentLoaded", () => {
