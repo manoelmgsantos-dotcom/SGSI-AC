@@ -469,24 +469,26 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       border: 1px solid #cbd5e1;
       border-left: 3.5px solid #004b93;
       border-radius: 6px;
-      padding: 9px 14px;
+      padding: 10px 14px;
       margin: 12px 0;
       font-size: 9pt;
       line-height: 1.5;
       color: #334155;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
     }
     .muted {
       color: #64748b;
       font-size: 8pt;
       line-height: 1.5;
     }
-    .sig-grid {
+    .section, .signature-section, .approval-wrapper, .approval-container, .sig-grid {
       display: table;
       width: 100%;
       table-layout: fixed;
       margin-top: 14px;
-      page-break-inside: avoid;
-      break-inside: avoid;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
     }
     .sig-box {
       display: inline-block;
@@ -497,13 +499,15 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       border: 1px solid #cbd5e1;
       background: #ffffff;
       border-radius: 6px;
-      page-break-inside: avoid;
-      break-inside: avoid;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
     }
     .sig-box-signed {
       border: 1.5px solid #10b981 !important;
       background: #f0fdf4 !important;
       box-shadow: 0 2px 6px rgba(16, 185, 129, 0.08);
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
     }
     .sig-badge-row {
       display: flex;
@@ -581,15 +585,53 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       .page-sheet { border: none !important; box-shadow: none !important; padding: 0 !important; max-width: 100% !important; border-radius: 0 !important; margin: 0 !important; }
       .toolbar-no-print { display: none !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-      .doc-header-table, .brand-cell, .meta-cell { border-color: #94a3b8 !important; }
-      .doc-title-banner { background: #f8fafc !important; border-color: #94a3b8 !important; border-left: 5px solid #004b93 !important; }
-      h2 { background: #f1f5f9 !important; border-left: 3.5px solid #004b93 !important; border-bottom: 1px solid #94a3b8 !important; page-break-after: avoid !important; break-after: avoid !important; }
-      table.data-table { border: 1px solid #94a3b8 !important; }
-      table.data-table th { background: #f1f5f9 !important; border-bottom: 1.5px solid #64748b !important; }
+      .doc-header-table, .brand-cell, .meta-cell { border-color: #94a3b8 !important; page-break-inside: avoid !important; break-inside: avoid !important; break-after: avoid !important; }
+      .doc-title-banner { background: #f8fafc !important; border-color: #94a3b8 !important; border-left: 5px solid #004b93 !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+      
+      /* Previne títulos e seções órfãs */
+      h1, h2, h3, h4, .sec-sub {
+        background: #f1f5f9 !important;
+        border-left: 3.5px solid #004b93 !important;
+        border-bottom: 1px solid #94a3b8 !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      h1 + *, h2 + *, h3 + *, .sec-sub + * {
+        page-break-before: avoid !important;
+        break-before: avoid !important;
+      }
+
+      /* Callouts NUNCA são partidos ao meio por quebra de página */
+      .callout {
+        background: #f8fafc !important;
+        border: 1px solid #94a3b8 !important;
+        border-left: 4px solid #004b93 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      /* Tabelas e linhas */
+      table.data-table { border: 1px solid #94a3b8 !important; page-break-inside: auto; }
+      table.data-table thead { display: table-header-group !important; }
+      table.data-table tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+      table.data-table th { background: #f1f5f9 !important; border-bottom: 1.5px solid #64748b !important; page-break-inside: avoid !important; break-inside: avoid !important; }
       table.data-table td { border-bottom: 1px solid #cbd5e1 !important; }
+
+      /* Assinaturas e Homologações */
+      .section, .signature-section, .approval-wrapper, .approval-container, .sig-grid {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
       .sig-box { border: 1px solid #94a3b8 !important; page-break-inside: avoid !important; break-inside: avoid !important; }
-      .sig-box-signed { border: 1.5px solid #059669 !important; background: #f0fdf4 !important; }
-      .doc-footer { border-top: 1.5px solid #94a3b8 !important; }
+      .sig-box-signed { border: 1.5px solid #059669 !important; background: #f0fdf4 !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+
+      /* Listas e parágrafos */
+      li { page-break-inside: avoid !important; break-inside: avoid !important; }
+      p { orphans: 3 !important; widows: 3 !important; }
+
+      .doc-footer { border-top: 1.5px solid #94a3b8 !important; page-break-inside: avoid !important; break-inside: avoid !important; }
     }
   </style>
 </head>
@@ -1479,7 +1521,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
         </tbody>
       </table>
 
-      <div class="callout">
+      <div class="callout" style="page-break-inside: avoid !important; break-inside: avoid !important;">
         <strong>Critérios Obrigatórios para Escolha do DPO Provisório:</strong>
         <ul style="margin: 4px 0 0 16px; padding: 0;">
           <li><strong>Não pertencer à T.I.:</strong> Para evitar conflito de interesses direto — quem implementa a segurança técnica não deve auditá-la (SoD ISO 27001 A.5.3).</li>
@@ -1683,17 +1725,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
         </tbody>
       </table>
 
-      <h2>7. Aprovação e Termo de Compromisso</h2>
-      <p>Declaramos ciência e mútua concordância com as atribuições, alçadas e responsabilidades conferidas nesta Matriz RACI, comprometendo-nos a cumprir estritamente os prazos e fluxos aqui estabelecidos em conformidade com a ISO/IEC 27001 e a Resolução CD/ANPD nº 15/2024.</p>
-
-      ${buildSignatureGridHTML([
-        { role: "Diretor Responsável (Accountable C-Level)", name: custom.directorName || ctx.directorName || "" },
-        { role: "DPO Provisório Designado", name: custom.dpoName || ctx.dpoName || "" },
-        { role: "Responsável pela T.I. & Segurança", name: custom.secopsName || ctx.secopsName || "" },
-        { role: "Assessoria Jurídica", name: custom.legalName || "" }
-      ], false, "MOD-GOV-06")}
-
-      <h2>8. Próximos Passos de Governança</h2>
+      <h2>7. Próximos Passos de Governança</h2>
       <ul style="margin: 0 0 0 16px; padding: 0; line-height: 1.6; font-size: 9.5pt; color: #475569;">
         <li><strong>Formalização:</strong> Formalizar a designação do DPO provisório e do comitê de crise, com ata ou termo assinado no sistema.</li>
         <li><strong>Treinamento:</strong> Treinar os titulares e suplentes e manter distribuída a lista oficial de contatos 24h.</li>
@@ -1701,6 +1733,18 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
         <li><strong>Revisão Periódica:</strong> Revisar este documento anualmente e a cada alteração relevante na estrutura de pessoal da AC Engenharia.</li>
         <li><strong>Transição do DPO:</strong> Apresentar à Diretoria proposta de capacitação avançada do DPO interno ou contratação de DPO as a Service (terceirizado) para atender a exigências de auditoria e licitações.</li>
       </ul>
+
+      <div class="approval-wrapper" style="page-break-inside: avoid !important; break-inside: avoid !important; margin-top: 24px;">
+        <h2>8. Aprovação e Termo de Compromisso</h2>
+        <p>Declaramos ciência e mútua concordância com as atribuições, alçadas e responsabilidades conferidas nesta Matriz RACI, comprometendo-nos a cumprir estritamente os prazos e fluxos aqui estabelecidos em conformidade com a ISO/IEC 27001 e a Resolução CD/ANPD nº 15/2024.</p>
+
+        ${buildSignatureGridHTML([
+          { role: "Diretor Responsável (Accountable C-Level)", name: custom.directorName || ctx.directorName || "" },
+          { role: "DPO Provisório Designado", name: custom.dpoName || ctx.dpoName || "" },
+          { role: "Responsável pela T.I. & Segurança", name: custom.secopsName || ctx.secopsName || "" },
+          { role: "Assessoria Jurídica", name: custom.legalName || "" }
+        ], false, "MOD-GOV-06")}
+      </div>
     `
   },
   {
