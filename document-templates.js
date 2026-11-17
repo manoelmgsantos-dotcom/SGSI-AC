@@ -36,6 +36,20 @@ function saveStoredTemplateSignatures(map) {
   }
 }
 
+function getStoredCorporateSigners() {
+  try {
+    const raw = localStorage.getItem("sgsi_corporate_signers");
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return {};
+}
+
+function saveStoredCorporateSigners(data) {
+  try {
+    localStorage.setItem("sgsi_corporate_signers", JSON.stringify(data));
+  } catch (e) {}
+}
+
 function getTemplateContextDefaults() {
   const user = (window.AuthState && window.AuthState.currentUser) ? window.AuthState.currentUser : null;
   const selUnidade = document.getElementById("select-unidade-filter");
@@ -46,16 +60,18 @@ function getTemplateContextDefaults() {
   }
   const todayBr = new Date().toLocaleDateString("pt-BR");
   const nowBr = new Date().toLocaleString("pt-BR");
+  const stored = getStoredCorporateSigners();
+
   return {
     company: "AC ENGENHARIA",
     companyLegal: "AC Engenharia",
-    cnpj: "12.345.678/0001-90",
-    dpoName: "Dra. Amanda Carvalho (OAB/SE • Encarregada DPO)",
-    dpoEmail: "dpo@acengenhariase.com.br",
-    directorName: "Dr. Roberto Albuquerque (Diretor Executivo C-Level)",
-    secopsName: "Admin-SGSI (Gestor de T.I. & SecOps)",
-    obraManagerName: "Eng. Marcos Vinícius (Engenheiro Residente - CREA)",
-    currentUserName: user ? user.name : "Admin-SGSI",
+    cnpj: stored.cnpj || "12.345.678/0001-90",
+    dpoName: stored.dpoName || "",
+    dpoEmail: stored.dpoEmail || "dpo@acengenhariase.com.br",
+    directorName: stored.directorName || "",
+    secopsName: stored.secopsName || "",
+    obraManagerName: stored.obraManagerName || "",
+    currentUserName: user ? user.name : "",
     currentUserEmail: user ? user.email : "ti@acengenhariase.com.br",
     currentUserRole: user ? (user.roleName || user.role) : "Gestor de T.I. & SecOps",
     activeUnit,
@@ -63,6 +79,18 @@ function getTemplateContextDefaults() {
     nowBr
   };
 }
+
+const MODULE_MANAGEMENT_DEPT = {
+  obras: "Gerência de Engenharia, Obras & SST (NR-18)",
+  users: "Gerência de RH & Administração de Acessos",
+  raci: "Diretoria Executiva, Governança & DPO",
+  secops: "Gerência Executiva de T.I. & SecOps",
+  integrations: "Gerência de Sistemas, Infraestrutura & APIs",
+  risks: "Diretoria Executiva C-Level & Riscos GRC",
+  lgpd: "Encarregado(a) de Dados (DPO) & Jurídico",
+  evidence: "Gerência de Governança, Risco & Conformidade",
+  audit: "Auditoria Interna ISO 27001 & Qualidade"
+};
 
 function escapeDocHtml(val) {
   return String(val == null ? "" : val)
@@ -94,14 +122,32 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
         </div>
       `;
     }
+
+    const hasExplicitName = Boolean(s.name && s.name.trim() && !s.name.startsWith("[") && !s.name.includes("_____"));
+    const displayName = hasExplicitName ? escapeDocHtml(s.name) : "[ Preencher Nome Completo / Assinatura ]";
+    const nameColor = hasExplicitName ? "#0b1a30" : "#64748b";
+
     return `
       <div class="sig-box">
         <div class="sig-line"></div>
         <div class="sig-role">${escapeDocHtml(s.role)}</div>
-        <div class="sig-name"><strong>Nome Legível:</strong> ${escapeDocHtml(s.name || "___________________________________________")}</div>
-        <div class="sig-meta"><strong>CPF / CREA / OAB:</strong> ${escapeDocHtml(s.docLabel || "___________________________")}</div>
-        <div class="sig-meta" style="margin-top: 4px; font-size: 7.5pt; color: #94a3b8; border-top: 1px dotted #e2e8f0; padding-top: 3px;">
-          Data: ____/____/202___ &nbsp;|&nbsp; <em>Assinatura Física, Eletrônica SGSI ou Gov.br</em>
+        <div class="sig-name">
+          <strong>Nome Legível:</strong> 
+          <span class="sig-editable-slot" style="color: ${nameColor}; border-bottom: 1px dashed #94a3b8; display: inline-block; min-width: 210px; font-weight: ${hasExplicitName ? '700' : 'normal'};">
+            ${displayName}
+          </span>
+        </div>
+        <div class="sig-meta">
+          <strong>Cargo / Setor:</strong> ${escapeDocHtml(s.role)}
+        </div>
+        <div class="sig-meta">
+          <strong>CPF / CREA / OAB:</strong> 
+          <span style="color: #64748b; border-bottom: 1px dashed #cbd5e1; display: inline-block; min-width: 140px;">
+            ${escapeDocHtml(s.docLabel || "___________________________")}
+          </span>
+        </div>
+        <div class="sig-meta" style="margin-top: 6px; font-size: 7.5pt; color: #64748b; border-top: 1px dotted #e2e8f0; padding-top: 4px;">
+          <strong>Data da Homologação:</strong> ____ / ____ / 202___ &nbsp;|&nbsp; <em>Homologação Gerencial &bull; Assinatura Física ou Digital</em>
         </div>
       </div>
     `;
@@ -123,36 +169,36 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
   `).join("");
 
   const witnesses = includeWitnesses ? `
-    <div style="margin-top: 16px;">
+    <div style="margin-top: 16px; page-break-inside: avoid;">
       <div class="sec-sub">Testemunhas Instrumentárias Homologadas</div>
       <div class="sig-grid">
         <div class="sig-box">
           <div class="sig-line"></div>
           <div class="sig-role">1ª Testemunha Instrumentária</div>
-          <div class="sig-meta">Nome: ___________________________________________</div>
-          <div class="sig-meta">CPF: _________________________</div>
+          <div class="sig-name"><strong>Nome:</strong> <span style="border-bottom: 1px dashed #94a3b8; display: inline-block; min-width: 180px;">___________________________</span></div>
+          <div class="sig-meta"><strong>CPF:</strong> _________________________</div>
         </div>
         <div class="sig-box">
           <div class="sig-line"></div>
           <div class="sig-role">2ª Testemunha Instrumentária</div>
-          <div class="sig-meta">Nome: ___________________________________________</div>
-          <div class="sig-meta">CPF: _________________________</div>
+          <div class="sig-name"><strong>Nome:</strong> <span style="border-bottom: 1px dashed #94a3b8; display: inline-block; min-width: 180px;">___________________________</span></div>
+          <div class="sig-meta"><strong>CPF:</strong> _________________________</div>
         </div>
       </div>
     </div>
   ` : "";
 
   return `
-    <div class="section" style="page-break-inside: avoid; margin-top: 24px; padding-top: 14px; border-top: 1.5px solid #e2e8f0;">
+    <div class="section" style="page-break-inside: avoid; break-inside: avoid; margin-top: 24px; padding-top: 14px; border-top: 1.5px solid #cbd5e1;">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
         <h2 style="margin: 0; border: none; background: transparent; padding: 0; font-size: 10.5pt; color: #0b1a30; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;">
-          Quadro de Homologação e Assinaturas Formais — AC Engenharia
+          Quadro de Homologação, Validação Gerencial &amp; Assinaturas Formais
         </h2>
         <span style="font-size: 7.5pt; font-weight: 700; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">
           Eficácia Legal (Lei 14.063/2020)
         </span>
       </div>
-      <p class="muted">Este instrumento corporativo da <strong>AC Engenharia</strong> admite assinatura física manuscrita, assinatura eletrônica auditada no SGSI com selo temporal SHA-256 ou assinatura digital qualificada (ICP-Brasil / Portal Gov.br), nos termos da Lei nº 14.063/2020 e MP nº 2.200-2/2001, devendo ser arquivado no <strong>Repositório de Evidências do SGSI</strong> para custódia forense imutável.</p>
+      <p class="muted">Este instrumento corporativo da <strong>AC Engenharia</strong> admite preenchimento e assinatura física manuscrita, assinatura eletrônica auditada no SGSI com selo temporal SHA-256 ou assinatura digital qualificada (ICP-Brasil / Portal Gov.br), nos termos da Lei nº 14.063/2020 e MP nº 2.200-2/2001, devendo ser arquivado no <strong>Repositório de Evidências do SGSI</strong> para fins de auditoria interna, externa e conformidade da gerência.</p>
       <div class="sig-grid">${cards}${extraSigsHtml}</div>
       ${witnesses}
     </div>
@@ -164,6 +210,7 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
   const unitName = options.unit || ctx.activeUnit;
   const protocolCode = `SGSI-${meta.code}-${new Date().getFullYear()}`;
   const isWord = Boolean(options.forWord);
+  const managerDept = meta.department || MODULE_MANAGEMENT_DEPT[meta.module] || "Gerência Executiva de T.I., SecOps & Governança SGSI";
 
   return `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" lang="pt-BR">
@@ -171,17 +218,20 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
   <meta charset="UTF-8">
   <title>${escapeDocHtml(meta.code)} - ${escapeDocHtml(meta.title)}</title>
   <style>
-    @page { size: A4; margin: 14mm 14mm 14mm 14mm; }
-    @page Section1 { size: 595.3pt 841.9pt; margin: 40pt 40pt 40pt 40pt; }
+    @page {
+      size: A4 portrait;
+      margin: 12mm 14mm 14mm 14mm;
+    }
+    @page Section1 { size: 595.3pt 841.9pt; margin: 38pt 40pt 40pt 40pt; }
     div.Section1 { page: Section1; }
     * { box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", Arial, sans-serif;
-      color: #1e293b;
+      color: #0f172a;
       background: ${isWord ? "#ffffff" : "#f1f5f9"};
       margin: 0;
-      padding: ${isWord ? "0" : "24px 16px"};
-      font-size: 10pt;
+      padding: ${isWord ? "0" : "20px 14px"};
+      font-size: 9.5pt;
       line-height: 1.55;
       -webkit-font-smoothing: antialiased;
     }
@@ -190,29 +240,29 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       margin: 0 auto;
       background: #ffffff;
       padding: ${isWord ? "0" : "18mm 16mm"};
-      border: ${isWord ? "none" : "1px solid #e2e8f0"};
+      border: ${isWord ? "none" : "1px solid #cbd5e1"};
       border-radius: ${isWord ? "0" : "8px"};
       box-shadow: ${isWord ? "none" : "0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04)"};
     }
     .toolbar-no-print {
       max-width: 210mm;
-      margin: 0 auto 14px auto;
+      margin: 0 auto 12px auto;
       background: linear-gradient(135deg, #0b1a30 0%, #004b93 100%);
       color: #ffffff;
-      padding: 10px 18px;
+      padding: 10px 16px;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      font-size: 12px;
+      font-size: 11.5px;
       box-shadow: 0 4px 12px rgba(11,26,48,0.15);
     }
     .toolbar-no-print button {
       background: #ffffff;
       color: #0b1a30;
       border: none;
-      padding: 7px 14px;
+      padding: 6px 12px;
       border-radius: 6px;
       font-weight: 700;
       font-size: 11px;
@@ -227,28 +277,28 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       height: 4px;
       background: linear-gradient(90deg, #004b93 0%, #0284c7 60%, #10b981 100%);
       border-radius: 2px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     .doc-header-table {
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
-      margin-bottom: 16px;
-      border: 1px solid #e2e8f0;
+      margin-bottom: 14px;
+      border: 1.5px solid #cbd5e1;
       border-radius: 8px;
       overflow: hidden;
       background: #ffffff;
     }
     .brand-cell {
-      width: 58%;
-      padding: 14px 18px;
+      width: 54%;
+      padding: 12px 16px;
       vertical-align: middle;
-      border-right: 1px solid #e2e8f0;
+      border-right: 1.5px solid #cbd5e1;
       background: #fafbfc;
     }
     .meta-cell {
-      width: 42%;
-      padding: 12px 16px;
+      width: 46%;
+      padding: 10px 14px;
       vertical-align: middle;
       background: #ffffff;
     }
@@ -282,7 +332,7 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       color: #64748b;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       margin-top: 3px;
     }
     .brand-norm-pills {
@@ -291,7 +341,7 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
     .norm-pill {
       display: inline-block;
       padding: 1.5px 6px;
-      font-size: 7.5pt;
+      font-size: 7pt;
       font-weight: 700;
       border-radius: 4px;
       text-transform: uppercase;
@@ -313,15 +363,15 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       border: 1px solid #fde68a;
     }
     .doc-title-banner {
-      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
       border-left: 5px solid #004b93;
       border-radius: 6px;
-      padding: 14px 18px;
-      margin-bottom: 20px;
+      padding: 12px 16px;
+      margin-bottom: 18px;
     }
     .doc-type-eyebrow {
-      font-size: 8pt;
+      font-size: 7.5pt;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -329,7 +379,7 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       margin-bottom: 4px;
     }
     .doc-main-title {
-      font-size: 13pt;
+      font-size: 12.5pt;
       font-weight: 800;
       color: #0b1a30;
       margin: 0;
@@ -338,35 +388,37 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       text-transform: uppercase;
     }
     h2 {
-      font-size: 10.5pt;
+      font-size: 10pt;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.04em;
       color: #0b1a30;
       background: #f8fafc;
       border-left: 3.5px solid #004b93;
-      border-bottom: 1px solid #e2e8f0;
-      padding: 7px 12px;
-      margin: 22px 0 10px 0;
+      border-bottom: 1px solid #cbd5e1;
+      padding: 6px 12px;
+      margin: 20px 0 10px 0;
       border-radius: 0 4px 4px 0;
       page-break-after: avoid;
+      break-after: avoid;
     }
     .sec-sub {
-      font-size: 9.5pt;
+      font-size: 9pt;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.03em;
       color: #334155;
-      margin: 14px 0 6px 0;
+      margin: 12px 0 6px 0;
       padding-bottom: 3px;
       border-bottom: 1px dashed #cbd5e1;
       page-break-after: avoid;
+      break-after: avoid;
     }
     p, li {
       font-size: 9.5pt;
       text-align: justify;
       margin: 6px 0;
-      color: #334155;
+      color: #1e293b;
       line-height: 1.6;
     }
     ul, ol {
@@ -382,21 +434,25 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       border: 1px solid #cbd5e1;
       border-radius: 6px;
       overflow: hidden;
+      page-break-inside: auto;
+    }
+    table.data-table tr {
       page-break-inside: avoid;
+      break-inside: avoid;
     }
     table.data-table th {
       background: #f1f5f9;
       color: #0b1a30;
       font-weight: 700;
       text-align: left;
-      padding: 8px 10px;
+      padding: 7px 10px;
       border-bottom: 1.5px solid #94a3b8;
-      font-size: 8.5pt;
+      font-size: 8pt;
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
     table.data-table td {
-      padding: 8px 10px;
+      padding: 7px 10px;
       border-bottom: 1px solid #e2e8f0;
       color: #1e293b;
       vertical-align: top;
@@ -410,10 +466,10 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
     }
     .callout {
       background: #f8fafc;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #cbd5e1;
       border-left: 3.5px solid #004b93;
       border-radius: 6px;
-      padding: 10px 14px;
+      padding: 9px 14px;
       margin: 12px 0;
       font-size: 9pt;
       line-height: 1.5;
@@ -421,7 +477,7 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
     }
     .muted {
       color: #64748b;
-      font-size: 8.5pt;
+      font-size: 8pt;
       line-height: 1.5;
     }
     .sig-grid {
@@ -429,6 +485,8 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       width: 100%;
       table-layout: fixed;
       margin-top: 14px;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
     .sig-box {
       display: inline-block;
@@ -440,10 +498,11 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       background: #ffffff;
       border-radius: 6px;
       page-break-inside: avoid;
+      break-inside: avoid;
     }
     .sig-box-signed {
       border: 1.5px solid #10b981 !important;
-      background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%) !important;
+      background: #f0fdf4 !important;
       box-shadow: 0 2px 6px rgba(16, 185, 129, 0.08);
     }
     .sig-badge-row {
@@ -479,7 +538,7 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
     }
     .sig-hash-box {
       font-family: monospace;
-      font-size: 7.5pt;
+      font-size: 7pt;
       color: #047857;
       background: #ecfdf5;
       border: 1px solid #a7f3d0;
@@ -490,7 +549,7 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
     }
     .sig-line {
       border-bottom: 1.5px solid #0b1a30;
-      height: 32px;
+      height: 28px;
       margin-bottom: 8px;
     }
     .sig-role {
@@ -506,20 +565,31 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       margin-top: 2px;
     }
     .doc-footer {
-      margin-top: 26px;
+      margin-top: 24px;
       padding-top: 10px;
-      border-top: 1.5px solid #e2e8f0;
+      border-top: 1.5px solid #cbd5e1;
       font-size: 8pt;
       color: #64748b;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
     @media print {
-      body { background: #ffffff !important; padding: 0 !important; }
-      .page-sheet { border: none !important; box-shadow: none !important; padding: 0 !important; max-width: 100% !important; border-radius: 0 !important; }
+      body { background: #ffffff !important; padding: 0 !important; color: #000000 !important; }
+      .page-sheet { border: none !important; box-shadow: none !important; padding: 0 !important; max-width: 100% !important; border-radius: 0 !important; margin: 0 !important; }
       .toolbar-no-print { display: none !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      .doc-header-table, .brand-cell, .meta-cell { border-color: #94a3b8 !important; }
+      .doc-title-banner { background: #f8fafc !important; border-color: #94a3b8 !important; border-left: 5px solid #004b93 !important; }
+      h2 { background: #f1f5f9 !important; border-left: 3.5px solid #004b93 !important; border-bottom: 1px solid #94a3b8 !important; page-break-after: avoid !important; break-after: avoid !important; }
+      table.data-table { border: 1px solid #94a3b8 !important; }
+      table.data-table th { background: #f1f5f9 !important; border-bottom: 1.5px solid #64748b !important; }
+      table.data-table td { border-bottom: 1px solid #cbd5e1 !important; }
+      .sig-box { border: 1px solid #94a3b8 !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+      .sig-box-signed { border: 1.5px solid #059669 !important; background: #f0fdf4 !important; }
+      .doc-footer { border-top: 1.5px solid #94a3b8 !important; }
     }
   </style>
 </head>
@@ -531,7 +601,8 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       <strong style="color: #ffffff;">${escapeDocHtml(meta.title)}</strong>
     </div>
     <div style="display:flex; gap:8px;">
-      <button onclick="window.print()">🖨️ Imprimir / Salvar como PDF</button>
+      <button type="button" onclick="window.parent &amp;&amp; window.parent.toggleDocEditMode ? window.parent.toggleDocEditMode() : null">✏️ Editar Nomes na Tela</button>
+      <button type="button" onclick="window.print()">🖨️ Imprimir / Salvar como PDF</button>
     </div>
   </div>`}
   <div class="Section1 page-sheet">
@@ -554,28 +625,32 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
         <td class="meta-cell">
           <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt;">
             <tr>
-              <td style="padding: 2px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Código Oficial:</td>
-              <td style="padding: 2px 0; text-align: right;">
+              <td style="padding: 2.5px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Código Oficial:</td>
+              <td style="padding: 2.5px 0; text-align: right;">
                 <span style="display: inline-block; padding: 2px 8px; font-family: monospace; font-size: 8.5pt; font-weight: 800; color: #ffffff; background: #0b1a30; border-radius: 4px;">${escapeDocHtml(meta.code)}</span>
               </td>
             </tr>
             <tr>
-              <td style="padding: 2px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Classificação:</td>
-              <td style="padding: 2px 0; text-align: right;">
+              <td style="padding: 2.5px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Gerência Responsável:</td>
+              <td style="padding: 2.5px 0; text-align: right; color: #0b1a30; font-weight: 700; font-size: 8pt;">${escapeDocHtml(managerDept)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 2.5px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Classificação:</td>
+              <td style="padding: 2.5px 0; text-align: right;">
                 <span style="display: inline-block; padding: 1.5px 6px; font-size: 7.5pt; font-weight: 700; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: 4px;">${escapeDocHtml(meta.classification || "CONFIDENCIAL / RESTRITO")}</span>
               </td>
             </tr>
             <tr>
-              <td style="padding: 2px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Protocolo SGSI:</td>
-              <td style="padding: 2px 0; text-align: right; font-family: monospace; font-size: 8pt; color: #334155; font-weight: 700;">${escapeDocHtml(protocolCode)}</td>
+              <td style="padding: 2.5px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Protocolo SGSI:</td>
+              <td style="padding: 2.5px 0; text-align: right; font-family: monospace; font-size: 8pt; color: #334155; font-weight: 700;">${escapeDocHtml(protocolCode)}</td>
             </tr>
             <tr>
-              <td style="padding: 2px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Versão / Emissão:</td>
-              <td style="padding: 2px 0; text-align: right; color: #334155; font-weight: 600;">${escapeDocHtml(meta.version || "v2.0")} &bull; ${escapeDocHtml(ctx.todayBr)}</td>
+              <td style="padding: 2.5px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Versão / Emissão:</td>
+              <td style="padding: 2.5px 0; text-align: right; color: #334155; font-weight: 600;">${escapeDocHtml(meta.version || "v2.4")} &bull; ${escapeDocHtml(ctx.todayBr)}</td>
             </tr>
             <tr>
-              <td style="padding: 2px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Unidade:</td>
-              <td style="padding: 2px 0; text-align: right; color: #004b93; font-weight: 700;">${escapeDocHtml(unitName)}</td>
+              <td style="padding: 2.5px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Unidade / Abrangência:</td>
+              <td style="padding: 2.5px 0; text-align: right; color: #004b93; font-weight: 700;">${escapeDocHtml(unitName)}</td>
             </tr>
           </table>
         </td>
@@ -583,15 +658,22 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
     </table>
 
     <div class="doc-title-banner">
-      <div class="doc-type-eyebrow">${escapeDocHtml(meta.docType || "INSTRUMENTO NORMATIVO HOMOLOGADO")} &bull; BASE NORMATIVA: ${escapeDocHtml(meta.normative)}</div>
+      <div class="doc-type-eyebrow">
+        <span>${escapeDocHtml(meta.docType || "INSTRUMENTO NORMATIVO HOMOLOGADO")}</span>
+        <span style="margin: 0 6px; color: #94a3b8;">&bull;</span>
+        <span>GERÊNCIA RESPONSÁVEL: ${escapeDocHtml(managerDept.toUpperCase())}</span>
+      </div>
       <h1 class="doc-main-title">${escapeDocHtml(meta.title)}</h1>
+      <div style="font-size: 8.5pt; color: #475569; margin-top: 5px; font-weight: 500;">
+        <strong>Conformidade Regulatória:</strong> ${escapeDocHtml(meta.normative)} &nbsp;|&nbsp; <strong>Validade Operacional:</strong> AC Engenharia (Matriz &amp; Canteiros)
+      </div>
     </div>
 
     ${bodyHtml}
 
     <div class="doc-footer">
       <div>
-        <strong style="color: #0b1a30;">${escapeDocHtml(ctx.company)}</strong> &bull; Sistema Integrado de Gestão da Segurança da Informação &amp; Privacidade<br/>
+        <strong style="color: #0b1a30;">${escapeDocHtml(ctx.company)}</strong> &bull; Sistema Integrado de Gestão da Segurança da Informação &amp; Governança Corporativa<br/>
         <span>Documento Homologado &bull; ABNT NBR ISO/IEC 27001:2022 &bull; LGPD (Lei nº 13.709/2018) &bull; NR-18</span>
       </div>
       <div style="text-align: right;">
@@ -1141,7 +1223,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <p>Nomear para o exercício da função de <strong>Encarregado(a) pelo Tratamento de Dados Pessoais (Data Protection Officer — DPO)</strong> da AC Engenharia:</p>
       <table class="data-table">
         <tr>
-          <td width="50%"><strong>Encarregado(a) Titular:</strong> ${escapeDocHtml(ctx.dpoName)}</td>
+          <td width="50%"><strong>Encarregado(a) Titular:</strong> ${escapeDocHtml(ctx.dpoName || "[ Nome Completo do(a) Encarregado(a) DPO ]")}</td>
           <td width="50%"><strong>Canal Público Oficial:</strong> ${escapeDocHtml(ctx.dpoEmail)}</td>
         </tr>
         <tr>
@@ -1551,52 +1633,52 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
         </thead>
         <tbody>
           <tr>
-            <td><strong>Diretoria</strong></td>
-            <td><strong>Alécio</strong> (Diretor Executivo C-Level)</td>
-            <td>Gerência Geral de Operações</td>
+            <td><strong>Diretoria Executiva</strong></td>
+            <td><strong>${escapeDocHtml(ctx.directorName || "[ Preencher Nome do Diretor / C-Level ]")}</strong></td>
+            <td>Gerência Geral de Operações / Suplência</td>
             <td>diretoria@acengenhariase.com.br</td>
             <td>[ ✓ ] Sim</td>
           </tr>
           <tr>
-            <td><strong>DPO provisório (Encarregado)</strong></td>
-            <td><strong>Alysson</strong> (Gestão Administrativa / DPO)</td>
-            <td><strong>Luiza</strong> (Administrativo / Privacidade)</td>
-            <td>dpo@acengenhariase.com.br</td>
+            <td><strong>DPO (Encarregado de Dados)</strong></td>
+            <td><strong>${escapeDocHtml(ctx.dpoName || "[ Preencher Nome do(a) DPO Titular ]")}</strong></td>
+            <td>[ Preencher Nome do(a) Suplente DPO ]</td>
+            <td>${escapeDocHtml(ctx.dpoEmail || "dpo@acengenhariase.com.br")}</td>
             <td>[ ✓ ] Sim</td>
           </tr>
           <tr>
             <td><strong>TI / Segurança da Informação</strong></td>
-            <td><strong>Manoel Martins</strong> (Engenharia / SecOps)</td>
-            <td><strong>Davi</strong> / <strong>Lucas</strong> (Suporte & Infra TI)</td>
+            <td><strong>${escapeDocHtml(ctx.secopsName || "[ Preencher Nome do Gestor de T.I. & SecOps ]")}</strong></td>
+            <td>Equipe de Suporte &amp; Infraestrutura T.I.</td>
             <td>ti@acengenhariase.com.br</td>
             <td>[ ✓ ] Sim</td>
           </tr>
           <tr>
-            <td><strong>Jurídico</strong></td>
-            <td><strong>Dr. Saback</strong> (Consultoria Jurídica)</td>
-            <td>Assessoria Jurídica Externa</td>
+            <td><strong>Jurídico / Compliance</strong></td>
+            <td><strong>[ Preencher Nome do Assessor Jurídico / OAB ]</strong></td>
+            <td>Assessoria Jurídica Externa Homologada</td>
             <td>juridico@acengenhariase.com.br</td>
             <td>[ ✓ ] Sim</td>
           </tr>
           <tr>
-            <td><strong>RH / Gestão de Pessoas</strong></td>
-            <td><strong>Bruno</strong> (Recursos Humanos & SST)</td>
-            <td>Coordenação de RH / Folha</td>
+            <td><strong>RH / Gestão de Pessoas &amp; SST</strong></td>
+            <td><strong>[ Preencher Nome do(a) Gestor(a) de RH ]</strong></td>
+            <td>Coordenação de Recursos Humanos &amp; Folha</td>
             <td>rh@acengenhariase.com.br</td>
             <td>[ ✓ ] Sim</td>
           </tr>
           <tr>
             <td><strong>Comunicação / Comercial</strong></td>
-            <td><strong>Carla</strong> (Gestão Comercial & Estandes)</td>
-            <td>Equipe Comercial / Atendimento</td>
+            <td><strong>[ Preencher Nome do(a) Gestor(a) Comercial ]</strong></td>
+            <td>Equipe Comercial / Atendimento a Clientes</td>
             <td>comercial@acengenhariase.com.br</td>
             <td>[ ✓ ] Sim</td>
           </tr>
           <tr>
             <td><strong>Gestor da Área Afetada</strong></td>
-            <td>Engenheiro Residente da Obra / Gestor do Setor</td>
-            <td>Engenheiro de Campo / Coordenador</td>
-            <td>Plantão do Canteiro / Área</td>
+            <td>${escapeDocHtml(ctx.obraManagerName || "[ Engenheiro Residente da Obra / Gestor do Setor ]")}</td>
+            <td>Engenheiro de Campo / Coordenador da Área</td>
+            <td>Plantão do Canteiro / Área Afetada</td>
             <td>[ ✓ ] Sim</td>
           </tr>
         </tbody>
@@ -1606,10 +1688,10 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <p>Declaramos ciência e mútua concordância com as atribuições, alçadas e responsabilidades conferidas nesta Matriz RACI, comprometendo-nos a cumprir estritamente os prazos e fluxos aqui estabelecidos em conformidade com a ISO/IEC 27001 e a Resolução CD/ANPD nº 15/2024.</p>
 
       ${buildSignatureGridHTML([
-        { role: "Diretor Responsável (Accountable C-Level)", name: "Alécio — Diretor Executivo" },
-        { role: "DPO Provisório Designado", name: "Alysson — Encarregado(a) DPO" },
-        { role: "Responsável pela T.I. & Segurança", name: "Manoel Martins — Engenharia & SecOps" },
-        { role: "Assessoria Jurídica", name: "Dr. Saback — Jurídico" }
+        { role: "Diretor Responsável (Accountable C-Level)", name: custom.directorName || ctx.directorName || "" },
+        { role: "DPO Provisório Designado", name: custom.dpoName || ctx.dpoName || "" },
+        { role: "Responsável pela T.I. & Segurança", name: custom.secopsName || ctx.secopsName || "" },
+        { role: "Assessoria Jurídica", name: custom.legalName || "" }
       ], false, "MOD-GOV-06")}
 
       <h2>8. Próximos Passos de Governança</h2>
@@ -1899,7 +1981,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           <td width="45%"><strong>CNPJ:</strong> ${escapeDocHtml(ctx.cnpj)}</td>
         </tr>
         <tr>
-          <td><strong>Encarregado(a) (DPO):</strong> ${escapeDocHtml(ctx.dpoName)}</td>
+          <td><strong>Encarregado(a) (DPO):</strong> ${escapeDocHtml(ctx.dpoName || "[ Nome do(a) Encarregado(a) DPO ]")}</td>
           <td><strong>Contato DPO:</strong> ${escapeDocHtml(ctx.dpoEmail)}</td>
         </tr>
         <tr>
@@ -2964,6 +3046,45 @@ function renderDocumentTemplatesGrid() {
   }
 }
 
+let isDocEditModeActive = false;
+
+function toggleDocEditMode(forceState = null) {
+  isDocEditModeActive = forceState !== null ? forceState : !isDocEditModeActive;
+  const alertEl = document.getElementById("doc-edit-alert");
+  const btn = document.getElementById("btn-toggle-doc-edit");
+  const btnText = document.getElementById("btn-toggle-doc-edit-text");
+  const iframe = document.getElementById("doc-preview-iframe");
+
+  if (alertEl) {
+    if (isDocEditModeActive) alertEl.classList.remove("hidden");
+    else alertEl.classList.add("hidden");
+  }
+
+  if (btn) {
+    if (isDocEditModeActive) {
+      btn.className = "px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs ring-2 ring-emerald-300";
+      if (btnText) btnText.textContent = "✓ Concluir Edição";
+    } else {
+      btn.className = "px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs";
+      if (btnText) btnText.textContent = "✏️ Preencher / Editar Nomes";
+    }
+  }
+
+  if (iframe && iframe.contentDocument) {
+    const doc = iframe.contentDocument;
+    const sheet = doc.querySelector(".page-sheet") || doc.body;
+    if (sheet) {
+      sheet.contentEditable = isDocEditModeActive ? "true" : "false";
+      if (isDocEditModeActive) {
+        sheet.focus();
+        if (window.showToast) {
+          window.showToast("Modo de Edição Ativo: Clique nos campos do documento para digitar seus nomes e dados antes de imprimir ou baixar!", "info");
+        }
+      }
+    }
+  }
+}
+
 // Abre o Visualizador A4 Corporativo no navegador
 function previewCorporateTemplate(code, customData = null) {
   const tpl = getTemplateByCode(code);
@@ -2971,6 +3092,14 @@ function previewCorporateTemplate(code, customData = null) {
 
   TemplateHubState.previewingCode = code;
   TemplateHubState.previewingCustomData = customData || {};
+  isDocEditModeActive = false;
+
+  const alertEl = document.getElementById("doc-edit-alert");
+  const btn = document.getElementById("btn-toggle-doc-edit");
+  const btnText = document.getElementById("btn-toggle-doc-edit-text");
+  if (alertEl) alertEl.classList.add("hidden");
+  if (btn) btn.className = "px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs";
+  if (btnText) btnText.textContent = "✏️ Preencher / Editar Nomes";
 
   const html = buildRenderedTemplateHTML(code, TemplateHubState.previewingCustomData, { forWord: false });
   const modal = document.getElementById("modal-doc-template-preview");
@@ -3003,13 +3132,208 @@ function printPreviewedDocument() {
 
 function downloadPreviewedWord() {
   if (!TemplateHubState.previewingCode) return;
-  downloadTemplateWord(TemplateHubState.previewingCode, TemplateHubState.previewingCustomData || {});
+  const tpl = getTemplateByCode(TemplateHubState.previewingCode);
+  if (!tpl) return;
+
+  const iframe = document.getElementById("doc-preview-iframe");
+  let wordHtml = "";
+
+  if (iframe && iframe.contentDocument) {
+    const doc = iframe.contentDocument;
+    const sheet = doc.querySelector(".page-sheet");
+    if (sheet) {
+      const clone = sheet.cloneNode(true);
+      clone.removeAttribute("contenteditable");
+      wordHtml = "\ufeff" + `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeDocHtml(tpl.code)} - ${escapeDocHtml(tpl.title)}</title>
+  <style>
+    @page Section1 { size: 595.3pt 841.9pt; margin: 38pt 40pt 40pt 40pt; }
+    div.Section1 { page: Section1; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: #0f172a; margin: 0; padding: 0; font-size: 9.5pt; line-height: 1.55; }
+    table.data-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 12px 0 16px 0; font-size: 9pt; border: 1px solid #cbd5e1; }
+    table.data-table th { background: #f1f5f9; color: #0b1a30; font-weight: 700; text-align: left; padding: 7px 10px; border-bottom: 1.5px solid #94a3b8; }
+    table.data-table td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; }
+    h2 { font-size: 10pt; font-weight: 700; color: #0b1a30; background: #f8fafc; border-left: 3.5px solid #004b93; padding: 6px 12px; margin: 20px 0 10px 0; }
+    .sig-grid { display: table; width: 100%; table-layout: fixed; margin-top: 14px; }
+    .sig-box { display: inline-block; vertical-align: top; width: 48%; margin: 6px 1% 10px 0; padding: 12px 14px; border: 1px solid #cbd5e1; background: #ffffff; }
+    .sig-line { border-bottom: 1.5px solid #0b1a30; height: 28px; margin-bottom: 8px; }
+    .sig-role { font-weight: 700; font-size: 8.5pt; color: #0b1a30; }
+    .sig-name, .sig-meta { font-size: 8pt; color: #334155; margin-top: 2px; }
+    .doc-footer { margin-top: 24px; padding-top: 10px; border-top: 1.5px solid #cbd5e1; font-size: 8pt; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="Section1">
+    ${clone.innerHTML}
+  </div>
+</body>
+</html>`;
+    }
+  }
+
+  if (!wordHtml) {
+    wordHtml = "\ufeff" + buildRenderedTemplateHTML(TemplateHubState.previewingCode, TemplateHubState.previewingCustomData || {}, { forWord: true });
+  }
+
+  const slug = sanitizeFileSlug(tpl.title);
+  const fileName = `${tpl.code}-${slug}.doc`;
+  if (typeof triggerDownloadFile === "function") {
+    triggerDownloadFile(fileName, wordHtml, "application/msword;charset=utf-8");
+  }
+  if (window.showToast) {
+    window.showToast(`Documento ${tpl.code} baixado para Word (.doc) com sucesso!`, "success");
+  }
 }
 
 function attachPreviewedAsEvidence() {
   const code = TemplateHubState.previewingCode;
   if (typeof closeModal === "function") closeModal("modal-doc-template-preview");
   if (code) attachSignedTemplateAsEvidence(code);
+}
+
+function openCorporateSignersModal() {
+  let modal = document.getElementById("modal-corporate-signers");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "modal-corporate-signers";
+    modal.className = "fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-[70] flex items-center justify-center p-4 hidden";
+    modal.innerHTML = `
+      <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+        <div class="p-4 bg-[#0b1a30] text-white flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-lucide="users" class="w-4 h-4 text-amber-300"></i>
+            <div>
+              <h3 class="text-sm font-bold">Definir Responsáveis e Signatários — AC Engenharia</h3>
+              <p class="text-[11px] text-slate-300">Preencha os nomes corporativos para aplicar automaticamente em todos os 40 modelos</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeModal('modal-corporate-signers')" class="text-slate-300 hover:text-white cursor-pointer">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <form onsubmit="handleSaveCorporateSigners(event)" class="p-5 space-y-3 text-xs max-h-[75vh] overflow-y-auto">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Diretoria Executiva / Representante Legal (C-Level)</label>
+            <input type="text" id="signer-input-director" placeholder="Ex: Eng. João da Silva — Diretor Executivo" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-[#004b93]" />
+            <p class="text-[10px] text-slate-500 mt-0.5">Assina aceites de risco residual, atas de comitê de segurança e políticas da empresa.</p>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Encarregado(a) de Dados (DPO Titular)</label>
+            <input type="text" id="signer-input-dpo" placeholder="Ex: Dra. Mariana Costa (OAB/SE 12345 • DPO)" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-[#004b93]" />
+            <p class="text-[10px] text-slate-500 mt-0.5">Assina laudos de privacidade, DPAs, notificações ANPD e portarias de nomeação.</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">E-mail Oficial do DPO / Canal Titular</label>
+              <input type="email" id="signer-input-dpo-email" placeholder="dpo@acengenhariase.com.br" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-[#004b93]" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">CNPJ da Empresa</label>
+              <input type="text" id="signer-input-cnpj" placeholder="12.345.678/0001-90" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-[#004b93]" />
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Gestor(a) de T.I. &amp; SecOps</label>
+            <input type="text" id="signer-input-secops" placeholder="Ex: Carlos Santos — Gestor de T.I. &amp; SecOps" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-[#004b93]" />
+            <p class="text-[10px] text-slate-500 mt-0.5">Assina laudos de restore de backup, hardening de rede/servidores e custódia de credenciais.</p>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Engenheiro(a) Residente / Gestor de Obras</label>
+            <input type="text" id="signer-input-engineer" placeholder="Ex: Eng. Ricardo Lima — CREA/SE 98765" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-[#004b93]" />
+            <p class="text-[10px] text-slate-500 mt-0.5">Assina checklists de canteiro NR-18, termos de desmobilização e entrega de ativos.</p>
+          </div>
+          <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 space-y-1 text-[11px]">
+            <div class="font-bold flex items-center gap-1.5">
+              <i data-lucide="info" class="w-4 h-4 text-[#004b93]"></i>
+              <span>Flexibilidade Total: Físico, Editável ou Automatizado</span>
+            </div>
+            <p>Se deixar estes campos vazios, todos os 40 documentos mantêm espaços sublinhados abertos <code>[ Preencher Nome ... ]</code> para preenchimento manual por caneta ou digitação sob demanda no Word e na tela.</p>
+          </div>
+          <div class="pt-2 flex items-center justify-between gap-2 border-t border-slate-100 flex-wrap">
+            <button type="button" onclick="clearCorporateSigners()" class="px-3 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold cursor-pointer text-xs">
+              Deixar em Branco (Espaço Aberto)
+            </button>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="closeModal('modal-corporate-signers')" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer text-xs">
+                Cancelar
+              </button>
+              <button type="submit" class="px-4 py-2 rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white font-bold flex items-center gap-1.5 shadow-xs cursor-pointer text-xs">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                <span>Salvar nos 40 Modelos</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  const stored = getStoredCorporateSigners();
+  const dirEl = document.getElementById("signer-input-director");
+  const dpoEl = document.getElementById("signer-input-dpo");
+  const emailEl = document.getElementById("signer-input-dpo-email");
+  const cnpjEl = document.getElementById("signer-input-cnpj");
+  const secEl = document.getElementById("signer-input-secops");
+  const engEl = document.getElementById("signer-input-engineer");
+
+  if (dirEl) dirEl.value = stored.directorName || "";
+  if (dpoEl) dpoEl.value = stored.dpoName || "";
+  if (emailEl) emailEl.value = stored.dpoEmail || "";
+  if (cnpjEl) cnpjEl.value = stored.cnpj || "";
+  if (secEl) secEl.value = stored.secopsName || "";
+  if (engEl) engEl.value = stored.obraManagerName || "";
+
+  modal.classList.remove("hidden");
+  if (window.lucide && typeof window.lucide.createIcons === "function") {
+    window.lucide.createIcons();
+  }
+}
+
+function handleSaveCorporateSigners(e) {
+  e.preventDefault();
+  const dirEl = document.getElementById("signer-input-director");
+  const dpoEl = document.getElementById("signer-input-dpo");
+  const emailEl = document.getElementById("signer-input-dpo-email");
+  const cnpjEl = document.getElementById("signer-input-cnpj");
+  const secEl = document.getElementById("signer-input-secops");
+  const engEl = document.getElementById("signer-input-engineer");
+
+  const data = {
+    directorName: dirEl ? dirEl.value.trim() : "",
+    dpoName: dpoEl ? dpoEl.value.trim() : "",
+    dpoEmail: emailEl ? emailEl.value.trim() : "",
+    cnpj: cnpjEl ? cnpjEl.value.trim() : "",
+    secopsName: secEl ? secEl.value.trim() : "",
+    obraManagerName: engEl ? engEl.value.trim() : ""
+  };
+
+  saveStoredCorporateSigners(data);
+  if (typeof closeModal === "function") closeModal("modal-corporate-signers");
+
+  if (TemplateHubState.previewingCode) {
+    previewCorporateTemplate(TemplateHubState.previewingCode, TemplateHubState.previewingCustomData || {});
+  }
+  renderDocumentTemplatesGrid();
+
+  if (window.showToast) {
+    window.showToast("Responsáveis corporativos salvos com sucesso nos 40 modelos!", "success");
+  }
+}
+
+function clearCorporateSigners() {
+  saveStoredCorporateSigners({});
+  if (typeof closeModal === "function") closeModal("modal-corporate-signers");
+  if (TemplateHubState.previewingCode) {
+    previewCorporateTemplate(TemplateHubState.previewingCode, TemplateHubState.previewingCustomData || {});
+  }
+  renderDocumentTemplatesGrid();
+  if (window.showToast) {
+    window.showToast("Responsáveis removidos: todos os modelos agora exibem espaços abertos para edição futura.", "info");
+  }
 }
 
 // ============================================================================
@@ -3377,6 +3701,12 @@ window.generateRiskDocument = generateRiskDocument;
 window.generateOperatorDpaDocument = generateOperatorDpaDocument;
 window.generateDsarCertificateDocument = generateDsarCertificateDocument;
 window.generateOffcanvasEntityDocument = generateOffcanvasEntityDocument;
+window.toggleDocEditMode = toggleDocEditMode;
+window.openCorporateSignersModal = openCorporateSignersModal;
+window.handleSaveCorporateSigners = handleSaveCorporateSigners;
+window.clearCorporateSigners = clearCorporateSigners;
+window.getStoredCorporateSigners = getStoredCorporateSigners;
+window.saveStoredCorporateSigners = saveStoredCorporateSigners;
 
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("doc-templates-grid")) {

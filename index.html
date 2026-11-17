@@ -3115,6 +3115,11 @@
             <button onclick="clearTemplateFilters()" class="text-slate-500 hover:text-slate-800 px-2 py-1 font-medium cursor-pointer">
               Limpar Filtros
             </button>
+
+            <button onclick="openCorporateSignersModal()" class="px-2.5 py-1 rounded bg-[#0f2942] hover:bg-[#163a5c] text-white font-medium flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs" title="Configurar nomes da Diretoria, DPO, Gestor de T.I. e Engenheiro para preenchimento automático em todos os 40 modelos">
+              <i data-lucide="users" class="w-3.5 h-3.5 text-amber-300"></i>
+              <span>Definir Responsáveis</span>
+            </button>
           </div>
 
           <!-- Grid dos 40 Modelos Oficiais -->
@@ -4948,9 +4953,17 @@ openssl ts -reply -in response.tsr -text</pre>
             <p id="doc-preview-modal-sub" class="text-[11px] text-slate-300 truncate mt-0.5">Visualização A4 pronta para impressão PDF ou edição em Microsoft Word</p>
           </div>
           <div class="flex items-center gap-2 flex-wrap shrink-0">
+            <button type="button" id="btn-toggle-doc-edit" onclick="toggleDocEditMode()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs" title="Clique para editar ou preencher nomes diretamente no documento na tela antes de imprimir">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+              <span id="btn-toggle-doc-edit-text">✏️ Preencher / Editar Nomes</span>
+            </button>
+            <button type="button" onclick="openCorporateSignersModal()" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors" title="Cadastrar nomes oficiais da Diretoria, DPO e Gestores para aplicar em todos os 40 modelos">
+              <i data-lucide="users" class="w-3.5 h-3.5 text-blue-300"></i>
+              <span>Definir Responsáveis</span>
+            </button>
             <button type="button" onclick="openDigitalSignatureModal()" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs" title="Assinar eletronicamente o documento com carimbo SHA-256">
               <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i>
-              <span>Assinar Digitalmente (SHA-256)</span>
+              <span>Assinar (SHA-256)</span>
             </button>
             <button type="button" onclick="printPreviewedDocument()" class="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors">
               <i data-lucide="printer" class="w-3.5 h-3.5"></i>
@@ -4968,6 +4981,13 @@ openssl ts -reply -in response.tsr -text</pre>
               <i data-lucide="x" class="w-5 h-5"></i>
             </button>
           </div>
+        </div>
+        <div id="doc-edit-alert" class="hidden bg-amber-50 border-b border-amber-200 px-5 py-2 text-xs text-amber-900 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0"></i>
+            <span><strong>Modo de Edição Ativo:</strong> Clique diretamente sobre qualquer nome, cargo ou campo sublinhado no documento abaixo para digitar. Suas alterações serão mantidas na impressão (PDF) e no download do Word!</span>
+          </div>
+          <button type="button" onclick="toggleDocEditMode(false)" class="text-xs font-bold text-amber-800 hover:underline cursor-pointer">Concluir Edição</button>
         </div>
         <iframe id="doc-preview-iframe" title="Visualização A4 do Documento Corporativo" class="w-full flex-1 bg-slate-200 border-0"></iframe>
       </div>
