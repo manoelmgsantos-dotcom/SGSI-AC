@@ -80,15 +80,17 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
     const appliedSig = docSigs[idx] || null;
     if (appliedSig) {
       return `
-        <div class="sig-box" style="border: 1.5px solid #059669; background: #ecfdf5;">
-          <div style="font-family: 'Brush Script MT', 'Segoe Script', cursive; font-size: 15pt; color: #065f46; border-bottom: 1px solid #059669; padding-bottom: 2px; margin-bottom: 5px;">
-            ✓ ${escapeDocHtml(appliedSig.signerName)}
+        <div class="sig-box sig-box-signed">
+          <div class="sig-badge-row">
+            <span class="sig-status-badge">✓ ASSINADO DIGITALMENTE</span>
+            <span class="sig-crypto-pill">SHA-256</span>
           </div>
-          <div class="sig-role" style="color: #065f46;">${escapeDocHtml(s.role)} — ASSINADO DIGITALMENTE</div>
-          <div class="sig-name"><strong>Signatário:</strong> ${escapeDocHtml(appliedSig.signerName)} (${escapeDocHtml(appliedSig.signerDoc || "Verificado")})</div>
+          <div class="sig-cursive">${escapeDocHtml(appliedSig.signerName)}</div>
+          <div class="sig-role">${escapeDocHtml(s.role)}</div>
+          <div class="sig-meta"><strong>Signatário:</strong> ${escapeDocHtml(appliedSig.signerName)} (${escapeDocHtml(appliedSig.signerDoc || "Verificado via RBAC")})</div>
           <div class="sig-meta"><strong>Modalidade:</strong> ${escapeDocHtml(appliedSig.method || "Assinatura Eletrônica SGSI / ICP-Brasil")}</div>
-          <div class="sig-meta"><strong>Carimbo de Tempo:</strong> ${escapeDocHtml(appliedSig.timestamp)} | <strong>IP:</strong> ${escapeDocHtml(appliedSig.ip || "127.0.0.1")}</div>
-          <div class="sig-meta" style="font-family: monospace; font-size: 7.5pt; word-break: break-all; color: #047857;"><strong>Hash SHA-256:</strong> ${escapeDocHtml(appliedSig.hash)}</div>
+          <div class="sig-meta"><strong>Carimbo de Tempo:</strong> ${escapeDocHtml(appliedSig.timestamp)} &bull; <strong>IP:</strong> ${escapeDocHtml(appliedSig.ip || "127.0.0.1")}</div>
+          <div class="sig-hash-box"><strong>Hash SHA-256:</strong> ${escapeDocHtml(appliedSig.hash)}</div>
         </div>
       `;
     }
@@ -96,39 +98,43 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
       <div class="sig-box">
         <div class="sig-line"></div>
         <div class="sig-role">${escapeDocHtml(s.role)}</div>
-        <div class="sig-name">${escapeDocHtml(s.name || "Nome Legível: ____________________________________")}</div>
-        <div class="sig-meta">${escapeDocHtml(s.docLabel || "CPF / Registro Profissional (CREA/OAB): ___________________")}</div>
-        <div class="sig-meta">Data: ____/____/202___ &nbsp;|&nbsp; Assinatura Física, Eletrônica SGSI ou ICP-Brasil / Gov.br</div>
+        <div class="sig-name"><strong>Nome Legível:</strong> ${escapeDocHtml(s.name || "___________________________________________")}</div>
+        <div class="sig-meta"><strong>CPF / CREA / OAB:</strong> ${escapeDocHtml(s.docLabel || "___________________________")}</div>
+        <div class="sig-meta" style="margin-top: 4px; font-size: 7.5pt; color: #94a3b8; border-top: 1px dotted #e2e8f0; padding-top: 3px;">
+          Data: ____/____/202___ &nbsp;|&nbsp; <em>Assinatura Física, Eletrônica SGSI ou Gov.br</em>
+        </div>
       </div>
     `;
   }).join("");
 
   const extraSigsHtml = docSigs.slice(signers.length).map(appliedSig => `
-    <div class="sig-box" style="border: 1.5px solid #059669; background: #ecfdf5;">
-      <div style="font-family: 'Brush Script MT', 'Segoe Script', cursive; font-size: 15pt; color: #065f46; border-bottom: 1px solid #059669; padding-bottom: 2px; margin-bottom: 5px;">
-        ✓ ${escapeDocHtml(appliedSig.signerName)}
+    <div class="sig-box sig-box-signed">
+      <div class="sig-badge-row">
+        <span class="sig-status-badge">✓ ASSINADO DIGITALMENTE</span>
+        <span class="sig-crypto-pill">SHA-256</span>
       </div>
-      <div class="sig-role" style="color: #065f46;">${escapeDocHtml(appliedSig.signerRole || "Homologação Digital SGSI")} — ASSINADO DIGITALMENTE</div>
-      <div class="sig-name"><strong>Signatário:</strong> ${escapeDocHtml(appliedSig.signerName)} (${escapeDocHtml(appliedSig.signerDoc || "Verificado")})</div>
+      <div class="sig-cursive">${escapeDocHtml(appliedSig.signerName)}</div>
+      <div class="sig-role">${escapeDocHtml(appliedSig.signerRole || "Homologação Digital SGSI")}</div>
+      <div class="sig-meta"><strong>Signatário:</strong> ${escapeDocHtml(appliedSig.signerName)} (${escapeDocHtml(appliedSig.signerDoc || "Verificado via RBAC")})</div>
       <div class="sig-meta"><strong>Modalidade:</strong> ${escapeDocHtml(appliedSig.method || "Assinatura Eletrônica SGSI / ICP-Brasil")}</div>
-      <div class="sig-meta"><strong>Carimbo de Tempo:</strong> ${escapeDocHtml(appliedSig.timestamp)} | <strong>IP:</strong> ${escapeDocHtml(appliedSig.ip || "127.0.0.1")}</div>
-      <div class="sig-meta" style="font-family: monospace; font-size: 7.5pt; word-break: break-all; color: #047857;"><strong>Hash SHA-256:</strong> ${escapeDocHtml(appliedSig.hash)}</div>
+      <div class="sig-meta"><strong>Carimbo de Tempo:</strong> ${escapeDocHtml(appliedSig.timestamp)} &bull; <strong>IP:</strong> ${escapeDocHtml(appliedSig.ip || "127.0.0.1")}</div>
+      <div class="sig-hash-box"><strong>Hash SHA-256:</strong> ${escapeDocHtml(appliedSig.hash)}</div>
     </div>
   `).join("");
 
   const witnesses = includeWitnesses ? `
-    <div style="margin-top: 18px;">
-      <div class="sec-sub">Testemunhas Instrumentárias</div>
+    <div style="margin-top: 16px;">
+      <div class="sec-sub">Testemunhas Instrumentárias Homologadas</div>
       <div class="sig-grid">
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div class="sig-role">1ª Testemunha</div>
+          <div class="sig-role">1ª Testemunha Instrumentária</div>
           <div class="sig-meta">Nome: ___________________________________________</div>
           <div class="sig-meta">CPF: _________________________</div>
         </div>
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div class="sig-role">2ª Testemunha</div>
+          <div class="sig-role">2ª Testemunha Instrumentária</div>
           <div class="sig-meta">Nome: ___________________________________________</div>
           <div class="sig-meta">CPF: _________________________</div>
         </div>
@@ -137,9 +143,16 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
   ` : "";
 
   return `
-    <div class="section" style="page-break-inside: avoid;">
-      <h2>Quadro de Homologação e Assinaturas Formais — AC Engenharia</h2>
-      <p class="muted">Este instrumento corporativo da <strong>AC Engenharia</strong> admite assinatura física manuscrita, assinatura eletrônica auditada no SGSI com selo SHA-256 ou assinatura digital qualificada (ICP-Brasil / Portal Gov.br), nos termos da Lei nº 14.063/2020 e MP nº 2.200-2/2001, devendo ser arquivado no <strong>Repositório de Evidências do SGSI</strong> para custódia forense imutável.</p>
+    <div class="section" style="page-break-inside: avoid; margin-top: 24px; padding-top: 14px; border-top: 1.5px solid #e2e8f0;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <h2 style="margin: 0; border: none; background: transparent; padding: 0; font-size: 10.5pt; color: #0b1a30; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;">
+          Quadro de Homologação e Assinaturas Formais — AC Engenharia
+        </h2>
+        <span style="font-size: 7.5pt; font-weight: 700; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">
+          Eficácia Legal (Lei 14.063/2020)
+        </span>
+      </div>
+      <p class="muted">Este instrumento corporativo da <strong>AC Engenharia</strong> admite assinatura física manuscrita, assinatura eletrônica auditada no SGSI com selo temporal SHA-256 ou assinatura digital qualificada (ICP-Brasil / Portal Gov.br), nos termos da Lei nº 14.063/2020 e MP nº 2.200-2/2001, devendo ser arquivado no <strong>Repositório de Evidências do SGSI</strong> para custódia forense imutável.</p>
       <div class="sig-grid">${cards}${extraSigsHtml}</div>
       ${witnesses}
     </div>
@@ -158,139 +171,258 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
   <meta charset="UTF-8">
   <title>${escapeDocHtml(meta.code)} - ${escapeDocHtml(meta.title)}</title>
   <style>
-    @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
-    @page Section1 { size: 595.3pt 841.9pt; margin: 51pt 45pt 51pt 45pt; }
+    @page { size: A4; margin: 14mm 14mm 14mm 14mm; }
+    @page Section1 { size: 595.3pt 841.9pt; margin: 40pt 40pt 40pt 40pt; }
     div.Section1 { page: Section1; }
     * { box-sizing: border-box; }
     body {
-      font-family: "Segoe UI", Calibri, Arial, Helvetica, sans-serif;
-      color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", Arial, sans-serif;
+      color: #1e293b;
       background: ${isWord ? "#ffffff" : "#f1f5f9"};
       margin: 0;
-      padding: ${isWord ? "0" : "24px"};
-      font-size: 11pt;
-      line-height: 1.5;
+      padding: ${isWord ? "0" : "24px 16px"};
+      font-size: 10pt;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
     }
     .page-sheet {
       max-width: 210mm;
       margin: 0 auto;
       background: #ffffff;
-      padding: ${isWord ? "0" : "20mm 18mm"};
-      border: ${isWord ? "none" : "1px solid #cbd5e1"};
-      box-shadow: ${isWord ? "none" : "0 10px 25px rgba(15, 23, 42, 0.08)"};
+      padding: ${isWord ? "0" : "18mm 16mm"};
+      border: ${isWord ? "none" : "1px solid #e2e8f0"};
+      border-radius: ${isWord ? "0" : "8px"};
+      box-shadow: ${isWord ? "none" : "0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04)"};
     }
     .toolbar-no-print {
       max-width: 210mm;
       margin: 0 auto 14px auto;
-      background: #0f2942;
+      background: linear-gradient(135deg, #0b1a30 0%, #004b93 100%);
       color: #ffffff;
-      padding: 10px 16px;
+      padding: 10px 18px;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
       font-size: 12px;
+      box-shadow: 0 4px 12px rgba(11,26,48,0.15);
     }
     .toolbar-no-print button {
       background: #ffffff;
-      color: #0f2942;
+      color: #0b1a30;
       border: none;
-      padding: 6px 12px;
-      border-radius: 5px;
+      padding: 7px 14px;
+      border-radius: 6px;
       font-weight: 700;
-      font-size: 12px;
+      font-size: 11px;
       cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .toolbar-no-print button:hover {
+      background: #f8fafc;
+      transform: translateY(-1px);
+    }
+    .header-top-accent {
+      height: 4px;
+      background: linear-gradient(90deg, #004b93 0%, #0284c7 60%, #10b981 100%);
+      border-radius: 2px;
+      margin-bottom: 16px;
     }
     .doc-header-table {
       width: 100%;
-      border-collapse: collapse;
-      border: 1.5px solid #0f2942;
-      margin-bottom: 18px;
-    }
-    .doc-header-table td {
-      border: 1px solid #94a3b8;
-      padding: 7px 10px;
-      font-size: 9.5pt;
-      vertical-align: middle;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-bottom: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #ffffff;
     }
     .brand-cell {
-      background: #0f2942;
-      color: #ffffff;
-      width: 28%;
-      text-align: center;
-      font-weight: 700;
+      width: 58%;
+      padding: 14px 18px;
+      vertical-align: middle;
+      border-right: 1px solid #e2e8f0;
+      background: #fafbfc;
     }
-    .brand-sigla {
-      font-size: 16pt;
-      letter-spacing: 1px;
-      display: block;
-      margin-bottom: 2px;
+    .meta-cell {
+      width: 42%;
+      padding: 12px 16px;
+      vertical-align: middle;
+      background: #ffffff;
+    }
+    .brand-logo-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #0b1a30 0%, #004b93 100%);
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 15pt;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 6px rgba(0, 75, 147, 0.2);
+      text-align: center;
+      line-height: 42px;
+      float: left;
+      margin-right: 12px;
+    }
+    .brand-company-name {
+      font-size: 13.5pt;
+      font-weight: 800;
+      color: #0b1a30;
+      letter-spacing: 0.05em;
+      line-height: 1.1;
+    }
+    .brand-subtext {
+      font-size: 8pt;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 3px;
+    }
+    .brand-norm-pills {
+      margin-top: 5px;
+    }
+    .norm-pill {
+      display: inline-block;
+      padding: 1.5px 6px;
+      font-size: 7.5pt;
+      font-weight: 700;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-right: 4px;
+    }
+    .norm-pill-iso {
+      color: #004b93;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+    }
+    .norm-pill-lgpd {
+      color: #065f46;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+    }
+    .norm-pill-nr {
+      color: #92400e;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+    }
+    .doc-title-banner {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1px solid #e2e8f0;
+      border-left: 5px solid #004b93;
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+    }
+    .doc-type-eyebrow {
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #004b93;
+      margin-bottom: 4px;
     }
     .doc-main-title {
-      font-size: 12.5pt;
+      font-size: 13pt;
       font-weight: 800;
-      color: #0f2942;
+      color: #0b1a30;
+      margin: 0;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
     }
     h2 {
       font-size: 10.5pt;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.4px;
-      color: #0f2942;
-      border-bottom: 1.5px solid #0f2942;
-      padding-bottom: 3px;
-      margin: 18px 0 8px 0;
+      letter-spacing: 0.04em;
+      color: #0b1a30;
+      background: #f8fafc;
+      border-left: 3.5px solid #004b93;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 7px 12px;
+      margin: 22px 0 10px 0;
+      border-radius: 0 4px 4px 0;
+      page-break-after: avoid;
     }
     .sec-sub {
       font-size: 9.5pt;
       font-weight: 700;
       text-transform: uppercase;
+      letter-spacing: 0.03em;
       color: #334155;
-      margin: 10px 0 6px 0;
+      margin: 14px 0 6px 0;
+      padding-bottom: 3px;
+      border-bottom: 1px dashed #cbd5e1;
+      page-break-after: avoid;
     }
     p, li {
-      font-size: 10pt;
+      font-size: 9.5pt;
       text-align: justify;
-      margin: 5px 0;
+      margin: 6px 0;
+      color: #334155;
+      line-height: 1.6;
     }
     ul, ol {
-      margin: 6px 0 10px 20px;
+      margin: 6px 0 12px 22px;
       padding: 0;
     }
     table.data-table {
       width: 100%;
-      border-collapse: collapse;
-      margin: 10px 0 14px 0;
-      font-size: 9.5pt;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 12px 0 16px 0;
+      font-size: 9pt;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      overflow: hidden;
+      page-break-inside: avoid;
     }
     table.data-table th {
-      background: #e2e8f0;
-      color: #0f172a;
+      background: #f1f5f9;
+      color: #0b1a30;
       font-weight: 700;
       text-align: left;
-      padding: 6px 8px;
-      border: 1px solid #94a3b8;
-      font-size: 9pt;
+      padding: 8px 10px;
+      border-bottom: 1.5px solid #94a3b8;
+      font-size: 8.5pt;
       text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
     table.data-table td {
-      padding: 6px 8px;
-      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #1e293b;
       vertical-align: top;
+      line-height: 1.45;
+    }
+    table.data-table tr:last-child td {
+      border-bottom: none;
+    }
+    table.data-table tr:nth-child(even) td {
+      background-color: #fafbfc;
     }
     .callout {
       background: #f8fafc;
-      border: 1px solid #cbd5e1;
-      border-left: 4px solid #004b93;
-      padding: 9px 12px;
-      margin: 10px 0;
-      font-size: 9.5pt;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #004b93;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 12px 0;
+      font-size: 9pt;
+      line-height: 1.5;
+      color: #334155;
     }
     .muted {
-      color: #475569;
-      font-size: 9pt;
+      color: #64748b;
+      font-size: 8.5pt;
+      line-height: 1.5;
     }
     .sig-grid {
       display: table;
@@ -302,84 +434,170 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
       display: inline-block;
       vertical-align: top;
       width: 48%;
-      margin: 8px 1% 10px 0;
-      padding: 12px 10px 8px 10px;
+      margin: 6px 1% 10px 0;
+      padding: 12px 14px;
       border: 1px solid #cbd5e1;
-      background: #fcfdff;
+      background: #ffffff;
+      border-radius: 6px;
+      page-break-inside: avoid;
+    }
+    .sig-box-signed {
+      border: 1.5px solid #10b981 !important;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%) !important;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.08);
+    }
+    .sig-badge-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #a7f3d0;
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+    }
+    .sig-status-badge {
+      font-size: 7.5pt;
+      font-weight: 800;
+      color: #065f46;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .sig-crypto-pill {
+      font-family: monospace;
+      font-size: 7pt;
+      font-weight: 700;
+      background: #059669;
+      color: #ffffff;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .sig-cursive {
+      font-family: "Brush Script MT", "Segoe Script", cursive, sans-serif;
+      font-size: 16pt;
+      color: #065f46;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    .sig-hash-box {
+      font-family: monospace;
+      font-size: 7.5pt;
+      color: #047857;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      padding: 3px 6px;
+      border-radius: 4px;
+      margin-top: 6px;
+      word-break: break-all;
     }
     .sig-line {
-      border-bottom: 1px solid #0f172a;
-      height: 28px;
-      margin-bottom: 6px;
+      border-bottom: 1.5px solid #0b1a30;
+      height: 32px;
+      margin-bottom: 8px;
     }
     .sig-role {
       font-weight: 700;
-      font-size: 9.5pt;
-      color: #0f2942;
+      font-size: 8.5pt;
+      color: #0b1a30;
       text-transform: uppercase;
+      letter-spacing: 0.03em;
     }
     .sig-name, .sig-meta {
-      font-size: 8.5pt;
+      font-size: 8pt;
       color: #334155;
       margin-top: 2px;
     }
     .doc-footer {
-      margin-top: 22px;
-      padding-top: 8px;
-      border-top: 1px solid #cbd5e1;
+      margin-top: 26px;
+      padding-top: 10px;
+      border-top: 1.5px solid #e2e8f0;
       font-size: 8pt;
       color: #64748b;
       display: flex;
       justify-content: space-between;
+      align-items: center;
     }
     @media print {
-      body { background: #ffffff; padding: 0; }
-      .page-sheet { border: none; box-shadow: none; padding: 0; max-width: 100%; }
+      body { background: #ffffff !important; padding: 0 !important; }
+      .page-sheet { border: none !important; box-shadow: none !important; padding: 0 !important; max-width: 100% !important; border-radius: 0 !important; }
       .toolbar-no-print { display: none !important; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
   </style>
 </head>
 <body>
   ${isWord ? "" : `
   <div class="toolbar-no-print">
-    <div>
-      <strong>${escapeDocHtml(meta.code)}</strong> — ${escapeDocHtml(meta.title)}
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: 800; font-size: 11px;">${escapeDocHtml(meta.code)}</span>
+      <strong style="color: #ffffff;">${escapeDocHtml(meta.title)}</strong>
     </div>
     <div style="display:flex; gap:8px;">
-      <button onclick="window.print()">Imprimir / Salvar como PDF</button>
+      <button onclick="window.print()">🖨️ Imprimir / Salvar como PDF</button>
     </div>
   </div>`}
   <div class="Section1 page-sheet">
+    <div class="header-top-accent"></div>
+
     <table class="doc-header-table">
       <tr>
-        <td class="brand-cell" rowspan="3">
-          <span class="brand-sigla">AC ENGENHARIA</span>
-          <span style="font-size:8.5pt; font-weight:400;">AC Engenharia<br/>SGSI &amp; Governança GRC</span>
+        <td class="brand-cell">
+          <div class="brand-logo-badge">AC</div>
+          <div>
+            <div class="brand-company-name">AC ENGENHARIA</div>
+            <div class="brand-subtext">Sistema de Gestão de Segurança da Informação &amp; Governança GRC</div>
+            <div class="brand-norm-pills">
+              <span class="norm-pill norm-pill-iso">ISO/IEC 27001:2022</span>
+              <span class="norm-pill norm-pill-lgpd">LGPD (Lei 13.709)</span>
+              <span class="norm-pill norm-pill-nr">NR-18 / NR-07</span>
+            </div>
+          </div>
         </td>
-        <td colspan="3">
-          <div class="doc-main-title">${escapeDocHtml(meta.title)}</div>
+        <td class="meta-cell">
+          <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt;">
+            <tr>
+              <td style="padding: 2px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Código Oficial:</td>
+              <td style="padding: 2px 0; text-align: right;">
+                <span style="display: inline-block; padding: 2px 8px; font-family: monospace; font-size: 8.5pt; font-weight: 800; color: #ffffff; background: #0b1a30; border-radius: 4px;">${escapeDocHtml(meta.code)}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 2px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Classificação:</td>
+              <td style="padding: 2px 0; text-align: right;">
+                <span style="display: inline-block; padding: 1.5px 6px; font-size: 7.5pt; font-weight: 700; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: 4px;">${escapeDocHtml(meta.classification || "CONFIDENCIAL / RESTRITO")}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 2px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Protocolo SGSI:</td>
+              <td style="padding: 2px 0; text-align: right; font-family: monospace; font-size: 8pt; color: #334155; font-weight: 700;">${escapeDocHtml(protocolCode)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 2px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Versão / Emissão:</td>
+              <td style="padding: 2px 0; text-align: right; color: #334155; font-weight: 600;">${escapeDocHtml(meta.version || "v2.0")} &bull; ${escapeDocHtml(ctx.todayBr)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 2px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Unidade:</td>
+              <td style="padding: 2px 0; text-align: right; color: #004b93; font-weight: 700;">${escapeDocHtml(unitName)}</td>
+            </tr>
+          </table>
         </td>
-      </tr>
-      <tr>
-        <td><strong>Código:</strong> ${escapeDocHtml(meta.code)}</td>
-        <td><strong>Versão:</strong> ${escapeDocHtml(meta.version || "v1.0")}</td>
-        <td><strong>Classificação:</strong> ${escapeDocHtml(meta.classification || "USO INTERNO / RESTRITO")}</td>
-      </tr>
-      <tr>
-        <td colspan="2"><strong>Base Normativa:</strong> ${escapeDocHtml(meta.normative)}</td>
-        <td><strong>Emissão:</strong> ${escapeDocHtml(ctx.todayBr)}</td>
-      </tr>
-      <tr>
-        <td colspan="2"><strong>Unidade / Escopo:</strong> ${escapeDocHtml(unitName)}</td>
-        <td colspan="2"><strong>Protocolo SGSI:</strong> ${escapeDocHtml(protocolCode)}</td>
       </tr>
     </table>
+
+    <div class="doc-title-banner">
+      <div class="doc-type-eyebrow">${escapeDocHtml(meta.docType || "INSTRUMENTO NORMATIVO HOMOLOGADO")} &bull; BASE NORMATIVA: ${escapeDocHtml(meta.normative)}</div>
+      <h1 class="doc-main-title">${escapeDocHtml(meta.title)}</h1>
+    </div>
 
     ${bodyHtml}
 
     <div class="doc-footer">
-      <span>${escapeDocHtml(ctx.company)} — Sistema Integrado de Gestão de Segurança da Informação e Privacidade (ISO 27001 &amp; LGPD)</span>
-      <span>Gerado em ${escapeDocHtml(ctx.nowBr)} | Custódia Forense SHA-256</span>
+      <div>
+        <strong style="color: #0b1a30;">${escapeDocHtml(ctx.company)}</strong> &bull; Sistema Integrado de Gestão da Segurança da Informação &amp; Privacidade<br/>
+        <span>Documento Homologado &bull; ABNT NBR ISO/IEC 27001:2022 &bull; LGPD (Lei nº 13.709/2018) &bull; NR-18</span>
+      </div>
+      <div style="text-align: right;">
+        <span style="font-size: 7.5pt; font-weight: 700; color: #004b93; background: #eff6ff; border: 1px solid #bfdbfe; padding: 1.5px 6px; border-radius: 3px;">CUSTÓDIA FORENSE SHA-256</span><br/>
+        <span style="font-family: monospace; font-size: 7.5pt;">Gerado em ${escapeDocHtml(ctx.nowBr)} | Protocolo: ${escapeDocHtml(protocolCode)}</span>
+      </div>
     </div>
   </div>
 </body>
@@ -1456,6 +1674,82 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       ], false, "MOD-GOV-08")}
     `
   },
+  {
+    code: "MOD-GOV-09",
+    module: "raci",
+    docType: "Política & Diretriz (PML-006)",
+    requiresSignature: true,
+    title: "Política e Diretriz de Mesa Limpa e Tela Limpa (PML-006) — Matriz e Estandes",
+    normative: "ISO/IEC 27001:2022 Controle A.7.7 (Mesa Limpa e Tela Limpa) & LGPD Art. 46",
+    evidenceCategory: "Governança & Políticas",
+    signersSummary: "DPO Encarregada + Gestor de T.I. / SecOps + Gestor Comercial / Estandes",
+    summary: "Regulamento compulsório para matriz corporativa, escritórios de canteiros e estandes de vendas imobiliárias: bloqueio automático de tela (3 minutos / Win+L), guarda trancada de fichas de leads, proibição de post-its com senhas e descarte seguro em fragmentadora P-4.",
+    buildBody: (ctx) => `
+      <h2>1. Objetivo, Princípio da Minimização e Escopo de Aplicação</h2>
+      <p>Em consonância com o Controle <strong>A.7.7 da norma ABNT NBR ISO/IEC 27001:2022</strong> e o Artigo 46 da Lei Geral de Proteção de Dados (LGPD), a <strong>${escapeDocHtml(ctx.company)}</strong> institui a presente <strong>Política de Mesa Limpa e Tela Limpa (PML-006)</strong>, de cumprimento compulsório por todos os colaboradores, estagiários, corretores parceiros e prestadores de serviços nos seguintes ambientes:</p>
+      <ul>
+        <li><strong>Sede Administrativa (Matriz Central):</strong> Estações de trabalho, financeiro, suprimentos, diretoria e salas de reunião;</li>
+        <li><strong>Contêineres Administrativos de Canteiros de Obras:</strong> Postos de engenharia, almoxarifado, controle de catracas e segurança do trabalho (SST);</li>
+        <li><strong>Estandes de Vendas e Pontos de Atendimento ao Cliente:</strong> Mesas de atendimento, recepção e computadores de simulação de crédito imobiliário.</li>
+      </ul>
+
+      <h2>2. Diretrizes Específicas de Tela Limpa (Clean Screen)</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th width="30%">Requisito Operacional</th>
+            <th width="40%">Diretriz Mandatória de Segurança</th>
+            <th width="30%">Controle Técnico / Auditoria</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Bloqueio Automático por Inatividade</strong></td>
+            <td>Todas as estações de trabalho conectadas ao domínio corporativo bloqueiam a sessão automaticamente após <strong>3 (três) minutos</strong> de ociosidade.</td>
+            <td>GPO do Active Directory / Rotação de credenciais</td>
+          </tr>
+          <tr>
+            <td><strong>Bloqueio Imediato Manual</strong></td>
+            <td>Ao se ausentar do posto de trabalho, mesmo por breves momentos (café, impressão, sanitários), o colaborador deve acionar o atalho <code>Win + L</code> (ou <code>Ctrl + Alt + Del</code>).</td>
+            <td>Auditoria visual e trilha de eventos Wazuh</td>
+          </tr>
+          <tr>
+            <td><strong>Proteção de Visor (Shoulder Surfing)</strong></td>
+            <td>Monitores em estandes de vendas e recepção devem ser posicionados de forma a impedir a visualização de propostas financeiras e documentos de crédito por transeuntes.</td>
+            <td>Filtro de privacidade óptico em telas de atendimento</td>
+          </tr>
+          <tr>
+            <td><strong>Proibição de Anotação de Credenciais</strong></td>
+            <td>É terminantemente proibido colar notas adesivas (<em>post-its</em>) com senhas, PINs de token ou acessos ao Sienge/AD em monitores, teclados ou sob gaveteiros.</td>
+            <td>Falta disciplinar grave / Incidente SGSI</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>3. Diretrizes Específicas de Mesa Limpa (Clean Desk) e Guarda Física</h2>
+      <ol>
+        <li><strong>Guarda de Documentos Físicos ao Final do Expediente:</strong> Todos os formulários contendo dados pessoais (fichas de cadastro de leads, cópias de CNH/RG de proponentes, ASOs, contratos e recibos) devem ser guardados e trancados em gaveteiros individuais ou armários chaveados ao término do expediente ou durante ausências prolongadas.</li>
+        <li><strong>Chaves de Armários e Gavetas:</strong> As chaves dos gaveteiros e armários devem ser mantidas sob a posse exclusiva do responsável ou depositadas em cofre de chaves da administração, nunca deixadas sobre as mesas.</li>
+        <li><strong>Mídias Removíveis e Tokens:</strong> Pendrives, HDs externos, tokens de certificado digital A3 (e-CNPJ / e-CPF) e crachás de catraca não podem pernoitar expostos em superfícies de trabalho.</li>
+        <li><strong>Salas de Reunião e Espaços Compartilhados:</strong> Ao término de reuniões comerciais, comitês de obras ou reuniões de diretoria, os quadros brancos devem ser integralmente apagados e qualquer minuta ou anotação confidencial recolhida para trituração.</li>
+      </ol>
+
+      <h2>4. Procedimentos de Descarte e Fragmentação Nível P-4 (DIN 66399)</h2>
+      <div class="callout">
+        <strong>Importante:</strong> É expressamente vedado o descarte de papéis de rascunho com dados pessoais (nomes, CPFs, rendas, telefones de leads) em lixeiras comuns de escritório.
+      </div>
+      <p>Todo documento físico inservível ou rasurado contendo dados corporativos ou pessoais deve ser imediatamente inserido em <strong>fragmentadora de papel com corte cruzado (Nível de Segurança P-4)</strong> ou descartado em caixas coletoras lacradas destinadas à incineração/trituração industrial documentada com certificado de destruição térmica/mecânica.</p>
+
+      <h2>5. Auditorias Periódicas (Rondas de Mesa Limpa) e Penalidades</h2>
+      <p>A equipe de SecOps e o DPO realizarão rondas periódicas não anunciadas na Matriz, nos estandes de vendas e nos canteiros adjacentes. Itens não conformes (documentos expostos, computadores desbloqueados ou post-its com senhas) serão recolhidos pela segurança, autuados no Relatório de Não Conformidade (MOD-AUD-03) e reportados à Diretoria Executiva.</p>
+
+      ${buildSignatureGridHTML([
+        { role: "Encarregado(a) pelo Tratamento de Dados (DPO)", name: ctx.dpoName },
+        { role: "Gestor de Infraestrutura, Segurança da Informação & SecOps", name: ctx.secopsName },
+        { role: "Gestor Comercial & Estandes de Vendas", name: "Coordenação Comercial / Vendas" }
+      ], false, "MOD-GOV-09")}
+    `
+  },
 
   // --------------------------------------------------------------------------
   // MÓDULO 05: INFRAESTRUTURA & SECOPS
@@ -1787,6 +2081,88 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
         { role: "Solicitante / Executor Técnico", name: "" },
         { role: "Aprovação de Mudança — Gestor SecOps AC Engenharia", name: ctx.secopsName }
       ], false, "MOD-SEC-07")}
+    `
+  },
+  {
+    code: "MOD-SUP-01",
+    module: "secops",
+    docType: "Laudo de Due Diligence",
+    requiresSignature: true,
+    title: "Laudo de Due Diligence, Homologação e Gestão de Riscos de Fornecedores de TIC e Nuvem (QDD-007)",
+    normative: "ISO/IEC 27001:2022 A.5.19, A.5.20, A.5.21, A.5.22, A.5.23 & LGPD Art. 39",
+    evidenceCategory: "Infraestrutura & T.I.",
+    signersSummary: "Gestor de Suprimentos & Terceiros + Gestor SecOps + DPO",
+    summary: "Homologação técnica e jurídica de fornecedores críticos de TIC e serviços em nuvem (ERP Sienge / Softplan, MikroTik, Google Workspace, Bitdefender GravityZone, Wazuh Cloud, Provedores de Link de Internet e Empreiteiras de Catracas Biométricas). Avaliação de SLAs, certificações ISO 27001 / SOC 2, rotina de backups, criptografia em trânsito/repouso e conformidade com DPAs.",
+    buildBody: (ctx) => `
+      <h2>1. Identificação do Fornecedor / Terceiro Homologado</h2>
+      <table class="data-table">
+        <tr>
+          <td width="50%"><strong>Razão Social / Fornecedor:</strong> ________________________________________________</td>
+          <td width="50%"><strong>CNPJ:</strong> __________________________________</td>
+        </tr>
+        <tr>
+          <td><strong>Solução / Serviço Contratado:</strong> [ ] ERP Sienge [ ] Nuvem Google [ ] Bitdefender [ ] Link Fibra [ ] Outro: ________</td>
+          <td><strong>Classificação de Criticidade:</strong> [ ] Crítico (Tier 1) &nbsp;[ ] Alto (Tier 2) &nbsp;[ ] Médio (Tier 3)</td>
+        </tr>
+        <tr>
+          <td><strong>Responsável Técnico do Fornecedor:</strong> ________________________________</td>
+          <td><strong>E-mail / Telefone 24/7:</strong> _________________________________</td>
+        </tr>
+      </table>
+
+      <h2>2. Checklist Técnico de Due Diligence em Cibersegurança & Conformidade (ISO 27001 A.5.19 a A.5.23)</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th width="40%">Item Auditado no Fornecedor</th>
+            <th width="35%">Evidência / Certificação Comprovada</th>
+            <th width="25%">Status Homologação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Certificações Internacionais de Segurança</strong></td>
+            <td>Relatório SOC 2 Tipo II, Certificação ISO/IEC 27001:2022 ou equivalente</td>
+            <td>[ ] Homologado &nbsp;[ ] Pendente</td>
+          </tr>
+          <tr>
+            <td><strong>Criptografia em Repouso e em Trânsito</strong></td>
+            <td>AES-256 para dados armazenados e TLS 1.3 obrigatório para conexões de rede</td>
+            <td>[ ] Homologado &nbsp;[ ] Pendente</td>
+          </tr>
+          <tr>
+            <td><strong>Acordo de Processamento de Dados (DPA — Art. 39 LGPD)</strong></td>
+            <td>Minuta formal de DPA assinada contendo regras de confidencialidade e suboperadores</td>
+            <td>[ ] Homologado &nbsp;[ ] Pendente</td>
+          </tr>
+          <tr>
+            <td><strong>SLA de Disponibilidade e Continuidade (PCN)</strong></td>
+            <td>Disponibilidade contratual mínima de 99.5% e teste anual de recuperação de desastres</td>
+            <td>[ ] Homologado &nbsp;[ ] Pendente</td>
+          </tr>
+          <tr>
+            <td><strong>Notificação de Incidentes de Segurança</strong></td>
+            <td>Obrigação contratual de notificar a AC Engenharia em até <strong>48 (quarenta e oito) horas</strong> de qualquer violação</td>
+            <td>[ ] Homologado &nbsp;[ ] Pendente</td>
+          </tr>
+          <tr>
+            <td><strong>Descarte Seguro de Dados no Término</strong></td>
+            <td>Procedimento de exclusão definitiva ou devolução dos dados após rescisão contratual</td>
+            <td>[ ] Homologado &nbsp;[ ] Pendente</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>3. Parecer Conjunto de Homologação (T.I., Suprimentos & DPO)</h2>
+      <div class="callout">
+        <strong>Conclusão Técnica:</strong> Com base na análise das evidências documentais e respostas ao questionário de conformidade, o fornecedor acima qualificado atende aos padrões de governança, confidencialidade e segurança cibernética exigidos pela <strong>AC Engenharia</strong>, estando formalmente HOMOLOGADO para prestação de serviços no escopo do SGSI.
+      </div>
+
+      ${buildSignatureGridHTML([
+        { role: "Gestão de Suprimentos & Homologação de Terceiros", name: "Coordenação de Suprimentos" },
+        { role: "Gestor de Infraestrutura, Segurança da Informação & SecOps", name: ctx.secopsName },
+        { role: "Encarregado(a) pelo Tratamento de Dados (DPO)", name: ctx.dpoName }
+      ], false, "MOD-SUP-01")}
     `
   },
 
