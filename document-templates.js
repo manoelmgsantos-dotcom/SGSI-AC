@@ -1070,45 +1070,338 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     module: "raci",
     docType: "Ata & Matriz RACI",
     requiresSignature: true,
-    title: "Ata de Instituição e Homologação da Matriz RACI de Governança e Resposta a Incidentes",
-    normative: "ISO/IEC 27001:2022 Cláusula 5.3, A.5.2 & LGPD Art. 50",
+    title: "Matriz RACI de Resposta a Incidentes de Dados Pessoais (LGPD / ANPD)",
+    normative: "ISO/IEC 27001:2022 Cláusula 5.3, A.5.24 a A.5.28, LGPD Art. 50 & Resolução CD/ANPD nº 15/2024",
     evidenceCategory: "Privacidade & Contratos",
-    signersSummary: "Diretoria + SecOps + DPO/Jurídico + RH/SST",
-    summary: "Homologa formalmente os papéis Responsável (R), Aprovador (A), Consultado (C) e Informado (I) para os processos críticos de segurança e privacidade da AC Engenharia.",
+    signersSummary: "Diretor Responsável + DPO Provisório + Responsável TI + Jurídico",
+    summary: "Documento oficial para definição e designação de responsáveis por etapa de incidente de dados pessoais (Res. CD/ANPD nº 15/2024), contendo os 11 passos de contenção, quadro de designação nominal com titulares e suplentes, e termo de aprovação executiva.",
     buildBody: (ctx, custom = {}) => `
-      <h2>1. Objeto da Deliberação (ISO/IEC 27001 Cláusula 5.3)</h2>
-      <p>Por meio desta Ata Oficial, a Alta Direção e os líderes de governança da <strong>${escapeDocHtml(ctx.company)}</strong> homologam a <strong>Matriz RACI Corporativa do SGSI</strong>, assegurando que cada processo crítico possua um único Aprovador Executivo (<em>Accountable</em>) e executores técnicos claramente designados (<em>Responsible</em>).</p>
-      ${custom.process ? `<div class="callout"><strong>Processo Específico Destacado:</strong> ${escapeDocHtml(custom.process)} — TI/SecOps: [${escapeDocHtml(custom.secops || "R")}] | Diretoria: [${escapeDocHtml(custom.executive || "A")}] | DPO/Jurídico: [${escapeDocHtml(custom.legal || "C")}] | RH/SST: [${escapeDocHtml(custom.hr || "I")}]</div>` : ""}
+      <h2>1. Objetivo</h2>
+      <p>Definir formalmente quem executa (<strong>R</strong>), quem responde e aprova (<strong>A</strong>), quem é consultado (<strong>C</strong>) e quem é informado (<strong>I</strong>) em cada etapa de um incidente de segurança com dados pessoais na <strong>${escapeDocHtml(ctx.company)}</strong>. Este documento serve para a Diretoria homologar os papéis e formalizar as designações nominais antes da ocorrência de qualquer incidente.</p>
 
-      <h2>2. Quadro Oficial de Atribuições RACI Homologado</h2>
+      <h2>2. Por que a Matriz RACI de Incidentes é Necessária</h2>
+      <p>Em uma fiscalização, a ANPD avalia não só o vazamento em si, mas como a empresa se organizou para responder. Se ninguém sabe quem desliga o servidor, quem consulta o jurídico ou quem avisa os titulares, a demora vira negligência. A matriz RACI é a prova documental de boa-fé e de responsabilização (<em>accountability</em>): demonstra que, no minuto seguinte ao incidente, a empresa já sabia quem contém o dano técnico, quem avalia o risco legal e quem comunica as pessoas afetadas.</p>
+      
+      <p>Os três cenários abaixo resumem como a ANPD tende a enxergar a construtora em um mesmo incidente:</p>
       <table class="data-table">
         <thead>
           <tr>
-            <th>Processo Crítico do SGSI &amp; LGPD</th>
-            <th>TI / SecOps</th>
-            <th>Diretoria</th>
-            <th>DPO / Jurídico</th>
-            <th>RH / SST (NR-18)</th>
+            <th width="25%">Cenário</th>
+            <th width="40%">O que acontece na empresa</th>
+            <th width="35%">Leitura provável da ANPD</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td>1. Resposta a Incidentes de Ransomware em Servidor BIM / Sienge</td><td><strong>R</strong></td><td><strong>A</strong></td><td>C</td><td>I</td></tr>
-          <tr><td>2. Revogação de Acesso e Offboarding no AD &amp; Catracas Faciais</td><td><strong>R</strong></td><td>I</td><td>C</td><td><strong>A</strong></td></tr>
-          <tr><td>3. Atendimento a Direitos dos Titulares / Compradores (DSAR 15d)</td><td>C</td><td>I</td><td><strong>A</strong></td><td><strong>R</strong></td></tr>
-          <tr><td>4. Gestão de Catracas e Biometria Facial nos Canteiros (Art. 11)</td><td><strong>A</strong></td><td>I</td><td>C</td><td><strong>R</strong></td></tr>
-          <tr><td>5. Compartilhamento de Dossiê Financeiro com Agentes (Caixa)</td><td>C</td><td><strong>A</strong></td><td><strong>R</strong></td><td>-</td></tr>
-          <tr><td>6. Homologação LGPD &amp; SST de Empreiteiras de Obra (NR-18)</td><td>C</td><td><strong>A</strong></td><td><strong>R</strong></td><td><strong>R</strong></td></tr>
-          <tr><td>7. Backup Imutável e Proteção de Projetos de Engenharia (BIM/CAD)</td><td><strong>A / R</strong></td><td>I</td><td>-</td><td>-</td></tr>
-          <tr><td>8. Revisão Anual da PSI e Termos Anti-Repasse de Leads (Cyrela)</td><td><strong>R</strong></td><td><strong>A</strong></td><td>C</td><td>-</td></tr>
+          <tr>
+            <td><strong>Sem RACI e sem DPO</strong></td>
+            <td>TI resolve sozinha; diretoria descobre tarde; ANPD toma conhecimento por terceiros.</td>
+            <td><span class="badge" style="background:#fee2e2; color:#991b1b;">Omissão e Falta de Governança</span><br/>Multas mais graves, com responsabilização direta dos diretores.</td>
+          </tr>
+          <tr>
+            <td><strong>Com RACI e DPO provisório</strong></td>
+            <td>Equipe age rápido e a notificação sai no prazo, mas o DPO acumula funções internas.</td>
+            <td><span class="badge" style="background:#fef3c7; color:#92400e;">Boa-fé Reconhecida</span><br/>Tende a advertência ou multa leve, com exigência de TAC para capacitação contínua.</td>
+          </tr>
+          <tr>
+            <td><strong>Com RACI e DPO capacitado</strong></td>
+            <td>Incidente contido pelo RACI; DPO conduz o diálogo com a ANPD e apresenta o RIPD.</td>
+            <td><span class="badge" style="background:#dcfce7; color:#166534;">Maturidade Comprovada</span><br/>Em muitos casos, arquivamento com recomendações de melhoria.</td>
+          </tr>
         </tbody>
       </table>
 
+      <div class="callout" style="border-left: 4px solid #b45309; background: #fffbeb;">
+        <strong>Ponto de Atenção Regulatório (Resolução CD/ANPD nº 15/2024):</strong> Fixa o prazo estrito de <strong>3 dias úteis</strong>, a partir do conhecimento de que o incidente afetou dados pessoais, para comunicar a ANPD e os titulares quando houver risco ou dano relevante. Também exige registrar todos os incidentes (comunicados ou não) por no mínimo <strong>5 anos</strong>.
+      </div>
+
+      <h2>3. Como Ler a Matriz</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th width="15%">Letra</th>
+            <th width="25%">Significado</th>
+            <th width="60%">Regra de Uso</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong style="color:#004b93; font-size:12pt;">R</strong></td><td><strong>Responsible (Executor)</strong></td><td>Executa a atividade técnica ou operacional. Pode haver mais de um R por atividade.</td></tr>
+          <tr><td><strong style="color:#7c3aed; font-size:12pt;">A</strong></td><td><strong>Accountable (Aprovador / Responde)</strong></td><td>Responde pelo resultado final e aprova. <strong>Deve haver exatamente um A por atividade.</strong></td></tr>
+          <tr><td><strong style="color:#059669; font-size:12pt;">C</strong></td><td><strong>Consulted (Consultado)</strong></td><td>Deve ser consultado antes da decisão ou da entrega (comunicação bilateral nos dois sentidos).</td></tr>
+          <tr><td><strong style="color:#d97706; font-size:12pt;">I</strong></td><td><strong>Informed (Informado)</strong></td><td>Deve ser informado após a decisão ou entrega (comunicação unilateral em um sentido).</td></tr>
+        </tbody>
+      </table>
+      <p class="muted"><strong>Regras práticas:</strong> Cada etapa tem um único <strong>A</strong>; Nenhuma pessoa pode ser <strong>A</strong> de uma etapa que ela mesma audita (SoD ISO 27001 A.5.3); e todo titular precisa de um suplente designado para férias, viagens e turnos de obra.</p>
+
+      <h2>4. Papéis da Estrutura de Resposta a Incidentes</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th width="25%">Papel</th>
+            <th width="35%">Perfil Sugerido na AC Engenharia</th>
+            <th width="40%">Responsabilidade Principal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Diretoria</strong></td>
+            <td>Sócio ou diretor com poder de decisão e de assinatura corporativa.</td>
+            <td>Decide sobre comunicação externa, libera recursos e assume a responsabilidade final. Precisa estar acessível em até poucas horas.</td>
+          </tr>
+          <tr>
+            <td><strong>DPO provisório (Encarregado)</strong></td>
+            <td>Colaborador de RH ou Administrativo, com perfil organizado e acesso direto à Diretoria. <strong>Não deve ser da T.I.</strong></td>
+            <td>Coordena o incidente, avalia o risco aos titulares, mantém o registro regulatório e é o canal oficial com a ANPD e com os titulares.</td>
+          </tr>
+          <tr>
+            <td><strong>TI / Segurança da Informação</strong></td>
+            <td>Equipe de T.I. (infraestrutura, endpoints, servidores e contas).</td>
+            <td>Detecta, contém e erradica o incidente técnico, preserva evidências digitais e restaura os serviços do Sienge e rede.</td>
+          </tr>
+          <tr>
+            <td><strong>Jurídico</strong></td>
+            <td>Advogado interno ou escritório jurídico externo de confiança.</td>
+            <td>Avalia obrigações legais, revisa comunicações à ANPD e apoia a análise de contratos com empreiteiras, operadoras e clientes.</td>
+          </tr>
+          <tr>
+            <td><strong>RH / Gestão de Pessoas</strong></td>
+            <td>Responsável pela Gestão de Pessoas e SST.</td>
+            <td>Trata incidentes com dados de colaboradores (folha, ASO) e apoia a comunicação aos titulares internos.</td>
+          </tr>
+          <tr>
+            <td><strong>Comunicação / Comercial</strong></td>
+            <td>Responsável por relacionamento com clientes, parceiros e estandes.</td>
+            <td>Executa a comunicação externa aprovada pela Diretoria, garantindo mensagem única, alinhada e consistente aos compradores.</td>
+          </tr>
+          <tr>
+            <td><strong>Gestor da área afetada</strong></td>
+            <td>Gerente ou coordenador do setor ou da obra envolvida (ex: canteiros, suprimentos, financeiro).</td>
+            <td>Reporta o incidente imediatamente e fornece contexto operacional sobre os dados e processos afetados.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Critérios Obrigatórios para Escolha do DPO Provisório:</strong>
+        <ul style="margin: 4px 0 0 16px; padding: 0;">
+          <li><strong>Não pertencer à T.I.:</strong> Para evitar conflito de interesses direto — quem implementa a segurança técnica não deve auditá-la (SoD ISO 27001 A.5.3).</li>
+          <li><strong>Acesso Direto à Diretoria:</strong> Autonomia funcional para acionar imediatamente a T.I., o RH, o Comercial e o Jurídico.</li>
+          <li><strong>Disponibilidade para o Prazo de 3 Dias Úteis:</strong> Conhecimento básico da LGPD para interlocução com a ANPD.</li>
+          <li><strong>Formalização por Ato Escrito:</strong> Designação formal assinada, com o canal de contato divulgado no portal institucional.</li>
+        </ul>
+      </div>
+
+      <h2>5. Matriz RACI por Etapa do Incidente de Dados Pessoais (11 Etapas)</h2>
+      <p class="muted">Proposta oficial homologada para a AC Engenharia. Cada etapa possui exatamente <strong>um único A</strong>.</p>
+      <table class="data-table" style="text-align: center;">
+        <thead>
+          <tr>
+            <th style="text-align: left;" width="34%">Etapa do Incidente</th>
+            <th width="9%">Diretoria</th>
+            <th width="9%">DPO prov.</th>
+            <th width="9%">T.I.</th>
+            <th width="9%">Jurídico</th>
+            <th width="9%">RH</th>
+            <th width="11%">Comunicação / Comercial</th>
+            <th width="10%">Gestor da Área</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: left;">1. Detectar e reportar o incidente</td>
+            <td>I</td>
+            <td>I</td>
+            <td><strong>A / R</strong></td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td><strong>R</strong></td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">2. Registrar e acionar o comitê de crise</td>
+            <td>I</td>
+            <td><strong>A / R</strong></td>
+            <td>C</td>
+            <td>I</td>
+            <td>I</td>
+            <td>-</td>
+            <td>I</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">3. Conter o dano técnico (isolar, revogar acessos)</td>
+            <td>I</td>
+            <td>I</td>
+            <td><strong>A / R</strong></td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>C</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">4. Preservar evidências e analisar a causa</td>
+            <td>I</td>
+            <td><strong>A</strong></td>
+            <td><strong>R</strong></td>
+            <td>C</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">5. Avaliar risco e dano aos titulares</td>
+            <td>I</td>
+            <td><strong>A / R</strong></td>
+            <td>C</td>
+            <td>C</td>
+            <td>C</td>
+            <td>-</td>
+            <td>C</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">6. Decidir sobre comunicação (ANPD e titulares)</td>
+            <td><strong>A</strong></td>
+            <td><strong>R</strong></td>
+            <td>C</td>
+            <td><strong>R</strong></td>
+            <td>-</td>
+            <td>I</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">7. Comunicar a ANPD (prazo de 3 dias úteis)</td>
+            <td><strong>A</strong></td>
+            <td><strong>R</strong></td>
+            <td>C</td>
+            <td>C</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">8. Comunicar os titulares afetados</td>
+            <td>I</td>
+            <td><strong>A</strong></td>
+            <td>C</td>
+            <td>C</td>
+            <td><strong>R</strong></td>
+            <td><strong>R</strong></td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">9. Comunicar clientes, parceiros e imprensa</td>
+            <td><strong>A</strong></td>
+            <td>C</td>
+            <td>I</td>
+            <td>C</td>
+            <td>-</td>
+            <td><strong>R</strong></td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">10. Remediar e restaurar os serviços</td>
+            <td>I</td>
+            <td>C</td>
+            <td><strong>A / R</strong></td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>C</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">11. Relatório pós-incidente, RIPD e lições aprendidas</td>
+            <td>I</td>
+            <td><strong>A / R</strong></td>
+            <td><strong>R</strong></td>
+            <td>C</td>
+            <td>C</td>
+            <td>I</td>
+            <td>C</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>6. Quadro Oficial de Designação de Responsáveis</h2>
+      <p class="muted">Contatos de plantão e equipe de pronta resposta 24h designada para a AC Engenharia:</p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th width="20%">Papel</th>
+            <th width="26%">Titular (Nome e Cargo)</th>
+            <th width="24%">Suplente (Nome e Cargo)</th>
+            <th width="20%">Contato 24h</th>
+            <th width="10%">Ciente</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Diretoria</strong></td>
+            <td><strong>Alécio</strong> (Diretor Executivo C-Level)</td>
+            <td>Gerência Geral de Operações</td>
+            <td>diretoria@acengenhariase.com.br</td>
+            <td>[ ✓ ] Sim</td>
+          </tr>
+          <tr>
+            <td><strong>DPO provisório (Encarregado)</strong></td>
+            <td><strong>Alysson</strong> (Gestão Administrativa / DPO)</td>
+            <td><strong>Luiza</strong> (Administrativo / Privacidade)</td>
+            <td>dpo@acengenhariase.com.br</td>
+            <td>[ ✓ ] Sim</td>
+          </tr>
+          <tr>
+            <td><strong>TI / Segurança da Informação</strong></td>
+            <td><strong>Manoel Martins</strong> (Engenharia / SecOps)</td>
+            <td><strong>Davi</strong> / <strong>Lucas</strong> (Suporte & Infra TI)</td>
+            <td>ti@acengenhariase.com.br</td>
+            <td>[ ✓ ] Sim</td>
+          </tr>
+          <tr>
+            <td><strong>Jurídico</strong></td>
+            <td><strong>Dr. Saback</strong> (Consultoria Jurídica)</td>
+            <td>Assessoria Jurídica Externa</td>
+            <td>juridico@acengenhariase.com.br</td>
+            <td>[ ✓ ] Sim</td>
+          </tr>
+          <tr>
+            <td><strong>RH / Gestão de Pessoas</strong></td>
+            <td><strong>Bruno</strong> (Recursos Humanos & SST)</td>
+            <td>Coordenação de RH / Folha</td>
+            <td>rh@acengenhariase.com.br</td>
+            <td>[ ✓ ] Sim</td>
+          </tr>
+          <tr>
+            <td><strong>Comunicação / Comercial</strong></td>
+            <td><strong>Carla</strong> (Gestão Comercial & Estandes)</td>
+            <td>Equipe Comercial / Atendimento</td>
+            <td>comercial@acengenhariase.com.br</td>
+            <td>[ ✓ ] Sim</td>
+          </tr>
+          <tr>
+            <td><strong>Gestor da Área Afetada</strong></td>
+            <td>Engenheiro Residente da Obra / Gestor do Setor</td>
+            <td>Engenheiro de Campo / Coordenador</td>
+            <td>Plantão do Canteiro / Área</td>
+            <td>[ ✓ ] Sim</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>7. Aprovação e Termo de Compromisso</h2>
+      <p>Declaramos ciência e mútua concordância com as atribuições, alçadas e responsabilidades conferidas nesta Matriz RACI, comprometendo-nos a cumprir estritamente os prazos e fluxos aqui estabelecidos em conformidade com a ISO/IEC 27001 e a Resolução CD/ANPD nº 15/2024.</p>
+
       ${buildSignatureGridHTML([
-        { role: "Diretoria Executiva (Accountable C-Level)", name: ctx.directorName },
-        { role: "Gestor de T.I. & SecOps", name: ctx.secopsName },
-        { role: "Encarregado(a) de Dados (DPO) / Jurídico", name: ctx.dpoName },
-        { role: "Coordenação de Recursos Humanos & SST (NR-18)", name: "" }
+        { role: "Diretor Responsável (Accountable C-Level)", name: "Alécio — Diretor Executivo" },
+        { role: "DPO Provisório Designado", name: "Alysson — Encarregado(a) DPO" },
+        { role: "Responsável pela T.I. & Segurança", name: "Manoel Martins — Engenharia & SecOps" },
+        { role: "Assessoria Jurídica", name: "Dr. Saback — Jurídico" }
       ], false, "MOD-GOV-06")}
+
+      <h2>8. Próximos Passos de Governança</h2>
+      <ul style="margin: 0 0 0 16px; padding: 0; line-height: 1.6; font-size: 9.5pt; color: #475569;">
+        <li><strong>Formalização:</strong> Formalizar a designação do DPO provisório e do comitê de crise, com ata ou termo assinado no sistema.</li>
+        <li><strong>Treinamento:</strong> Treinar os titulares e suplentes e manter distribuída a lista oficial de contatos 24h.</li>
+        <li><strong>Simulação de Mesa:</strong> Realizar uma simulação anual (exercício de mesa / <em>tabletop exercise</em>) de incidente de dados pessoais para testar a matriz e validar os tempos de reação.</li>
+        <li><strong>Revisão Periódica:</strong> Revisar este documento anualmente e a cada alteração relevante na estrutura de pessoal da AC Engenharia.</li>
+        <li><strong>Transição do DPO:</strong> Apresentar à Diretoria proposta de capacitação avançada do DPO interno ou contratação de DPO as a Service (terceirizado) para atender a exigências de auditoria e licitações.</li>
+      </ul>
     `
   },
   {
