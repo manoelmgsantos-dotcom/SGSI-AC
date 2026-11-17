@@ -594,17 +594,16 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
   </style>
 </head>
 <body>
-  ${isWord ? "" : `
+  ${options.showStandaloneToolbar ? `
   <div class="toolbar-no-print">
     <div style="display: flex; align-items: center; gap: 8px;">
       <span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: 800; font-size: 11px;">${escapeDocHtml(meta.code)}</span>
       <strong style="color: #ffffff;">${escapeDocHtml(meta.title)}</strong>
     </div>
     <div style="display:flex; gap:8px;">
-      <button type="button" onclick="window.parent &amp;&amp; window.parent.toggleDocEditMode ? window.parent.toggleDocEditMode() : null">✏️ Editar Nomes na Tela</button>
       <button type="button" onclick="window.print()">🖨️ Imprimir / Salvar como PDF</button>
     </div>
-  </div>`}
+  </div>` : ""}
   <div class="Section1 page-sheet">
     <div class="header-top-accent"></div>
 
@@ -3063,10 +3062,10 @@ function toggleDocEditMode(forceState = null) {
   if (btn) {
     if (isDocEditModeActive) {
       btn.className = "px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs ring-2 ring-emerald-300";
-      if (btnText) btnText.textContent = "✓ Concluir Edição";
+      if (btnText) btnText.textContent = "Concluir Edição";
     } else {
       btn.className = "px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs";
-      if (btnText) btnText.textContent = "✏️ Preencher / Editar Nomes";
+      if (btnText) btnText.textContent = "Preencher Nomes na Tela";
     }
   }
 
@@ -3099,15 +3098,17 @@ function previewCorporateTemplate(code, customData = null) {
   const btnText = document.getElementById("btn-toggle-doc-edit-text");
   if (alertEl) alertEl.classList.add("hidden");
   if (btn) btn.className = "px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs";
-  if (btnText) btnText.textContent = "✏️ Preencher / Editar Nomes";
+  if (btnText) btnText.textContent = "Preencher Nomes na Tela";
 
-  const html = buildRenderedTemplateHTML(code, TemplateHubState.previewingCustomData, { forWord: false });
+  const html = buildRenderedTemplateHTML(code, TemplateHubState.previewingCustomData, { forWord: false, showStandaloneToolbar: false });
   const modal = document.getElementById("modal-doc-template-preview");
+  const codeEl = document.getElementById("doc-preview-modal-code");
   const titleEl = document.getElementById("doc-preview-modal-title");
   const subEl = document.getElementById("doc-preview-modal-sub");
   const iframe = document.getElementById("doc-preview-iframe");
 
-  if (titleEl) titleEl.textContent = `${tpl.code} — ${tpl.title}`;
+  if (codeEl) codeEl.textContent = tpl.code;
+  if (titleEl) titleEl.textContent = tpl.title;
   if (subEl) subEl.textContent = `${tpl.normative} • Assinaturas: ${tpl.signersSummary}`;
 
   if (iframe) {

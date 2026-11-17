@@ -4945,40 +4945,54 @@ openssl ts -reply -in response.tsr -text</pre>
     </div>
 
     <!-- VISUALIZADOR CORPORATIVO A4 DE MODELOS, ATAS E TERMOS PARA ASSINATURA -->
-    <div id="modal-doc-template-preview" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-5 hidden">
-      <div class="bg-white rounded-2xl w-full max-w-5xl h-[92vh] shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
-        <div class="px-5 py-3.5 bg-[#0f2942] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-          <div class="min-w-0">
-            <h3 id="doc-preview-modal-title" class="text-sm font-bold truncate">Modelo Corporativo Homologado</h3>
-            <p id="doc-preview-modal-sub" class="text-[11px] text-slate-300 truncate mt-0.5">Visualização A4 pronta para impressão PDF ou edição em Microsoft Word</p>
+    <div id="modal-doc-template-preview" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 hidden">
+      <div class="bg-white rounded-2xl w-full max-w-6xl h-[94vh] shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+        
+        <!-- LINHA 1: TÍTULO DO MODELO E FECHAMENTO RÁPIDO -->
+        <div class="px-5 py-3 bg-[#0b1a30] text-white flex items-center justify-between gap-3 border-b border-white/10 shrink-0">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span id="doc-preview-modal-code" class="px-2.5 py-0.5 rounded text-[11px] font-mono font-bold bg-[#004b93] text-white shadow-2xs shrink-0">MOD-01</span>
+            <div class="min-w-0">
+              <h3 id="doc-preview-modal-title" class="text-sm font-bold text-white truncate">Modelo Corporativo Homologado</h3>
+              <p id="doc-preview-modal-sub" class="text-[11px] text-slate-300 truncate">Visualização A4 homologada para auditoria ISO 27001 e conformidade LGPD</p>
+            </div>
           </div>
-          <div class="flex items-center gap-2 flex-wrap shrink-0">
+          <button type="button" onclick="closeModal('modal-doc-template-preview')" class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer shrink-0 transition-colors" title="Fechar Visualizador (ESC)">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- LINHA 2: BARRA DE AÇÕES ORGANIZADA POR GRUPOS -->
+        <div class="px-5 py-2.5 bg-[#0f2942] text-white flex items-center justify-between gap-3 flex-wrap shrink-0 border-b border-slate-700/60 shadow-inner">
+          <!-- Grupo de Customização -->
+          <div class="flex items-center gap-2 flex-wrap">
             <button type="button" id="btn-toggle-doc-edit" onclick="toggleDocEditMode()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs" title="Clique para editar ou preencher nomes diretamente no documento na tela antes de imprimir">
               <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-              <span id="btn-toggle-doc-edit-text">✏️ Preencher / Editar Nomes</span>
+              <span id="btn-toggle-doc-edit-text">Preencher Nomes na Tela</span>
             </button>
-            <button type="button" onclick="openCorporateSignersModal()" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors" title="Cadastrar nomes oficiais da Diretoria, DPO e Gestores para aplicar em todos os 40 modelos">
+            <button type="button" onclick="openCorporateSignersModal()" class="px-3 py-1.5 rounded-lg bg-slate-700/90 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-medium flex items-center gap-1.5 border border-slate-600/60 cursor-pointer transition-colors" title="Cadastrar nomes oficiais da Diretoria, DPO e Gestores para aplicar em todos os 40 modelos">
               <i data-lucide="users" class="w-3.5 h-3.5 text-blue-300"></i>
               <span>Definir Responsáveis</span>
             </button>
-            <button type="button" onclick="openDigitalSignatureModal()" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs" title="Assinar eletronicamente o documento com carimbo SHA-256">
-              <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i>
+          </div>
+
+          <!-- Grupo de Ações de Emissão -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" onclick="openDigitalSignatureModal()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs" title="Assinar eletronicamente o documento com carimbo temporal SHA-256">
+              <i data-lucide="pen-tool" class="w-3.5 h-3.5 text-emerald-200"></i>
               <span>Assinar (SHA-256)</span>
             </button>
-            <button type="button" onclick="printPreviewedDocument()" class="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors">
+            <button type="button" onclick="printPreviewedDocument()" class="px-3.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs" title="Imprimir em folha A4 ou Salvar como PDF">
               <i data-lucide="printer" class="w-3.5 h-3.5"></i>
-              <span>Imprimir / Salvar PDF</span>
+              <span>Imprimir / PDF</span>
             </button>
-            <button type="button" onclick="downloadPreviewedWord()" class="px-3 py-1.5 rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white text-xs font-semibold flex items-center gap-1.5 border border-blue-400/30 cursor-pointer transition-colors">
+            <button type="button" onclick="downloadPreviewedWord()" class="px-3 py-1.5 rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white text-xs font-semibold flex items-center gap-1.5 border border-blue-400/30 cursor-pointer transition-colors shadow-xs" title="Baixar versão editável para Microsoft Word (.doc)">
               <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-              <span>Baixar Word (.doc)</span>
+              <span>Baixar Word</span>
             </button>
-            <button type="button" onclick="attachPreviewedAsEvidence()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors">
-              <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-              <span>Anexar Assinado</span>
-            </button>
-            <button type="button" onclick="closeModal('modal-doc-template-preview')" class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer" title="Fechar Visualizador">
-              <i data-lucide="x" class="w-5 h-5"></i>
+            <button type="button" onclick="attachPreviewedAsEvidence()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-medium flex items-center gap-1.5 border border-slate-600/60 cursor-pointer transition-colors" title="Anexar documento assinado como evidência no SGSI">
+              <i data-lucide="upload" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Anexar Evidência</span>
             </button>
           </div>
         </div>
