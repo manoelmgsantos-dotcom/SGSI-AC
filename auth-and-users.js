@@ -97,55 +97,95 @@ const DEFAULT_AC_USERS = [
   }
 ];
 
-// Metadados dos Papéis RBAC
+// Metadados dos Papéis RBAC e Enquadramento Legal LGPD (Art. 5º, VI, VII e Art. 41) & ISO 27001 (A.5.3 SoD)
 const ROLE_DEFINITIONS = {
+  diretoria: {
+    name: "Diretoria Executiva / C-Level",
+    color: "purple",
+    badgeClass: "bg-purple-50 text-purple-700 border-purple-200",
+    lgpdRole: "Controlador (Representante Legal)",
+    lgpdBadge: "Controlador",
+    lgpdBadgeClass: "bg-purple-100 text-purple-900 border-purple-300 font-bold",
+    lgpdRoleBulletColor: "bg-purple-600",
+    description: "Aprovação executiva da PSI, aceite formal de riscos críticos e alocação orçamentária.",
+    lgpdExplanation: "Representa a pessoa jurídica AC Engenharia perante a LGPD (Art. 5º, VI). Detém com exclusividade o poder decisório sobre o tratamento de dados, aceite formal de riscos residuais e homologação orçamentária do SGSI."
+  },
   dpo: {
     name: "DPO & Encarregado(a) Geral",
     color: "emerald",
     badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    description: "Gestão completa de privacidade, RoPA, DSAR, relatórios ANPD e homologação de evidências."
+    lgpdRole: "Encarregado Geral (DPO - Art. 41)",
+    lgpdBadge: "DPO / Encarregado",
+    lgpdBadgeClass: "bg-emerald-100 text-emerald-900 border-emerald-300 font-bold",
+    lgpdRoleBulletColor: "bg-emerald-600",
+    description: "Gestão completa de privacidade, RoPA, DSAR, relatórios ANPD e homologação de evidências.",
+    lgpdExplanation: "Canal oficial de comunicação entre o Controlador, os titulares (DSAR) e a ANPD (Art. 41). Fiscaliza de forma autônoma e independente as operações de privacidade, sem subordinação técnica à infraestrutura de T.I."
   },
   secops: {
     name: "Gestor de T.I. & SecOps",
     color: "blue",
     badgeClass: "bg-blue-50 text-blue-700 border-blue-200",
-    description: "SIEM Wazuh, infraestrutura, backups Sienge ERP, firewall, GLPI e resposta a incidentes CSIRT."
+    lgpdRole: "Operador Técnico (Segurança & TI)",
+    lgpdBadge: "Operador (TI/SecOps)",
+    lgpdBadgeClass: "bg-blue-50 text-blue-800 border-blue-200 font-semibold",
+    lgpdRoleBulletColor: "bg-blue-600",
+    description: "SIEM Wazuh, infraestrutura, backups Sienge ERP, firewall, GLPI e resposta a incidentes CSIRT.",
+    lgpdExplanation: "Executa a salvaguarda técnica dos ativos (Art. 5º, VII e Art. 46). Não determina finalidades de tratamento e opera sob as diretrizes do Controlador e do DPO, garantindo confidencialidade, integridade e disponibilidade."
   },
   gestor_obra: {
     name: "Engenheiro Residente / Obras",
     color: "amber",
     badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
-    description: "Segurança de canteiro, biometria em catracas, termos de empreiteiras e evidências operacionais."
-  },
-  auditoria: {
-    name: "Auditor Líder ISO 27001",
-    color: "purple",
-    badgeClass: "bg-purple-50 text-purple-700 border-purple-200",
-    description: "Verificação pericial da trilha forense SHA-256, inspeção cruzada de evidências e auditoria SoA."
-  },
-  diretoria: {
-    name: "Diretoria Executiva / C-Level",
-    color: "slate",
-    badgeClass: "bg-slate-100 text-slate-800 border-slate-300",
-    description: "Aprovação executiva da PSI, aceite formal de riscos críticos e alocação orçamentária."
+    lgpdRole: "Operador Setorial (Canteiro & Obras)",
+    lgpdBadge: "Operador (Obras)",
+    lgpdBadgeClass: "bg-amber-50 text-amber-800 border-amber-200 font-semibold",
+    lgpdRoleBulletColor: "bg-amber-600",
+    description: "Segurança de canteiro, biometria em catracas, termos de empreiteiras e evidências operacionais.",
+    lgpdExplanation: "Opera o tratamento de dados biométricos em catracas físicas e termos de canteiro. Executa o expurgo de dados faciais pós-Habite-se (MOD-OBR-02), preservando os registros documentais de SST da NR-18."
   },
   rh_sst: {
     name: "RH & SST (NR-18)",
     color: "teal",
     badgeClass: "bg-teal-50 text-teal-700 border-teal-200",
-    description: "Prontuários médicos de canteiro, NR-18, termos de colaboradores e controle de acessos de empreiteiras."
-  },
-  comercial: {
-    name: "Comercial & Estandes de Vendas",
-    color: "pink",
-    badgeClass: "bg-pink-50 text-pink-700 border-pink-200",
-    description: "Termos anti-repasse de leads, proteção de dados de compradores em estandes de vendas e sigilo financeiro."
+    lgpdRole: "Operador Setorial (RH & SST NR-18)",
+    lgpdBadge: "Operador (RH/SST)",
+    lgpdBadgeClass: "bg-teal-50 text-teal-800 border-teal-200 font-semibold",
+    lgpdRoleBulletColor: "bg-teal-600",
+    description: "Prontuários médicos de canteiro, NR-18, termos de colaboradores e controle de acessos de empreiteiras.",
+    lgpdExplanation: "Trata dados pessoais e dados sensíveis de saúde de colaboradores sob Obrigação Legal (CLT/NR-18) e Tutela da Saúde, garantindo a guarda e custódia segura de prontuários ocupacionais por 20 anos."
   },
   suprimentos: {
     name: "Suprimentos & Terceirização",
     color: "indigo",
     badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200",
-    description: "Homologação de empreiteiras, gestão de aditivos contratuais de confidencialidade (DPA) e matriz de terceirizados."
+    lgpdRole: "Operador Setorial (Contratos & Terceiros)",
+    lgpdBadge: "Operador (Suprimentos)",
+    lgpdBadgeClass: "bg-indigo-50 text-indigo-800 border-indigo-200 font-semibold",
+    lgpdRoleBulletColor: "bg-indigo-600",
+    description: "Homologação de empreiteiras, gestão de aditivos contratuais de confidencialidade (DPA) e matriz de terceirizados.",
+    lgpdExplanation: "Garante a blindagem com terceiros (Art. 39), exigindo a assinatura formal do Acordo de Tratamento de Dados (DPA) e cláusulas de segurança da informação antes da liberação de acesso à rede ou às obras."
+  },
+  comercial: {
+    name: "Comercial & Estandes de Vendas",
+    color: "pink",
+    badgeClass: "bg-pink-50 text-pink-700 border-pink-200",
+    lgpdRole: "Operador Setorial (Leads & Vendas)",
+    lgpdBadge: "Operador (Comercial)",
+    lgpdBadgeClass: "bg-pink-50 text-pink-800 border-pink-200 font-semibold",
+    lgpdRoleBulletColor: "bg-pink-600",
+    description: "Termos anti-repasse de leads, proteção de dados de compradores em estandes de vendas e sigilo financeiro.",
+    lgpdExplanation: "Trata dados de compradores e potenciais clientes sob consentimento e legítimo interesse, fiscalizando termos anti-repasse contra vazamento de cadastros e listas para parceiros ou corretores autônomos."
+  },
+  auditoria: {
+    name: "Auditor Líder ISO 27001",
+    color: "slate",
+    badgeClass: "bg-slate-100 text-slate-800 border-slate-300",
+    lgpdRole: "Auditor Independente (Read-Only SoA)",
+    lgpdBadge: "Auditoria Imparcial",
+    lgpdBadgeClass: "bg-slate-200 text-slate-900 border-slate-400 font-semibold",
+    lgpdRoleBulletColor: "bg-slate-600",
+    description: "Verificação pericial da trilha forense SHA-256, inspeção cruzada de evidências e auditoria SoA.",
+    lgpdExplanation: "Acesso estritamente consultivo e pericial (Read-Only) à Trilha Forense SHA-256 e à Declaração de Aplicabilidade (SoA). Bloqueio total de edição para garantir a integridade imparcial da auditoria."
   }
 };
 
@@ -1404,9 +1444,15 @@ function renderAdminUsersTable() {
         </div>
       </td>
       <td class="py-3 px-3">
-        <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${roleDef.badgeClass}">
-          ${escapeHtml(roleDef.name)}
-        </span>
+        <div class="flex flex-col gap-1 items-start">
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${roleDef.badgeClass}">
+            ${escapeHtml(roleDef.name)}
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-mono border ${roleDef.lgpdBadgeClass || 'bg-slate-100 text-slate-700 border-slate-200'}" title="Enquadramento Legal LGPD">
+            <span class="w-1.5 h-1.5 rounded-full ${roleDef.lgpdRoleBulletColor || 'bg-slate-400'}"></span>
+            <span>${escapeHtml(roleDef.lgpdBadge || 'Operador')}</span>
+          </span>
+        </div>
       </td>
       <td class="py-3 px-3">
         <div class="text-xs text-slate-700 font-medium">${safeDept}</div>
@@ -1529,11 +1575,13 @@ function switchUserSubtab(tab) {
   const viewList = document.getElementById("users-subtab-view-list");
   const viewForm = document.getElementById("users-subtab-view-form");
   const viewMatrix = document.getElementById("users-subtab-view-matrix");
+  const viewGov = document.getElementById("users-subtab-view-governance");
   const btnList = document.getElementById("subtab-user-btn-list");
   const btnForm = document.getElementById("subtab-user-btn-form");
   const btnMatrix = document.getElementById("subtab-user-btn-matrix");
+  const btnGov = document.getElementById("subtab-user-btn-governance");
 
-  [viewList, viewForm, viewMatrix].forEach(v => {
+  [viewList, viewForm, viewMatrix, viewGov].forEach(v => {
     if (v) v.classList.add("hidden");
   });
 
@@ -1543,6 +1591,7 @@ function switchUserSubtab(tab) {
   if (btnList) btnList.className = inactiveBtnClass;
   if (btnForm) btnForm.className = inactiveBtnClass;
   if (btnMatrix) btnMatrix.className = inactiveBtnClass;
+  if (btnGov) btnGov.className = inactiveBtnClass;
 
   if (tab === 'form') {
     if (viewForm) viewForm.classList.remove("hidden");
@@ -1550,9 +1599,14 @@ function switchUserSubtab(tab) {
   } else if (tab === 'matrix') {
     if (viewMatrix) viewMatrix.classList.remove("hidden");
     if (btnMatrix) btnMatrix.className = activeBtnClass;
+  } else if (tab === 'governance') {
+    if (viewGov) viewGov.classList.remove("hidden");
+    if (btnGov) btnGov.className = activeBtnClass;
+    renderGovernanceOrganogram();
   } else {
     if (viewList) viewList.classList.remove("hidden");
     if (btnList) btnList.className = activeBtnClass;
+    renderAdminUsersTable();
   }
 
   if (window.lucide && typeof window.lucide.createIcons === 'function') {
@@ -1592,12 +1646,123 @@ function populateUserLocationDropdown() {
   }
 }
 
+function checkSodRoleConflict(role) {
+  const alertEl = document.getElementById("admin-user-sod-conflict-alert");
+  if (!alertEl) return;
+
+  const emailEl = document.getElementById("admin-user-page-email");
+  const deptEl = document.getElementById("admin-user-page-dept");
+  const currentEmail = (emailEl ? emailEl.value : "").trim().toLowerCase();
+  const currentDept = (deptEl ? deptEl.value : "").trim().toLowerCase();
+
+  const isDpo = role === "dpo";
+  const isSecops = role === "secops";
+
+  const isTiEmail = currentEmail.includes("ti@") || currentEmail.includes("suporte@") || currentEmail.includes("infra") || currentEmail.includes("sistemas");
+  const isTiDept = currentDept.includes("ti") || currentDept.includes("tecnologia") || currentDept.includes("infra") || currentDept.includes("sistemas");
+
+  const directConflict = (isDpo && (isTiEmail || isTiDept)) || (isSecops && currentEmail.includes("dpo@"));
+
+  if (directConflict) {
+    alertEl.classList.remove("hidden");
+    alertEl.className = "mt-2 p-3.5 rounded-xl bg-rose-50 border border-rose-300 text-xs flex items-start gap-3 text-rose-950 transition-all";
+    alertEl.innerHTML = `
+      <i data-lucide="alert-octagon" class="w-5 h-5 text-rose-600 shrink-0 mt-0.5"></i>
+      <div class="space-y-1">
+        <strong class="text-rose-900 font-bold block">⚠️ Alerta Crítico de SoD (ISO 27001 A.5.3) & ANPD — Conflito Direto de Funções:</strong>
+        <p class="leading-relaxed text-[11px] text-rose-900">
+          Foi detectada a atribuição da função de <strong>DPO (Encarregado)</strong> para um colaborador vinculado à gestão técnica de T.I. Segundo o Guia Orientativo da ANPD e o controle A.5.3 da ISO/IEC 27001:2022, o Encarregado não deve acumular a responsabilidade de implementar as próprias salvaguardas que ele deve auditar.
+        </p>
+        <div class="p-2 rounded bg-white/70 border border-rose-200 text-[10px] text-rose-800 font-medium">
+          💡 <strong>Recomendação de Governança:</strong> Nomeie um profissional autônomo (ou DPO as a Service) ou assegure que todas as deliberações, relatórios RIPD e aceites de risco sejam assinados formalmente pela <strong>Diretoria Executiva (Controlador)</strong> para resguardar a responsabilidade da T.I.
+        </div>
+      </div>
+    `;
+    if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+  } else if (isDpo) {
+    alertEl.classList.remove("hidden");
+    alertEl.className = "mt-2 p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-xs flex items-start gap-3 text-amber-950 transition-all";
+    alertEl.innerHTML = `
+      <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+      <div class="space-y-1">
+        <strong class="text-amber-900 font-bold block">Aviso de Governança ISO 27001 (SoD A.5.3) & ANPD — Segregação de Funções:</strong>
+        <p class="leading-relaxed text-[11px] text-amber-900">
+          A função de <strong>DPO & Encarregado(a)</strong> exige autonomia em relação aos operadores técnicos de T.I. e Canteiros. Suas orientações e relatórios de impacto (RIPD) devem ser encaminhados diretamente à <strong>Diretoria Executiva (Controlador)</strong> para deliberação executiva.
+        </p>
+      </div>
+    `;
+    if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+  } else {
+    alertEl.classList.add("hidden");
+  }
+}
+
 function onUserRoleChange(newRole) {
   const respEl = document.getElementById("admin-user-page-resp");
   if (respEl) {
     const list = getDefaultResponsibilities(newRole);
     respEl.value = list.join("\n");
   }
+
+  // Atualiza Card de Enquadramento Legal LGPD
+  const lgpdCard = document.getElementById("admin-user-lgpd-badge-card");
+  const roleDef = ROLE_DEFINITIONS[newRole] || {};
+  if (lgpdCard) {
+    const lgpdRole = roleDef.lgpdRole || "Operador Setorial";
+    const lgpdBadge = roleDef.lgpdBadge || "Operador";
+    const lgpdBadgeClass = roleDef.lgpdBadgeClass || "bg-slate-100 text-slate-800 border-slate-200";
+    const explanation = roleDef.lgpdExplanation || "Papel operacional no tratamento de dados pessoais da AC Engenharia.";
+
+    let iconName = "users";
+    let iconColor = "text-slate-600";
+    if (newRole === 'diretoria') {
+      iconName = "crown";
+      iconColor = "text-purple-600";
+    } else if (newRole === 'dpo') {
+      iconName = "shield-alert";
+      iconColor = "text-emerald-600";
+    } else if (newRole === 'auditoria') {
+      iconName = "eye";
+      iconColor = "text-purple-600";
+    } else if (newRole === 'secops') {
+      iconName = "shield";
+      iconColor = "text-blue-600";
+    } else if (newRole === 'gestor_obra') {
+      iconName = "hard-hat";
+      iconColor = "text-amber-600";
+    } else if (newRole === 'rh_sst') {
+      iconName = "heart-pulse";
+      iconColor = "text-teal-600";
+    } else if (newRole === 'suprimentos') {
+      iconName = "truck";
+      iconColor = "text-indigo-600";
+    } else if (newRole === 'comercial') {
+      iconName = "store";
+      iconColor = "text-pink-600";
+    }
+
+    lgpdCard.innerHTML = `
+      <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-2xs ${iconColor}">
+        <i data-lucide="${iconName}" class="w-4 h-4"></i>
+      </div>
+      <div class="space-y-1 flex-1">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="font-bold text-slate-800 text-xs">Enquadramento Legal LGPD: <strong class="text-slate-900">${escapeHtml(lgpdRole)}</strong></span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-mono border ${lgpdBadgeClass}">
+            <span class="w-1.5 h-1.5 rounded-full ${roleDef.lgpdRoleBulletColor || 'bg-slate-400'}"></span>
+            ${escapeHtml(lgpdBadge)}
+          </span>
+        </div>
+        <p class="text-[11px] text-slate-600 leading-relaxed">${escapeHtml(explanation)}</p>
+      </div>
+    `;
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+  }
+
+  // Alerta SoD de Conflito de Interesses
+  checkSodRoleConflict(newRole);
 }
 
 let editingUserId = null;
@@ -1652,6 +1817,8 @@ function openEditUserPage(userId) {
   setVal("admin-user-page-pass", "");
   setVal("admin-user-page-status", target.status || "Ativo");
   setVal("admin-user-page-resp", (target.responsibilities || []).join("\n"));
+
+  onUserRoleChange(target.role);
 
   switchUserSubtab('form');
 }
@@ -1861,6 +2028,512 @@ async function deleteUser(userId) {
   }
 }
 
+// ============================================================================
+// HIERARQUIA LGPD & ORGANOGRAMA DE GOVERNANÇA (DPO > CONTROLADOR > OPERADOR)
+// ============================================================================
+
+function assignUserRoleFromOrganogram(role) {
+  openCreateUserPage();
+  const roleEl = document.getElementById("admin-user-page-role");
+  if (roleEl) {
+    roleEl.value = role;
+    onUserRoleChange(role);
+  }
+}
+
+function filterUsersByRoleFromOrganogram(role) {
+  const roleEl = document.getElementById("admin-user-filter-role");
+  if (roleEl) roleEl.value = role;
+  adminUserFilterRole = role;
+  switchUserSubtab('list');
+  renderAdminUsersTable();
+}
+
+function renderGovernanceOrganogram() {
+  const container = document.getElementById("users-subtab-view-governance");
+  if (!container) return;
+
+  const users = getStoredUsers();
+
+  const diretoriaUsers = users.filter(u => u.role === "diretoria");
+  const dpoUsers = users.filter(u => u.role === "dpo");
+  const secopsUsers = users.filter(u => u.role === "secops");
+  const obraUsers = users.filter(u => u.role === "gestor_obra");
+  const rhUsers = users.filter(u => u.role === "rh_sst");
+  const suprimentosUsers = users.filter(u => u.role === "suprimentos");
+  const comercialUsers = users.filter(u => u.role === "comercial");
+  const auditoriaUsers = users.filter(u => u.role === "auditoria");
+
+  // Helper para renderizar os cards de colaboradores alocados em cada nível
+  const renderChips = (userList, roleKey, roleLabel) => {
+    if (!userList || userList.length === 0) {
+      return `
+        <div class="p-2.5 rounded-xl bg-slate-50 border border-dashed border-slate-300 text-slate-500 text-xs flex items-center justify-between gap-2">
+          <span class="italic text-[11px] text-slate-400">Nenhum ${roleLabel} alocado</span>
+          <button onclick="assignUserRoleFromOrganogram('${roleKey}')" class="px-2 py-0.5 rounded text-[10px] font-bold bg-white hover:bg-slate-100 text-[#004b93] border border-slate-300 shadow-2xs transition-all cursor-pointer">
+            + Atribuir
+          </button>
+        </div>
+      `;
+    }
+    return `
+      <div class="space-y-1.5">
+        ${userList.map(u => `
+          <div class="p-2 rounded-xl bg-white border border-slate-200 text-xs flex items-center justify-between gap-2 shadow-2xs hover:border-blue-300 transition-all">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#004b93] to-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                ${escapeHtml(u.avatar || 'U')}
+              </div>
+              <div class="min-w-0">
+                <div class="font-bold text-slate-900 text-xs truncate flex items-center gap-1.5">
+                  <span>${escapeHtml(u.name)}</span>
+                  ${u.isSuperAdmin ? `<span class="px-1.5 py-0.2 rounded text-[8px] font-bold bg-amber-100 text-amber-800 border border-amber-300">⭐ Admin Principal</span>` : ''}
+                </div>
+                <div class="text-[10px] text-slate-500 font-mono truncate">${escapeHtml(u.email)}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button data-uid="${escapeHtml(u.id)}" onclick="openEditUserPage(this.getAttribute('data-uid'))" class="p-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 cursor-pointer" title="Editar Usuário">
+                <i data-lucide="edit-2" class="w-3 h-3"></i>
+              </button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  };
+
+  container.innerHTML = `
+    <!-- CABEÇALHO HERO DO ORGANOGRAMA -->
+    <div class="card-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-xs">
+            <i data-lucide="network" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Hierarquia de Governança LGPD & Segregação de Funções (SoD)</h2>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-50 text-purple-800 border border-purple-200">
+                Lei 13.709/2018 (LGPD) & ISO/IEC 27001 A.5.3
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Estrutura oficial de papéis legais: <strong>Controlador</strong> (Poder de Decisão), <strong>Encarregado / DPO</strong> (Autonomia e Canal ANPD) e <strong>Operadores Setoriais</strong> (Execução Técnica e Operacional).
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openCreateUserPage()" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
+            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+            <span>Cadastrar Colaborador</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- BANNER EXPLICATIVO DE REGRAS E SOD -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+        <div class="p-3 rounded-xl bg-purple-50/70 border border-purple-200/80 text-xs">
+          <div class="flex items-center gap-2 font-bold text-purple-950 mb-1">
+            <i data-lucide="crown" class="w-4 h-4 text-purple-600"></i>
+            <span>1. Controlador (Art. 5º, VI)</span>
+          </div>
+          <p class="text-[11px] text-purple-900 leading-relaxed">
+            Representado pela <strong>Diretoria Executiva</strong>. Detém a responsabilidade legal final sobre os dados, aceita riscos residuais e aprova orçamentos.
+          </p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200/80 text-xs">
+          <div class="flex items-center gap-2 font-bold text-emerald-950 mb-1">
+            <i data-lucide="shield-alert" class="w-4 h-4 text-emerald-600"></i>
+            <span>2. Encarregado / DPO (Art. 41)</span>
+          </div>
+          <p class="text-[11px] text-emerald-900 leading-relaxed">
+            Canal independente de comunicação com a ANPD e titulares. Fiscaliza o RoPA e campanhas sem subordinação operacional às áreas técnicas.
+          </p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-blue-50/70 border border-blue-200/80 text-xs">
+          <div class="flex items-center gap-2 font-bold text-blue-950 mb-1">
+            <i data-lucide="cpu" class="w-4 h-4 text-blue-600"></i>
+            <span>3. Operadores (Art. 5º, VII)</span>
+          </div>
+          <p class="text-[11px] text-blue-900 leading-relaxed">
+            T.I., Engenheiros de Obra, RH/SST, Suprimentos e Vendas. Tratam os dados em nome do Controlador e seguem estritamente suas instruções.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORGANOGRAMA VISUAL (ÁRVORE DE GOVERNANÇA) -->
+    <div class="space-y-6">
+
+      <!-- ============================================================= -->
+      <!-- NÍVEL 1: CONTROLADOR (CÚPULA EXECUTIVA)                         -->
+      <!-- ============================================================= -->
+      <div class="relative max-w-4xl mx-auto">
+        <div class="card-white rounded-2xl border-2 border-purple-300 shadow-sm overflow-hidden bg-gradient-to-b from-purple-50/40 to-white">
+          <div class="p-4 bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-amber-300 shrink-0">
+                <i data-lucide="crown" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-bold uppercase tracking-wider text-purple-200">Enquadramento Legal LGPD (Art. 5º, VI)</span>
+                  <span class="px-2 py-0.2 rounded text-[10px] font-bold bg-amber-400 text-slate-950">PODER DECISÓRIO MÁXIMO</span>
+                </div>
+                <h3 class="text-base font-bold text-white">CONTROLADOR: AC Engenharia LTDA (Diretoria Executiva / C-Level)</h3>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="filterUsersByRoleFromOrganogram('diretoria')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all cursor-pointer flex items-center gap-1">
+                <i data-lucide="list" class="w-3.5 h-3.5"></i>
+                <span>Ver na Tabela</span>
+              </button>
+              <button onclick="assignUserRoleFromOrganogram('diretoria')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-500 hover:bg-purple-600 text-white transition-all cursor-pointer flex items-center gap-1">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Atribuir Diretor</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2 text-xs">
+              <strong class="text-slate-800 block font-semibold flex items-center gap-1.5">
+                <i data-lucide="shield-check" class="w-4 h-4 text-purple-600"></i>
+                Prerrogativas e Responsabilidades Exclusivas:
+              </strong>
+              <ul class="space-y-1.5 text-slate-600 text-[11px] leading-relaxed">
+                <li class="flex items-start gap-1.5">
+                  <span class="text-purple-600 font-bold shrink-0">✓</span>
+                  <span><strong>Aceite de Risco Residual:</strong> Único com autoridade jurídica para aceitar riscos críticos na Matriz de Riscos (Módulo 3) com assinatura SHA-256.</span>
+                </li>
+                <li class="flex items-start gap-1.5">
+                  <span class="text-purple-600 font-bold shrink-0">✓</span>
+                  <span><strong>Homologação da PSI:</strong> Promulga oficialmente a Política de Segurança da Informação (MOD-SEC-001).</span>
+                </li>
+                <li class="flex items-start gap-1.5">
+                  <span class="text-purple-600 font-bold shrink-0">✓</span>
+                  <span><strong>Alocação Orçamentária:</strong> Libera investimentos para as salvaguardas das 4 Fases do Plano de Ação (Módulo 6).</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="space-y-2">
+              <strong class="text-slate-800 text-xs block font-semibold flex items-center justify-between">
+                <span>Membros da Diretoria Cadastrados (${diretoriaUsers.length}):</span>
+                <span class="text-[10px] text-purple-700 font-mono font-bold">Perfil: diretoria</span>
+              </strong>
+              ${renderChips(diretoriaUsers, 'diretoria', 'Diretor(a)')}
+            </div>
+          </div>
+        </div>
+
+        <!-- CONECTOR VISUAL VERTICAL -->
+        <div class="w-0.5 h-6 bg-slate-300 mx-auto my-0"></div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- NÍVEL 2: DPO / ENCARREGADO (CANAL DE FISCALIZAÇÃO INDEPENDENTE) -->
+      <!-- ============================================================= -->
+      <div class="relative max-w-4xl mx-auto">
+        <div class="card-white rounded-2xl border-2 border-emerald-400 shadow-sm overflow-hidden bg-gradient-to-b from-emerald-50/40 to-white">
+          <div class="p-4 bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 shrink-0">
+                <i data-lucide="shield-alert" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-bold uppercase tracking-wider text-emerald-200">Enquadramento Legal LGPD (Art. 41)</span>
+                  <span class="px-2 py-0.2 rounded text-[10px] font-bold bg-emerald-400 text-slate-950">CANAL OFICIAL ANPD & TITULARES</span>
+                </div>
+                <h3 class="text-base font-bold text-white">ENCARREGADO DE DADOS (DPO & Governança de Privacidade)</h3>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="filterUsersByRoleFromOrganogram('dpo')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all cursor-pointer flex items-center gap-1">
+                <i data-lucide="list" class="w-3.5 h-3.5"></i>
+                <span>Ver na Tabela</span>
+              </button>
+              <button onclick="assignUserRoleFromOrganogram('dpo')" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-all cursor-pointer flex items-center gap-1">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Atribuir DPO</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2 text-xs">
+              <strong class="text-slate-800 block font-semibold flex items-center gap-1.5">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+                Autonomia e Atribuições Principais:
+              </strong>
+              <ul class="space-y-1.5 text-slate-600 text-[11px] leading-relaxed">
+                <li class="flex items-start gap-1.5">
+                  <span class="text-emerald-600 font-bold shrink-0">✓</span>
+                  <span><strong>Ponto Focal com a ANPD:</strong> Interlocução formal e envio de respostas e notificações à Autoridade Nacional.</span>
+                </li>
+                <li class="flex items-start gap-1.5">
+                  <span class="text-emerald-600 font-bold shrink-0">✓</span>
+                  <span><strong>Canal do Titular (DSAR):</strong> Atendimento a solicitações de acesso, correção e expurgo de dados de compradores e colaboradores.</span>
+                </li>
+                <li class="flex items-start gap-1.5">
+                  <span class="text-emerald-600 font-bold shrink-0">✓</span>
+                  <span><strong>Auditoria do RoPA & RIPD:</strong> Mapeamento do fluxo de dados e elaboração de Relatórios de Impacto (Art. 38).</span>
+                </li>
+              </ul>
+
+              <!-- NOTA DE SEGREGAÇÃO DE FUNÇÕES (SoD) -->
+              <div class="p-2.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-950 text-[11px] space-y-1 mt-2">
+                <div class="flex items-center gap-1.5 font-bold text-amber-900">
+                  <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i>
+                  <span>Alerta de SoD (ISO 27001 A.5.3 & ANPD)</span>
+                </div>
+                <p class="leading-relaxed">
+                  O Encarregado (DPO) <strong>não deve ser o gestor técnico de TI</strong> em definitivo, para evitar autoauditoria (auditar o firewall ou backup que ele próprio configurou). Em equipes enxutas, se houver acúmulo temporário, a <strong>Diretoria (Controlador)</strong> deve aprovar expressamente os relatórios para conferir validade jurídica e blindar a T.I.
+                </p>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <strong class="text-slate-800 text-xs block font-semibold flex items-center justify-between">
+                <span>Encarregados / DPOs Cadastrados (${dpoUsers.length}):</span>
+                <span class="text-[10px] text-emerald-700 font-mono font-bold">Perfil: dpo</span>
+              </strong>
+              ${renderChips(dpoUsers, 'dpo', 'DPO / Encarregado(a)')}
+            </div>
+          </div>
+        </div>
+
+        <!-- CONECTOR VISUAL VERTICAL -->
+        <div class="w-0.5 h-6 bg-slate-300 mx-auto my-0"></div>
+      </div>
+
+      <!-- ============================================================= -->
+      <!-- NÍVEL 3: OPERADORES SETORIAIS (EXECUÇÃO OPERACIONAL)             -->
+      <!-- ============================================================= -->
+      <div class="space-y-3">
+        <div class="text-center space-y-1">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-bold text-blue-900">
+            <i data-lucide="cpu" class="w-3.5 h-3.5 text-blue-600"></i>
+            <span>NÍVEL OPERACIONAL: OPERADORES DE DADOS (Art. 5º, VII)</span>
+          </div>
+          <p class="text-xs text-slate-500 max-w-2xl mx-auto">
+            Executam as rotinas de tratamento de dados sob a autoridade e as diretrizes do Controlador, aplicando salvaguardas técnicas, administrativas e físicas nos seus respectivos setores.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          <!-- 1. OPERADOR TÉCNICO: GESTOR DE T.I. & SECOPS -->
+          <div class="card-white rounded-xl border border-slate-200 hover:border-blue-300 transition-all p-4 flex flex-col justify-between space-y-3 shadow-2xs">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                  Operador Técnico (TI)
+                </span>
+                <button onclick="assignUserRoleFromOrganogram('secops')" class="text-[10px] font-bold text-[#004b93] hover:underline cursor-pointer">
+                  + Atribuir
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-[#004b93] shrink-0 font-bold">
+                  <i data-lucide="shield" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-900 text-xs">Gestor de T.I. & SecOps</h4>
+                  <span class="text-[10px] text-slate-500 font-mono">Perfil: secops</span>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">
+                Guardião da infraestrutura técnica: Firewall MikroTik, SIEM Wazuh, backups imutáveis Sienge ERP, Active Directory e antivírus/EDR.
+              </p>
+            </div>
+            <div>
+              ${renderChips(secopsUsers, 'secops', 'Gestor de T.I.')}
+            </div>
+          </div>
+
+          <!-- 2. OPERADOR SETORIAL: ENGENHEIRO RESIDENTE / OBRAS -->
+          <div class="card-white rounded-xl border border-slate-200 hover:border-amber-300 transition-all p-4 flex flex-col justify-between space-y-3 shadow-2xs">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                  Operador Canteiro (Campo)
+                </span>
+                <button onclick="assignUserRoleFromOrganogram('gestor_obra')" class="text-[10px] font-bold text-amber-700 hover:underline cursor-pointer">
+                  + Atribuir
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shrink-0 font-bold">
+                  <i data-lucide="hard-hat" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-900 text-xs">Engenheiro Residente / Obras</h4>
+                  <span class="text-[10px] text-slate-500 font-mono">Perfil: gestor_obra</span>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">
+                Gestão dos canteiros físicos: controle biométrico facial nas catracas, expurgo após o Habite-se (MOD-OBR-02) e evidências operacionais de obra.
+              </p>
+            </div>
+            <div>
+              ${renderChips(obraUsers, 'gestor_obra', 'Eng. Residente')}
+            </div>
+          </div>
+
+          <!-- 3. OPERADOR SETORIAL: RH & SST (NR-18) -->
+          <div class="card-white rounded-xl border border-slate-200 hover:border-teal-300 transition-all p-4 flex flex-col justify-between space-y-3 shadow-2xs">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                  Operador RH & SST
+                </span>
+                <button onclick="assignUserRoleFromOrganogram('rh_sst')" class="text-[10px] font-bold text-teal-700 hover:underline cursor-pointer">
+                  + Atribuir
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 shrink-0 font-bold">
+                  <i data-lucide="heart-pulse" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-900 text-xs">RH & SST (NR-18)</h4>
+                  <span class="text-[10px] text-slate-500 font-mono">Perfil: rh_sst</span>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">
+                Tratamento de dados pessoais e sensíveis de colaboradores e empreiteiras: ASOs, prontuários PCMSO (guarda por 20 anos) e folha de pagamento.
+              </p>
+            </div>
+            <div>
+              ${renderChips(rhUsers, 'rh_sst', 'Gestor de RH/SST')}
+            </div>
+          </div>
+
+          <!-- 4. OPERADOR SETORIAL: SUPRIMENTOS & TERCEIRIZAÇÃO -->
+          <div class="card-white rounded-xl border border-slate-200 hover:border-indigo-300 transition-all p-4 flex flex-col justify-between space-y-3 shadow-2xs">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-50 text-indigo-800 border border-indigo-200">
+                  Operador Contratos & Terceiros
+                </span>
+                <button onclick="assignUserRoleFromOrganogram('suprimentos')" class="text-[10px] font-bold text-indigo-700 hover:underline cursor-pointer">
+                  + Atribuir
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700 shrink-0 font-bold">
+                  <i data-lucide="truck" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-900 text-xs">Suprimentos & Terceirização</h4>
+                  <span class="text-[10px] text-slate-500 font-mono">Perfil: suprimentos</span>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">
+                Homologação de empreiteiras e fornecedores: gestão obrigatória de Aditivos DPA (Art. 39) antes da liberação de acesso aos canteiros e sistemas.
+              </p>
+            </div>
+            <div>
+              ${renderChips(suprimentosUsers, 'suprimentos', 'Comprador / Suprimentos')}
+            </div>
+          </div>
+
+          <!-- 5. OPERADOR SETORIAL: COMERCIAL & ESTANDES -->
+          <div class="card-white rounded-xl border border-slate-200 hover:border-pink-300 transition-all p-4 flex flex-col justify-between space-y-3 shadow-2xs">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-pink-50 text-pink-800 border border-pink-200">
+                  Operador Comercial & Vendas
+                </span>
+                <button onclick="assignUserRoleFromOrganogram('comercial')" class="text-[10px] font-bold text-pink-700 hover:underline cursor-pointer">
+                  + Atribuir
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-pink-50 border border-pink-200 flex items-center justify-center text-pink-700 shrink-0 font-bold">
+                  <i data-lucide="store" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-900 text-xs">Comercial & Estandes de Vendas</h4>
+                  <span class="text-[10px] text-slate-500 font-mono">Perfil: comercial</span>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">
+                Proteção de dados de compradores: termos de sigilo anti-repasse com imobiliárias parceiras e corretores, simulações bancárias e consentimentos.
+              </p>
+            </div>
+            <div>
+              ${renderChips(comercialUsers, 'comercial', 'Gestor Comercial')}
+            </div>
+          </div>
+
+          <!-- 6. PERÍCIA FORENSE: AUDITORIA LÍDER ISO 27001 (READ-ONLY) -->
+          <div class="card-white rounded-xl border border-purple-200 hover:border-purple-300 transition-all p-4 flex flex-col justify-between space-y-3 shadow-2xs bg-purple-50/20">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-100 text-purple-900 border border-purple-300">
+                  Inspeção Imparcial (Read-Only)
+                </span>
+                <button onclick="assignUserRoleFromOrganogram('auditoria')" class="text-[10px] font-bold text-purple-700 hover:underline cursor-pointer">
+                  + Atribuir
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-700 shrink-0 font-bold">
+                  <i data-lucide="eye" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-900 text-xs">Auditor Líder ISO 27001</h4>
+                  <span class="text-[10px] text-slate-500 font-mono">Perfil: auditoria</span>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">
+                Acesso estritamente consultivo à Trilha Forense SHA-256 (Módulo 9) e à Declaração de Aplicabilidade (SoA). Sem poder de edição para preservar a imparcialidade pericial.
+              </p>
+            </div>
+            <div>
+              ${renderChips(auditoriaUsers, 'auditoria', 'Auditor(a) Líder')}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  `;
+
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
+}
+
+// Watchers reativos no formulário para alertar conflito de interesses (SoD) em tempo real
+(function initUserFormWatchers() {
+  const setupWatchers = () => {
+    const emailEl = document.getElementById("admin-user-page-email");
+    const deptEl = document.getElementById("admin-user-page-dept");
+    const roleEl = document.getElementById("admin-user-page-role");
+
+    const recheck = () => {
+      if (roleEl) checkSodRoleConflict(roleEl.value);
+    };
+
+    if (emailEl) emailEl.addEventListener("input", recheck);
+    if (deptEl) deptEl.addEventListener("input", recheck);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupWatchers);
+  } else {
+    setupWatchers();
+  }
+})();
+
 // Exposição Global
 window.DEFAULT_AC_USERS = DEFAULT_AC_USERS;
 window.ROLE_DEFINITIONS = ROLE_DEFINITIONS;
@@ -1888,3 +2561,7 @@ window.handleSaveUserPage = handleSaveUserPage;
 window.toggleUserStatus = toggleUserStatus;
 window.deleteUser = deleteUser;
 window.onUserRoleChange = onUserRoleChange;
+window.checkSodRoleConflict = checkSodRoleConflict;
+window.renderGovernanceOrganogram = renderGovernanceOrganogram;
+window.assignUserRoleFromOrganogram = assignUserRoleFromOrganogram;
+window.filterUsersByRoleFromOrganogram = filterUsersByRoleFromOrganogram;
