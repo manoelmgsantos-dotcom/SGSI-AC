@@ -1064,7 +1064,7 @@ function applyUserSession(user) {
     }
   }
 
-  // Garante que o cabeçalho e o banner exibam exatamente o usuário autenticado
+  // Garante que o cabeçalho, drawer mobile e o banner exibam exatamente o usuário autenticado
   const userName = document.getElementById("header-user-name");
   const userRole = document.getElementById("header-user-role");
   const userAvatar = document.getElementById("header-user-avatar");
@@ -1072,6 +1072,13 @@ function applyUserSession(user) {
   if (userName) userName.textContent = user.name;
   if (userRole) userRole.textContent = user.roleName ? user.roleName.split('&')[0].trim() : user.role;
   if (userAvatar) userAvatar.textContent = user.avatar || "US";
+
+  const drawerName = document.getElementById("drawer-user-name");
+  const drawerRole = document.getElementById("drawer-user-role");
+  const drawerAvatar = document.getElementById("drawer-user-avatar");
+  if (drawerName) drawerName.textContent = user.name;
+  if (drawerRole) drawerRole.textContent = user.roleName ? user.roleName.split('&')[0].trim() : user.role;
+  if (drawerAvatar) drawerAvatar.textContent = user.avatar || "US";
 
   const personaName = document.getElementById("persona-user-name");
   const personaAvatar = document.getElementById("persona-badge-avatar");

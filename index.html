@@ -239,6 +239,61 @@
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
       }
+
+      /* ================================================================= */
+      /* OTIMIZAÇÕES MOBILE & TABLETS (RESPONSIVIDADE, SAFE-AREA, TOUCH)   */
+      /* ================================================================= */
+      @media screen and (max-width: 768px) {
+        input, select, textarea {
+          font-size: 16px !important; /* Previne auto-zoom indesejado no iOS Safari */
+        }
+      }
+
+      .touch-scroll, .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Tablet & Desktop Collapsible Sidebar */
+      #app-sidebar {
+        transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      #app-sidebar.collapsed {
+        width: 4.5rem !important; /* 72px icon-only */
+      }
+      #app-sidebar.collapsed .sidebar-hide-collapsed {
+        display: none !important;
+      }
+      #app-sidebar.collapsed .sidebar-header-box {
+        justify-content: center !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+      }
+      #app-sidebar.collapsed .corp-nav-item {
+        justify-content: center !important;
+        padding: 10px 0 !important;
+        gap: 0 !important;
+      }
+      #app-sidebar.collapsed .corp-nav-item i {
+        margin: 0 auto !important;
+      }
+      #app-sidebar.collapsed .sidebar-footer-grid {
+        grid-template-columns: 1fr !important;
+      }
+      #app-sidebar.collapsed .sidebar-footer-btn {
+        justify-content: center !important;
+        padding: 8px 0 !important;
+      }
+      #app-sidebar.collapsed .sidebar-db-box {
+        justify-content: center !important;
+        padding: 8px 0 !important;
+      }
+
+      /* Safe-area padding para navegadores mobile modernos */
+      @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        #mobile-bottom-nav {
+          padding-bottom: calc(0.375rem + env(safe-area-inset-bottom));
+        }
+      }
     </style>
   </head>
   <body class="bg-[#f1f5f9] text-slate-900 font-sans antialiased h-screen flex overflow-hidden selection:bg-slate-200 selection:text-slate-900">
@@ -249,91 +304,249 @@
     <div id="app-main-shell" class="w-full h-full flex overflow-hidden hidden">
 
     <!-- ================================================================= -->
-    <!-- SIDEBAR CORPORATIVA ESQUERDA (ESTRUTURA GRC MODERNA & ORGANIZADA)  -->
+    <!-- DRAWER OFFCANVAS MOBILE / TABLET (ACESSO COMPLETO AOS MÓDULOS)   -->
     <!-- ================================================================= -->
-    <aside class="hidden md:flex flex-col justify-between w-64 bg-[#0b1320] text-slate-300 border-r border-slate-800/80 z-30 shrink-0 h-full select-none shadow-xl">
+    <div id="mobile-drawer-overlay" onclick="closeMobileDrawer()" class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 transition-opacity duration-300 opacity-0 pointer-events-none md:hidden"></div>
+
+    <aside id="mobile-drawer-panel" class="fixed inset-y-0 left-0 w-[84%] max-w-xs bg-[#0b1320] text-slate-300 z-50 flex flex-col justify-between transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden shadow-2xl border-r border-slate-800">
+      
+      <!-- TOPO DO DRAWER: LOGO + BADGE + BOTÃO FECHAR -->
+      <div class="h-16 px-4 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-[#070d17]">
+        <div class="flex items-center gap-3 min-w-0">
+          <img src="/app-logo.png" alt="AC Engenharia" class="w-8 h-8 rounded-lg shrink-0 border border-white/15 object-contain" />
+          <div class="min-w-0">
+            <div class="text-xs font-bold text-white tracking-tight leading-none truncate">AC Engenharia</div>
+            <div class="text-[10px] text-slate-400 font-mono mt-1 leading-none">SGSI & GRC v3.2</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Ativo</span>
+          </div>
+          <button type="button" onclick="closeMobileDrawer()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer" title="Fechar menu">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- CARD DO USUÁRIO LOGADO NO DRAWER -->
+      <div class="p-3.5 bg-slate-900/60 border-b border-slate-800/80 shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div id="drawer-user-avatar" class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#004b93] to-slate-700 text-white font-bold text-xs flex items-center justify-center shrink-0">
+            MM
+          </div>
+          <div class="min-w-0 flex-1">
+            <div id="drawer-user-name" class="text-xs font-bold text-slate-200 truncate leading-tight">Administrador SGSI</div>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <span id="drawer-user-role" class="text-[10px] text-emerald-400 font-mono font-semibold truncate">SecOps / SuperAdmin</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTA DE MÓDULOS DE NAVEGAÇÃO AGRUPADOS NO DRAWER -->
+      <div class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-4 touch-scroll">
+        <!-- GRUPO 1: GOVERNANÇA & RISCOS -->
+        <div class="space-y-1">
+          <div class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+            <span>Governança & Riscos</span>
+            <i data-lucide="shield" class="w-3 h-3 text-slate-500"></i>
+          </div>
+          <button onclick="switchTab('dashboard'); closeMobileDrawer();" id="nav-dashboard-drawer" class="corp-nav-item active cursor-pointer">
+            <i data-lucide="layout-dashboard" class="w-4 h-4 shrink-0 text-[#38bdf8]"></i>
+            <span class="truncate">Visão Geral</span>
+          </button>
+          <button onclick="switchTab('raci'); closeMobileDrawer();" id="nav-raci-drawer" class="corp-nav-item cursor-pointer">
+            <i data-lucide="file-text" class="w-4 h-4 shrink-0 text-slate-400"></i>
+            <span class="truncate">Governança & SoA</span>
+          </button>
+          <button onclick="switchTab('risks'); closeMobileDrawer();" id="nav-risks-drawer" class="corp-nav-item cursor-pointer">
+            <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 text-amber-400"></i>
+            <span class="truncate">Gestão de Riscos</span>
+          </button>
+          <button onclick="switchTab('lgpd'); closeMobileDrawer();" id="nav-lgpd-drawer" class="corp-nav-item cursor-pointer">
+            <i data-lucide="scale" class="w-4 h-4 shrink-0 text-emerald-400"></i>
+            <span class="truncate">Privacidade (LGPD)</span>
+          </button>
+        </div>
+
+        <!-- GRUPO 2: OPERAÇÕES & CANTEIROS -->
+        <div class="space-y-1">
+          <div class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+            <span>Operações & Canteiros</span>
+            <i data-lucide="hard-hat" class="w-3 h-3 text-slate-500"></i>
+          </div>
+          <button onclick="switchTab('obras'); closeMobileDrawer();" id="nav-obras-drawer" class="corp-nav-item cursor-pointer">
+            <i data-lucide="building-2" class="w-4 h-4 shrink-0 text-amber-400"></i>
+            <span class="truncate">Central & Canteiros</span>
+          </button>
+          <button onclick="switchTab('secops'); closeMobileDrawer();" id="nav-secops-drawer" class="corp-nav-item cursor-pointer">
+            <i data-lucide="server" class="w-4 h-4 shrink-0 text-sky-400"></i>
+            <span class="truncate">Infraestrutura & SecOps</span>
+          </button>
+          <button onclick="switchTab('integrations'); closeMobileDrawer();" id="nav-integrations-drawer" class="corp-nav-item cursor-pointer">
+            <i data-lucide="network" class="w-4 h-4 shrink-0 text-indigo-400"></i>
+            <span class="truncate">Integrações & APIs</span>
+          </button>
+          <button onclick="switchTab('users'); closeMobileDrawer();" id="nav-users-drawer" class="corp-nav-item cursor-pointer">
+            <i data-lucide="users" class="w-4 h-4 shrink-0 text-slate-400"></i>
+            <span class="truncate">Usuários & RBAC</span>
+          </button>
+        </div>
+
+        <!-- GRUPO 3: EVIDÊNCIAS & AUDITORIA -->
+        <div class="space-y-1">
+          <div class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+            <span>Evidências & Auditoria</span>
+            <i data-lucide="check-check" class="w-3 h-3 text-slate-500"></i>
+          </div>
+          <button onclick="switchTab('evidence'); closeMobileDrawer();" id="nav-evidence-drawer" class="corp-nav-item cursor-pointer">
+            <i data-lucide="folder-check" class="w-4 h-4 shrink-0 text-blue-400"></i>
+            <span class="truncate">Repositório de Evidências</span>
+          </button>
+          <button onclick="switchTab('audit'); closeMobileDrawer();" id="nav-audit-drawer" class="corp-nav-item cursor-pointer">
+            <i data-lucide="binary" class="w-4 h-4 shrink-0 text-purple-400"></i>
+            <span class="truncate">Trilha Forense SHA-256</span>
+          </button>
+        </div>
+
+        <!-- UTILITÁRIOS NO DRAWER -->
+        <div class="pt-2 border-t border-slate-800/80 space-y-2">
+          <div class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Utilitários & Ferramentas</div>
+          <div class="grid grid-cols-2 gap-1.5">
+            <button onclick="openPlaybookModal(); closeMobileDrawer();" class="px-2.5 py-2 rounded-lg bg-slate-900 text-slate-300 hover:text-white flex items-center gap-2 text-xs transition-colors cursor-pointer border border-slate-800">
+              <i data-lucide="book-open" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+              <span class="truncate">Manual</span>
+            </button>
+            <button onclick="openModal('modal-official-downloads'); closeMobileDrawer();" class="px-2.5 py-2 rounded-lg bg-slate-900 text-slate-300 hover:text-white flex items-center gap-2 text-xs transition-colors cursor-pointer border border-slate-800">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-blue-400 shrink-0"></i>
+              <span class="truncate">Dossiês</span>
+            </button>
+          </div>
+
+          <button onclick="window.StorageManager && window.StorageManager.copyAccessLink(); closeMobileDrawer();" class="w-full px-2.5 py-2 rounded-lg text-emerald-400 hover:text-emerald-300 bg-emerald-950/20 border border-emerald-500/20 flex items-center justify-between text-xs transition-colors cursor-pointer">
+            <div class="flex items-center gap-2 truncate">
+              <i data-lucide="link" class="w-3.5 h-3.5 shrink-0"></i>
+              <span class="truncate font-medium">Copiar Link Público</span>
+            </div>
+            <i data-lucide="share-2" class="w-3 h-3 shrink-0 opacity-70"></i>
+          </button>
+
+          <div onclick="window.StorageManager && window.StorageManager.syncToServer(true); closeMobileDrawer();" class="p-2 rounded-lg bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2 cursor-pointer hover:border-slate-700 transition-colors">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+              <div class="min-w-0">
+                <div class="text-[11px] font-semibold text-slate-200 truncate leading-tight">PostgreSQL Conectado</div>
+                <div class="text-[9px] text-slate-400 truncate leading-tight">Toque para sincronizar</div>
+              </div>
+            </div>
+            <i data-lucide="database" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- RODAPÉ DO DRAWER: BOTÃO SAIR -->
+      <div class="p-3 border-t border-slate-800/80 bg-[#070d17] shrink-0">
+        <button onclick="logout(); closeMobileDrawer();" class="w-full px-3 py-2.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center justify-center gap-2 text-xs font-semibold transition-colors cursor-pointer">
+          <i data-lucide="log-out" class="w-4 h-4 text-rose-400"></i>
+          <span>Encerrar Sessão</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ================================================================= -->
+    <!-- SIDEBAR CORPORATIVA ESQUERDA (DESKTOP & TABLETS - COLAPSÁVEL)     -->
+    <!-- ================================================================= -->
+    <aside id="app-sidebar" class="hidden md:flex flex-col justify-between w-64 bg-[#0b1320] text-slate-300 border-r border-slate-800/80 z-30 shrink-0 h-full select-none shadow-xl transition-all duration-300">
       <!-- TOPO INSTITUCIONAL DA SIDEBAR + NAVEGAÇÃO ESTRUTURADA EM 3 PILARES -->
       <div class="flex-1 min-h-0 flex flex-col">
         <!-- Logo & Marca da Construtora -->
-        <div class="h-16 px-4 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-[#070d17]">
-          <button onclick="switchTab('dashboard')" class="flex items-center gap-3 text-left cursor-pointer group">
+        <div class="h-16 px-4 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-[#070d17] sidebar-header-box">
+          <button onclick="switchTab('dashboard')" class="flex items-center gap-3 text-left cursor-pointer group min-w-0" title="AC Engenharia - SGSI & GRC">
             <img src="/app-logo.png" alt="AC Engenharia" class="w-8 h-8 rounded-lg shrink-0 border border-white/15 shadow-sm group-hover:scale-105 transition-transform object-contain" />
-            <div class="min-w-0">
-              <div class="text-xs font-bold text-white tracking-tight leading-none group-hover:text-blue-300 transition-colors">AC Engenharia</div>
-              <div class="text-[10px] text-slate-400 font-mono mt-1 leading-none">SGSI & GRC v3.2</div>
+            <div class="min-w-0 sidebar-hide-collapsed">
+              <div class="text-xs font-bold text-white tracking-tight leading-none group-hover:text-blue-300 transition-colors truncate">AC Engenharia</div>
+              <div class="text-[10px] text-slate-400 font-mono mt-1 leading-none truncate">SGSI & GRC v3.2</div>
             </div>
           </button>
-          <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Ativo</span>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <div class="sidebar-hide-collapsed items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono flex">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Ativo</span>
+            </div>
+            <!-- Botão de Colapso da Sidebar (Tablet / Desktop) -->
+            <button onclick="toggleSidebarCollapse()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors cursor-pointer" title="Expandir/Recolher Barra Lateral">
+              <i id="sidebar-collapse-icon" data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
           </div>
         </div>
 
         <!-- MENU DE MÓDULOS AGRUPADOS LOGICAMENTE (BAIXA CARGA COGNITIVA) -->
-        <div class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-5">
+        <div class="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-5 touch-scroll">
           <nav id="dock-nav-items" class="space-y-4">
             
             <!-- GRUPO 1: GOVERNANÇA & RISCOS -->
             <div class="space-y-1">
-              <div class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+              <div class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between sidebar-hide-collapsed">
                 <span>Governança & Riscos</span>
                 <i data-lucide="shield" class="w-3 h-3 text-slate-500"></i>
               </div>
-              <button onclick="switchTab('dashboard')" id="nav-dashboard" class="corp-nav-item active cursor-pointer">
+              <button onclick="switchTab('dashboard')" id="nav-dashboard" class="corp-nav-item active cursor-pointer" title="Visão Geral">
                 <i data-lucide="layout-dashboard" class="w-4 h-4 shrink-0 text-[#38bdf8]"></i>
-                <span class="truncate">Visão Geral</span>
+                <span class="truncate sidebar-hide-collapsed">Visão Geral</span>
               </button>
-              <button onclick="switchTab('raci')" id="nav-raci" class="corp-nav-item cursor-pointer">
+              <button onclick="switchTab('raci')" id="nav-raci" class="corp-nav-item cursor-pointer" title="Governança & SoA">
                 <i data-lucide="file-text" class="w-4 h-4 shrink-0 text-slate-400"></i>
-                <span class="truncate">Governança & SoA</span>
+                <span class="truncate sidebar-hide-collapsed">Governança & SoA</span>
               </button>
-              <button onclick="switchTab('risks')" id="nav-risks" class="corp-nav-item cursor-pointer">
+              <button onclick="switchTab('risks')" id="nav-risks" class="corp-nav-item cursor-pointer" title="Gestão de Riscos">
                 <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 text-amber-400"></i>
-                <span class="truncate">Gestão de Riscos</span>
+                <span class="truncate sidebar-hide-collapsed">Gestão de Riscos</span>
               </button>
-              <button onclick="switchTab('lgpd')" id="nav-lgpd" class="corp-nav-item cursor-pointer">
+              <button onclick="switchTab('lgpd')" id="nav-lgpd" class="corp-nav-item cursor-pointer" title="Privacidade (LGPD)">
                 <i data-lucide="scale" class="w-4 h-4 shrink-0 text-emerald-400"></i>
-                <span class="truncate">Privacidade (LGPD)</span>
+                <span class="truncate sidebar-hide-collapsed">Privacidade (LGPD)</span>
               </button>
             </div>
 
             <!-- GRUPO 2: OPERAÇÕES & CANTEIROS -->
             <div class="space-y-1">
-              <div class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+              <div class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between sidebar-hide-collapsed">
                 <span>Operações & Canteiros</span>
                 <i data-lucide="hard-hat" class="w-3 h-3 text-slate-500"></i>
               </div>
-              <button onclick="switchTab('obras')" id="nav-obras" class="corp-nav-item cursor-pointer">
+              <button onclick="switchTab('obras')" id="nav-obras" class="corp-nav-item cursor-pointer" title="Central & Canteiros">
                 <i data-lucide="building-2" class="w-4 h-4 shrink-0 text-amber-400"></i>
-                <span class="truncate">Central & Canteiros</span>
+                <span class="truncate sidebar-hide-collapsed">Central & Canteiros</span>
               </button>
-              <button onclick="switchTab('secops')" id="nav-secops" class="corp-nav-item cursor-pointer">
+              <button onclick="switchTab('secops')" id="nav-secops" class="corp-nav-item cursor-pointer" title="Infraestrutura & SecOps">
                 <i data-lucide="server" class="w-4 h-4 shrink-0 text-sky-400"></i>
-                <span class="truncate">Infraestrutura & SecOps</span>
+                <span class="truncate sidebar-hide-collapsed">Infraestrutura & SecOps</span>
               </button>
-              <button onclick="switchTab('integrations')" id="nav-integrations" class="corp-nav-item cursor-pointer">
+              <button onclick="switchTab('integrations')" id="nav-integrations" class="corp-nav-item cursor-pointer" title="Integrações & APIs">
                 <i data-lucide="network" class="w-4 h-4 shrink-0 text-indigo-400"></i>
-                <span class="truncate">Integrações & APIs</span>
+                <span class="truncate sidebar-hide-collapsed">Integrações & APIs</span>
               </button>
-              <button onclick="switchTab('users')" id="nav-users" class="corp-nav-item cursor-pointer">
+              <button onclick="switchTab('users')" id="nav-users" class="corp-nav-item cursor-pointer" title="Usuários & RBAC">
                 <i data-lucide="users" class="w-4 h-4 shrink-0 text-slate-400"></i>
-                <span class="truncate">Usuários & RBAC</span>
+                <span class="truncate sidebar-hide-collapsed">Usuários & RBAC</span>
               </button>
             </div>
 
             <!-- GRUPO 3: EVIDÊNCIAS & AUDITORIA FORENSE -->
             <div class="space-y-1">
-              <div class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+              <div class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between sidebar-hide-collapsed">
                 <span>Evidências & Auditoria</span>
                 <i data-lucide="check-check" class="w-3 h-3 text-slate-500"></i>
               </div>
-              <button onclick="switchTab('evidence')" id="nav-evidence" class="corp-nav-item cursor-pointer">
+              <button onclick="switchTab('evidence')" id="nav-evidence" class="corp-nav-item cursor-pointer" title="Repositório de Evidências">
                 <i data-lucide="folder-check" class="w-4 h-4 shrink-0 text-blue-400"></i>
-                <span class="truncate">Repositório de Evidências</span>
+                <span class="truncate sidebar-hide-collapsed">Repositório de Evidências</span>
               </button>
-              <button onclick="switchTab('audit')" id="nav-audit" class="corp-nav-item cursor-pointer">
+              <button onclick="switchTab('audit')" id="nav-audit" class="corp-nav-item cursor-pointer" title="Trilha Forense SHA-256">
                 <i data-lucide="binary" class="w-4 h-4 shrink-0 text-purple-400"></i>
-                <span class="truncate">Trilha Forense SHA-256</span>
+                <span class="truncate sidebar-hide-collapsed">Trilha Forense SHA-256</span>
               </button>
             </div>
 
@@ -342,42 +555,42 @@
       </div>
 
       <!-- RODAPÉ DE UTILITÁRIOS E PERSISTÊNCIA DA SIDEBAR -->
-      <div class="shrink-0 p-3.5 border-t border-slate-800/80 bg-[#070d17] space-y-2">
-        <div class="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Utilitários & Sincronização</div>
+      <div class="shrink-0 p-3 border-t border-slate-800/80 bg-[#070d17] space-y-2 sidebar-footer-box">
+        <div class="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 sidebar-hide-collapsed">Utilitários & Sincronização</div>
         
-        <div class="grid grid-cols-2 gap-1 text-[11px]">
-          <button onclick="openPlaybookModal()" class="px-2 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 flex items-center gap-1.5 transition-colors cursor-pointer truncate">
+        <div class="grid grid-cols-2 gap-1 text-[11px] sidebar-footer-grid">
+          <button onclick="openPlaybookModal()" class="sidebar-footer-btn px-2 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 flex items-center gap-1.5 transition-colors cursor-pointer truncate" title="Manual Oficial de Preenchimento">
             <i data-lucide="book-open" class="w-3.5 h-3.5 shrink-0 text-amber-400"></i>
-            <span class="truncate">Manual</span>
+            <span class="truncate sidebar-hide-collapsed">Manual</span>
           </button>
-          <button onclick="openModal('modal-official-downloads')" class="px-2 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 flex items-center gap-1.5 transition-colors cursor-pointer truncate">
+          <button onclick="openModal('modal-official-downloads')" class="sidebar-footer-btn px-2 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 flex items-center gap-1.5 transition-colors cursor-pointer truncate" title="Dossiês e Downloads Oficiais">
             <i data-lucide="download" class="w-3.5 h-3.5 shrink-0 text-blue-400"></i>
-            <span class="truncate">Dossiês</span>
+            <span class="truncate sidebar-hide-collapsed">Dossiês</span>
           </button>
         </div>
 
-        <button onclick="window.StorageManager && window.StorageManager.copyAccessLink()" class="w-full px-2.5 py-1.5 rounded-lg text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30 border border-emerald-500/20 flex items-center justify-between text-xs transition-colors cursor-pointer" title="Copiar o link público Cloudflare ativo para compartilhar acesso externo">
+        <button onclick="window.StorageManager && window.StorageManager.copyAccessLink()" class="sidebar-footer-btn w-full px-2.5 py-1.5 rounded-lg text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30 border border-emerald-500/20 flex items-center justify-between text-xs transition-colors cursor-pointer" title="Copiar o link público Cloudflare ativo para compartilhar acesso externo">
           <div class="flex items-center gap-2 truncate">
             <i data-lucide="link" class="w-3.5 h-3.5 shrink-0"></i>
-            <span class="truncate font-medium">Copiar Link Público</span>
+            <span class="truncate font-medium sidebar-hide-collapsed">Copiar Link</span>
           </div>
-          <i data-lucide="share-2" class="w-3 h-3 shrink-0 opacity-70"></i>
+          <i data-lucide="share-2" class="w-3 h-3 shrink-0 opacity-70 sidebar-hide-collapsed"></i>
         </button>
 
         <!-- Status do Banco de Dados (PostgreSQL 17 / API) -->
-        <div onclick="window.StorageManager && window.StorageManager.syncToServer(true)" class="p-2 rounded-lg bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2 cursor-pointer hover:border-slate-700 transition-colors" title="Clique para sincronizar com o Banco de Dados">
+        <div onclick="window.StorageManager && window.StorageManager.syncToServer(true)" class="sidebar-db-box p-2 rounded-lg bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2 cursor-pointer hover:border-slate-700 transition-colors" title="Clique para sincronizar com o Banco de Dados">
           <div class="flex items-center gap-2 min-w-0">
             <span id="sidebar-db-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
-            <div class="min-w-0">
+            <div class="min-w-0 sidebar-hide-collapsed">
               <div id="sidebar-db-status-text" class="text-[11px] font-semibold text-slate-200 truncate leading-tight">PostgreSQL Conectado</div>
               <div id="sidebar-db-status-sub" class="text-[10px] text-slate-400 truncate leading-tight">Sincronização em tempo real</div>
             </div>
           </div>
-          <i data-lucide="database" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+          <i data-lucide="database" class="w-3.5 h-3.5 text-slate-400 shrink-0 sidebar-hide-collapsed"></i>
         </div>
 
         <!-- Backup JSON e Manutenção -->
-        <div id="sidebar-admin-db-controls" class="space-y-1 pt-1 border-t border-slate-800/60">
+        <div id="sidebar-admin-db-controls" class="space-y-1 pt-1 border-t border-slate-800/60 sidebar-hide-collapsed">
           <div class="grid grid-cols-2 gap-1 text-[10px]">
             <button onclick="window.StorageManager && window.StorageManager.exportFullBackupJSON()" class="px-2 py-1 rounded bg-slate-800/70 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer text-center font-medium" title="Baixar backup completo (.json)">
               Backup JSON
@@ -396,29 +609,36 @@
     <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[#f8fafc]">
 
       <!-- TOP CORPORATE HEADER BAR (GLASSMORPHIC & SLEEK) -->
-      <header class="glass-header border-b border-slate-200/80 px-4 sm:px-6 h-16 flex items-center justify-between gap-4 z-20 shrink-0 sticky top-0 shadow-xs">
-        <!-- ESQUERDA: TÍTULO DO MÓDULO ATIVO COM BREADCRUMB -->
-        <div class="flex items-center gap-3 min-w-0">
-          <button onclick="switchTab('dashboard')" class="md:hidden w-8 h-8 rounded-lg shrink-0 cursor-pointer shadow-sm overflow-hidden" title="Início">
-            <img src="/app-logo.png" alt="AC Engenharia" class="w-full h-full object-contain" />
+      <header class="glass-header border-b border-slate-200/80 px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4 z-20 shrink-0 sticky top-0 shadow-xs">
+        <!-- ESQUERDA: HAMBURGER (MOBILE) + LOGO + TÍTULO COM BREADCRUMB -->
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+          <button type="button" onclick="toggleMobileDrawer()" class="md:hidden p-2 -ml-1 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer shrink-0" title="Menu de navegação">
+            <i data-lucide="menu" class="w-5 h-5"></i>
           </button>
-          <div class="flex items-center gap-2 text-xs min-w-0">
+          <button onclick="switchTab('dashboard')" class="flex items-center gap-2 cursor-pointer group shrink-0" title="Página Inicial">
+            <img src="/app-logo.png" alt="AC Engenharia" class="w-8 h-8 rounded-lg shrink-0 border border-slate-200/80 shadow-2xs group-hover:scale-105 transition-transform object-contain" />
+            <div class="hidden xs:block sm:hidden text-left min-w-0">
+              <div class="text-xs font-bold text-slate-800 leading-none">AC Eng.</div>
+              <div class="text-[9px] text-slate-400 font-mono leading-none mt-0.5">SGSI</div>
+            </div>
+          </button>
+          <div class="flex items-center gap-1.5 sm:gap-2 text-xs min-w-0">
             <span class="text-slate-400 font-medium hidden sm:inline">SGSI</span>
             <span class="text-slate-300 hidden sm:inline">/</span>
-            <span id="workspace-active-tab-title" class="font-bold text-slate-900 text-sm sm:text-base truncate tracking-tight">Visão Geral</span>
+            <span id="workspace-active-tab-title" class="font-bold text-slate-900 text-xs sm:text-sm lg:text-base truncate tracking-tight">Visão Geral</span>
           </div>
         </div>
 
         <!-- DIREITA: FILTRO DE UNIDADE, AÇÃO RÁPIDA E PERFIL -->
-        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <!-- Filtro de Unidade / Canteiro Segmentado -->
-          <div class="flex items-center bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs shadow-2xs hover:border-slate-300 transition-colors">
+          <div class="flex items-center bg-white border border-slate-200 rounded-lg px-2 sm:px-2.5 py-1.5 text-xs shadow-2xs hover:border-slate-300 transition-colors max-w-[125px] xs:max-w-[170px] sm:max-w-xs">
             <span class="text-slate-400 mr-1.5 hidden lg:inline font-medium">Unidade:</span>
-            <select id="select-unidade-filter" onchange="setSectorFilter(this.value)" class="bg-transparent text-slate-800 font-semibold focus:outline-none cursor-pointer text-xs">
-              <option value="todos">🌐 Todas as Unidades (Visão Geral)</option>
-              <option value="Escritório Central (Matriz)">⭐ Escritório Central (Matriz)</option>
+            <select id="select-unidade-filter" onchange="setSectorFilter(this.value)" class="bg-transparent text-slate-800 font-semibold focus:outline-none cursor-pointer text-xs truncate w-full">
+              <option value="todos">🌐 Todas as Unidades</option>
+              <option value="Escritório Central (Matriz)">⭐ Central (Matriz)</option>
             </select>
-            <button type="button" onclick="openObrasManagerModal()" class="ml-1.5 p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer" title="Gerenciar Canteiros & Obras">
+            <button type="button" onclick="openObrasManagerModal()" class="ml-1 p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer shrink-0" title="Gerenciar Canteiros & Obras">
               <i data-lucide="settings" class="w-3.5 h-3.5"></i>
             </button>
           </div>
@@ -433,15 +653,15 @@
 
           <!-- Usuário Conectado & Menu de Sessão -->
           <div class="relative shrink-0">
-            <button onclick="toggleUserMenuDropdown(event)" id="header-user-btn" class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-colors cursor-pointer">
-              <div id="header-user-avatar" class="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#0f2942] to-slate-700 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+            <button onclick="toggleUserMenuDropdown(event)" id="header-user-btn" class="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-colors cursor-pointer">
+              <div id="header-user-avatar" class="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#0f2942] to-slate-700 text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
                 MM
               </div>
-              <div class="text-left hidden lg:block">
-                <div id="header-user-name" class="text-xs font-bold text-slate-800 leading-tight">Administrador SGSI</div>
-                <div id="header-user-role" class="text-[10px] text-slate-500 font-medium leading-tight">Sessão Corporativa</div>
+              <div class="text-left hidden xl:block">
+                <div id="header-user-name" class="text-xs font-bold text-slate-800 leading-tight truncate max-w-[120px]">Administrador SGSI</div>
+                <div id="header-user-role" class="text-[10px] text-slate-500 font-medium leading-tight truncate max-w-[120px]">Sessão Corporativa</div>
               </div>
-              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
             </button>
 
             <!-- Dropdown de Sessão -->
@@ -474,15 +694,15 @@
           </div>
 
           <!-- Botão Sair Direto -->
-          <button onclick="logout()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white hover:bg-rose-50 hover:text-rose-700 text-slate-600 border border-slate-200 text-xs font-semibold transition-all shrink-0 cursor-pointer shadow-2xs" title="Encerrar sessão e voltar à tela de login">
-            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          <button onclick="logout()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-white hover:bg-rose-50 hover:text-rose-700 text-slate-600 border border-slate-200 text-xs font-semibold transition-all shrink-0 cursor-pointer shadow-2xs" title="Encerrar sessão">
+            <i data-lucide="log-out" class="w-3.5 h-3.5 text-rose-600 sm:text-inherit"></i>
             <span class="hidden sm:inline">Sair</span>
           </button>
         </div>
       </header>
 
-      <!-- Navegação Mobile (< md) -->
-      <div id="mobile-nav-items" class="md:hidden flex items-center gap-1 overflow-x-auto px-4 py-2 border-b border-slate-200 bg-white text-xs no-scrollbar shrink-0">
+      <!-- Navegação Mobile (< md) com Momentum Touch Scrolling -->
+      <div id="mobile-nav-items" class="md:hidden flex items-center gap-1.5 overflow-x-auto px-3 py-2 border-b border-slate-200 bg-white text-xs no-scrollbar shrink-0 touch-scroll">
         <button onclick="switchTab('dashboard')" id="nav-dashboard-mobile" class="px-3 py-1 font-semibold rounded-lg bg-[#004b93] text-white whitespace-nowrap">Visão Geral</button>
         <button onclick="switchTab('obras')" id="nav-obras-mobile" class="px-3 py-1 font-medium rounded-lg text-slate-600 hover:bg-slate-100 whitespace-nowrap">Central & Obras</button>
         <button onclick="switchTab('users')" id="nav-users-mobile" class="px-3 py-1 font-medium rounded-lg text-slate-600 hover:bg-slate-100 whitespace-nowrap">Usuários</button>
@@ -533,7 +753,7 @@
         </div>
       </div>
 
-      <main class="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5 w-full max-w-[1680px] mx-auto" id="main-viewport">
+      <main class="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-5 pb-24 md:pb-6 space-y-4 sm:space-y-5 w-full max-w-[1680px] mx-auto touch-scroll" id="main-viewport">
 
       <!-- ================================================================= -->
       <!-- MÓDULO 01: VISÃO GERAL (DASHBOARD CORPORATIVO REDESENHADO)       -->
@@ -4092,6 +4312,50 @@ openssl ts -reply -in response.tsr -text</pre>
 
     </main>
     </div>
+
+    <!-- ================================================================= -->
+    <!-- BARRA DE NAVEGAÇÃO INFERIOR MOBILE (ERGONOMIA DE 1 TOQUE)        -->
+    <!-- ================================================================= -->
+    <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] px-2 py-1.5 flex items-center justify-around">
+      <button onclick="switchTab('dashboard')" id="nav-bottom-dashboard" class="flex flex-col items-center justify-center flex-1 py-1 text-[#004b93] cursor-pointer group">
+        <div class="relative">
+          <i data-lucide="layout-dashboard" class="w-5 h-5 text-[#004b93] nav-bottom-icon"></i>
+          <span class="nav-bottom-dot absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#004b93] ring-2 ring-white"></span>
+        </div>
+        <span class="text-[10px] font-bold mt-0.5 tracking-tight nav-bottom-label text-[#004b93]">Painel</span>
+      </button>
+
+      <button onclick="switchTab('obras')" id="nav-bottom-obras" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer group">
+        <div class="relative">
+          <i data-lucide="building-2" class="w-5 h-5 text-slate-500 group-hover:text-amber-600 transition-colors nav-bottom-icon"></i>
+          <span class="nav-bottom-dot hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-600 ring-2 ring-white"></span>
+        </div>
+        <span class="text-[10px] font-semibold mt-0.5 tracking-tight nav-bottom-label">Canteiros</span>
+      </button>
+
+      <button onclick="switchTab('risks')" id="nav-bottom-risks" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer group">
+        <div class="relative">
+          <i data-lucide="alert-triangle" class="w-5 h-5 text-slate-500 group-hover:text-rose-600 transition-colors nav-bottom-icon"></i>
+          <span class="nav-bottom-dot hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-600 ring-2 ring-white"></span>
+        </div>
+        <span class="text-[10px] font-semibold mt-0.5 tracking-tight nav-bottom-label">Riscos</span>
+      </button>
+
+      <button onclick="switchTab('lgpd')" id="nav-bottom-lgpd" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer group">
+        <div class="relative">
+          <i data-lucide="scale" class="w-5 h-5 text-slate-500 group-hover:text-emerald-600 transition-colors nav-bottom-icon"></i>
+          <span class="nav-bottom-dot hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-white"></span>
+        </div>
+        <span class="text-[10px] font-semibold mt-0.5 tracking-tight nav-bottom-label">LGPD</span>
+      </button>
+
+      <button onclick="toggleMobileDrawer()" id="nav-bottom-menu" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer group">
+        <div class="relative">
+          <i data-lucide="menu" class="w-5 h-5 text-slate-500 group-hover:text-slate-900 transition-colors nav-bottom-icon"></i>
+        </div>
+        <span class="text-[10px] font-semibold mt-0.5 tracking-tight nav-bottom-label">Menu</span>
+      </button>
+    </nav>
     </div> <!-- /#app-main-shell -->
 
     <!-- ===================================================================== -->
@@ -4101,7 +4365,7 @@ openssl ts -reply -in response.tsr -text</pre>
       <div class="flex-1 w-full grid grid-cols-1 lg:grid-cols-12 min-h-screen">
         
         <!-- PAINEL ESQUERDO: APRESENTAÇÃO INSTITUCIONAL & CONFIANÇA (58%) -->
-        <div class="lg:col-span-7 bg-gradient-to-br from-[#071322] via-[#0b192c] to-[#0f2942] text-white p-8 sm:p-12 lg:p-16 flex flex-col justify-between relative overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-800/80">
+        <div class="lg:col-span-7 bg-gradient-to-br from-[#071322] via-[#0b192c] to-[#0f2942] text-white p-6 sm:p-12 lg:p-16 flex flex-col justify-between relative overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-800/80">
           <!-- Efeito sutil de iluminação de fundo -->
           <div class="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
           <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -4120,8 +4384,8 @@ openssl ts -reply -in response.tsr -text</pre>
             </div>
 
             <!-- Headline de Impacto -->
-            <div class="pt-4 max-w-xl space-y-3">
-              <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+            <div class="pt-2 sm:pt-4 max-w-xl space-y-2 sm:space-y-3">
+              <h1 class="text-xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
                 Governança Cibernética, Riscos & Proteção de Dados
               </h1>
               <p class="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
@@ -4130,7 +4394,7 @@ openssl ts -reply -in response.tsr -text</pre>
             </div>
 
             <!-- 3 Pilares com Visual Moderno & Organizado -->
-            <div class="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-3.5 max-w-2xl">
+            <div class="pt-4 hidden sm:grid sm:grid-cols-3 gap-3.5 max-w-2xl">
               <div class="p-3.5 rounded-xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm space-y-1.5 hover:bg-white/[0.07] transition-all">
                 <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-400/20">
                   <i data-lucide="shield-check" class="w-4 h-4"></i>
@@ -4158,7 +4422,7 @@ openssl ts -reply -in response.tsr -text</pre>
           </div>
 
           <!-- Rodapé do Painel Institucional -->
-          <div class="relative z-10 pt-8 mt-6 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400">
+          <div class="relative z-10 pt-4 sm:pt-8 mt-4 sm:mt-6 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>Servidor Corporativo Online (PostgreSQL 17 & API Ativos)</span>
@@ -4168,7 +4432,7 @@ openssl ts -reply -in response.tsr -text</pre>
         </div>
 
         <!-- PAINEL DIREITO: FORMULÁRIO DE LOGIN CORPORATIVO COM GOOGLE SSO (42%) -->
-        <div class="lg:col-span-5 bg-white p-8 sm:p-12 lg:p-14 flex flex-col justify-between shadow-2xl">
+        <div class="lg:col-span-5 bg-white p-6 sm:p-12 lg:p-14 flex flex-col justify-between shadow-2xl">
           <!-- Topo do Form com Retorno à Sessão se logado -->
           <div class="flex items-center justify-between">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-semibold">
@@ -7398,16 +7662,22 @@ openssl ts -reply -in response.tsr -text</pre>
         const isAuditor = !isSuperAdmin && (role === 'auditoria' || role === 'auditor');
         const allowedModules = getAllowedModulesForRole(role);
 
-        // 1. Filtragem da navegação lateral (Dock) e barra mobile conforme o Papel RBAC (SuperAdmin vê 100%)
+        // 1. Filtragem da navegação lateral (Dock), barra mobile, drawer e bottom-nav conforme o Papel RBAC (SuperAdmin vê 100%)
         ALL_SYSTEM_MODULES.forEach(t => {
           const navBtn = document.getElementById(`nav-${t}`);
           const navMob = document.getElementById(`nav-${t}-mobile`);
+          const navDrawer = document.getElementById(`nav-${t}-drawer`);
+          const navBottom = document.getElementById(`nav-bottom-${t}`);
           if (allowedModules.includes(t)) {
             if (navBtn) navBtn.classList.remove('hidden');
             if (navMob) navMob.classList.remove('hidden');
+            if (navDrawer) navDrawer.classList.remove('hidden');
+            if (navBottom) navBottom.classList.remove('hidden');
           } else {
             if (navBtn) navBtn.classList.add('hidden');
             if (navMob) navMob.classList.add('hidden');
+            if (navDrawer) navDrawer.classList.add('hidden');
+            if (navBottom) navBottom.classList.add('hidden');
           }
         });
 
@@ -8496,6 +8766,92 @@ openssl ts -reply -in response.tsr -text</pre>
         }
       }
 
+      // =====================================================================
+      // CONTROLADORES DE RESPONSIVIDADE (MOBILE DRAWER & TABLET SIDEBAR)
+      // =====================================================================
+      window.toggleMobileDrawer = function() {
+        const panel = document.getElementById('mobile-drawer-panel');
+        if (!panel) return;
+        const isOpen = !panel.classList.contains('-translate-x-full');
+        if (isOpen) {
+          closeMobileDrawer();
+        } else {
+          openMobileDrawer();
+        }
+      };
+
+      window.openMobileDrawer = function() {
+        const overlay = document.getElementById('mobile-drawer-overlay');
+        const panel = document.getElementById('mobile-drawer-panel');
+        if (!overlay || !panel) return;
+
+        // Sincroniza dados do usuário no drawer
+        const drawerName = document.getElementById('drawer-user-name');
+        const drawerRole = document.getElementById('drawer-user-role');
+        const drawerAvatar = document.getElementById('drawer-user-avatar');
+        const headerName = document.getElementById('header-user-name');
+        const headerRole = document.getElementById('header-user-role');
+        const headerAvatar = document.getElementById('header-user-avatar');
+        if (drawerName && headerName) drawerName.textContent = headerName.textContent;
+        if (drawerRole && headerRole) drawerRole.textContent = headerRole.textContent;
+        if (drawerAvatar && headerAvatar) drawerAvatar.textContent = headerAvatar.textContent;
+
+        overlay.classList.remove('opacity-0', 'pointer-events-none');
+        overlay.classList.add('opacity-100', 'pointer-events-auto');
+        panel.classList.remove('-translate-x-full');
+        panel.classList.add('translate-x-0');
+        document.body.classList.add('overflow-hidden');
+      };
+
+      window.closeMobileDrawer = function() {
+        const overlay = document.getElementById('mobile-drawer-overlay');
+        const panel = document.getElementById('mobile-drawer-panel');
+        if (!overlay || !panel) return;
+
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+        overlay.classList.remove('opacity-100', 'pointer-events-auto');
+        panel.classList.add('-translate-x-full');
+        panel.classList.remove('translate-x-0');
+        document.body.classList.remove('overflow-hidden');
+      };
+
+      window.toggleSidebarCollapse = function() {
+        const sidebar = document.getElementById('app-sidebar');
+        if (!sidebar) return;
+        sidebar.classList.toggle('collapsed');
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        try {
+          localStorage.setItem('sgsi_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+        } catch (e) {}
+        updateSidebarCollapseIcon();
+      };
+
+      window.updateSidebarCollapseIcon = function() {
+        const sidebar = document.getElementById('app-sidebar');
+        const icon = document.getElementById('sidebar-collapse-icon');
+        if (!sidebar || !icon) return;
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        icon.setAttribute('data-lucide', isCollapsed ? 'chevron-right' : 'chevron-left');
+        if (window.lucide && typeof lucide.createIcons === 'function') {
+          lucide.createIcons();
+        }
+      };
+
+      window.initSidebarResponsiveState = function() {
+        const sidebar = document.getElementById('app-sidebar');
+        if (!sidebar) return;
+        try {
+          const saved = localStorage.getItem('sgsi_sidebar_collapsed');
+          const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1024;
+          if (saved === 'true' || (saved === null && isTablet)) {
+            sidebar.classList.add('collapsed');
+          } else {
+            sidebar.classList.remove('collapsed');
+          }
+          updateSidebarCollapseIcon();
+        } catch (e) {}
+      };
+
       function switchTab(tabId) {
         const currentRole = State.currentRole || 'secops';
         const allowed = (typeof getAllowedModulesForRole === 'function')
@@ -8534,6 +8890,7 @@ openssl ts -reply -in response.tsr -text</pre>
           const mod = document.getElementById(`module-${t}`);
           const nav = document.getElementById(`nav-${t}`);
           const navMob = document.getElementById(`nav-${t}-mobile`);
+          const navDrawer = document.getElementById(`nav-${t}-drawer`);
           if (mod) mod.classList.add('hidden');
           if (nav) {
             nav.className = "corp-nav-item cursor-pointer";
@@ -8551,11 +8908,20 @@ openssl ts -reply -in response.tsr -text</pre>
               navMob.classList.remove('hidden');
             }
           }
+          if (navDrawer) {
+            navDrawer.className = "corp-nav-item cursor-pointer";
+            if (!allowed.includes(t)) {
+              navDrawer.classList.add('hidden');
+            } else {
+              navDrawer.classList.remove('hidden');
+            }
+          }
         });
 
         const targetMod = document.getElementById(`module-${tabId}`);
         const targetNav = document.getElementById(`nav-${tabId}`);
         const targetNavMob = document.getElementById(`nav-${tabId}-mobile`);
+        const targetNavDrawer = document.getElementById(`nav-${tabId}-drawer`);
         if (targetMod) targetMod.classList.remove('hidden');
         if (targetNav) {
           targetNav.className = "corp-nav-item active cursor-pointer";
@@ -8565,9 +8931,58 @@ openssl ts -reply -in response.tsr -text</pre>
           targetNavMob.className = "px-3 py-1 font-semibold rounded bg-[#0f2942] text-white whitespace-nowrap transition-colors";
           targetNavMob.classList.remove('hidden');
         }
+        if (targetNavDrawer) {
+          targetNavDrawer.className = "corp-nav-item active cursor-pointer";
+          targetNavDrawer.classList.remove('hidden');
+        }
+
+        // Sincroniza barra inferior mobile (5 atalhos ergonômicos)
+        const bottomNavTabs = ['dashboard', 'obras', 'risks', 'lgpd'];
+        bottomNavTabs.forEach(bId => {
+          const bBtn = document.getElementById(`nav-bottom-${bId}`);
+          if (!bBtn) return;
+          const icon = bBtn.querySelector('.nav-bottom-icon');
+          const label = bBtn.querySelector('.nav-bottom-label');
+          const dot = bBtn.querySelector('.nav-bottom-dot');
+          if (bId === tabId) {
+            bBtn.classList.add('text-[#004b93]');
+            bBtn.classList.remove('text-slate-500');
+            if (icon) {
+              icon.classList.add('text-[#004b93]');
+              icon.classList.remove('text-slate-500');
+            }
+            if (label) {
+              label.classList.add('text-[#004b93]', 'font-bold');
+              label.classList.remove('text-slate-500');
+            }
+            if (dot) dot.classList.remove('hidden');
+          } else {
+            bBtn.classList.remove('text-[#004b93]');
+            bBtn.classList.add('text-slate-500');
+            if (icon) {
+              icon.classList.remove('text-[#004b93]');
+              icon.classList.add('text-slate-500');
+            }
+            if (label) {
+              label.classList.remove('text-[#004b93]', 'font-bold');
+              label.classList.add('text-slate-500');
+            }
+            if (dot) dot.classList.add('hidden');
+          }
+        });
+
+        // Fecha automaticamente o drawer ao trocar de tela em mobile
+        if (typeof closeMobileDrawer === 'function') {
+          closeMobileDrawer();
+        }
+
         renderCurrentTab();
         if (tabId === 'dashboard' && typeof renderPersonaDashboardKPIs === 'function') {
           renderPersonaDashboardKPIs();
+        }
+
+        if (window.lucide && typeof lucide.createIcons === 'function') {
+          lucide.createIcons();
         }
       }
 
@@ -10730,6 +11145,9 @@ openssl ts -reply -in response.tsr -text</pre>
       }
 
       function initApp() {
+        if (typeof initSidebarResponsiveState === 'function') {
+          initSidebarResponsiveState();
+        }
         const savedDashView = localStorage.getItem('AC_DASHBOARD_VIEW_PREF') || 'executive';
         if (typeof switchDashboardView === 'function') {
           switchDashboardView(savedDashView);
@@ -10741,10 +11159,11 @@ openssl ts -reply -in response.tsr -text</pre>
         }
       }
 
-      // Tecla Escape para fechar Drawer lateral e Modais (exceto Portal de Login)
+      // Tecla Escape para fechar Drawer lateral, Menu Mobile e Modais (exceto Portal de Login)
       window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
           closeOffcanvas();
+          if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
           const openModals = document.querySelectorAll('[id^="modal-"]:not(.hidden)');
           openModals.forEach(m => {
             if (m.id !== 'modal-login-overlay') {
