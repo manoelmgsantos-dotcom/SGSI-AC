@@ -50,6 +50,36 @@ function saveStoredCorporateSigners(data) {
   } catch (e) {}
 }
 
+function getStoredDocumentCustomData(code) {
+  if (!code) return { signers: [], fields: {} };
+  try {
+    const raw = localStorage.getItem("sgsi_doc_custom_" + code);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        signers: Array.isArray(parsed.signers) ? parsed.signers : [],
+        fields: (parsed.fields && typeof parsed.fields === "object") ? parsed.fields : {},
+        updatedAt: parsed.updatedAt || null
+      };
+    }
+  } catch (e) {}
+  return { signers: [], fields: {} };
+}
+
+function saveStoredDocumentCustomData(code, data) {
+  if (!code) return;
+  try {
+    localStorage.setItem("sgsi_doc_custom_" + code, JSON.stringify(data));
+  } catch (e) {}
+}
+
+function clearStoredDocumentCustomData(code) {
+  if (!code) return;
+  try {
+    localStorage.removeItem("sgsi_doc_custom_" + code);
+  } catch (e) {}
+}
+
 function getTemplateContextDefaults() {
   const user = (window.AuthState && window.AuthState.currentUser) ? window.AuthState.currentUser : null;
   const selUnidade = document.getElementById("select-unidade-filter");
@@ -92,6 +122,848 @@ const MODULE_MANAGEMENT_DEPT = {
   audit: "Auditoria Interna ISO 27001 & Qualidade"
 };
 
+const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
+  "MOD-OBR-01": {
+    "title": "Checklist de Mobilização de TI e Segurança Física de Canteiro de Obras",
+    "signers": [
+      {
+        "role": "Engenheiro(a) Residente / Gestor da Obra",
+        "docLabel": "CREA-SE",
+        "placeholder": "Ex: Eng. Ricardo Lima"
+      },
+      {
+        "role": "Gestor de T.I. & SecOps (Homologação Matriz)",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": [
+      {
+        "key": "obra",
+        "label": "Nome da Obra / Canteiro",
+        "placeholder": "Ex: Residencial Jardins da Costa"
+      }
+    ]
+  },
+  "MOD-OBR-02": {
+    "title": "Termo e Certificado de Expurgo Seguro de Biometria Facial Pós-Habite-se (PBIO-004)",
+    "signers": [
+      {
+        "role": "Executor Técnico de T.I. / SecOps",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Engenheiro(a) Residente da Obra",
+        "docLabel": "CREA-SE",
+        "placeholder": "Ex: Eng. Ricardo Lima"
+      },
+      {
+        "role": "Homologação Encarregado(a) de Dados (DPO)",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": [
+      {
+        "key": "obra",
+        "label": "Nome da Obra / Canteiro",
+        "placeholder": "Ex: Residencial Jardins da Costa"
+      }
+    ]
+  },
+  "MOD-OBR-03": {
+    "title": "Termo Individual de Ciência de Coleta Biométrica e Acesso em Canteiro (NR-18)",
+    "signers": [
+      {
+        "role": "Trabalhador / Titular dos Dados",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Responsável pela Integração (RH / Técnico SST — AC Engenharia)",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      }
+    ],
+    "fields": [
+      {
+        "key": "obra",
+        "label": "Nome da Obra / Canteiro",
+        "placeholder": "Ex: Residencial Jardins da Costa"
+      }
+    ]
+  },
+  "MOD-OBR-03B": {
+    "title": "Termo Individual de Ciência de Controle de Acesso e Identificação em Canteiro (QR Code / Crachá - NR-18)",
+    "signers": [
+      {
+        "role": "Trabalhador / Titular dos Dados",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Responsável pela Integração (RH / Técnico SST — AC Engenharia)",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      }
+    ],
+    "fields": [
+      {
+        "key": "obra",
+        "label": "Nome da Obra / Canteiro",
+        "placeholder": "Ex: Residencial Jardins da Costa"
+      }
+    ]
+  },
+  "MOD-OBR-04": {
+    "title": "Termo de Homologação de Câmeras CFTV, Drones de Obra e Placas de Privacidade (LGPD)",
+    "signers": [
+      {
+        "role": "Engenheiro(a) Residente da Obra",
+        "docLabel": "CREA-SE",
+        "placeholder": "Ex: Eng. Ricardo Lima"
+      },
+      {
+        "role": "Gestor de T.I. & SecOps",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Homologação DPO / Privacidade",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": [
+      {
+        "key": "obra",
+        "label": "Nome da Obra / Canteiro",
+        "placeholder": "Ex: Residencial Jardins da Costa"
+      }
+    ]
+  },
+  "MOD-OBR-05": {
+    "title": "Ata de Desmobilização Geral de TI, Recolhimento de Ativos e Encerramento de Canteiro",
+    "signers": [
+      {
+        "role": "Engenheiro(a) Residente (Entrega do Canteiro)",
+        "docLabel": "CREA-SE",
+        "placeholder": "Ex: Eng. Ricardo Lima"
+      },
+      {
+        "role": "Gestor de T.I. & SecOps (Recebimento e Sanitização)",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": [
+      {
+        "key": "obra",
+        "label": "Nome da Obra / Canteiro",
+        "placeholder": "Ex: Residencial Jardins da Costa"
+      }
+    ]
+  },
+  "MOD-USR-01": {
+    "title": "Termo de Responsabilidade, Confidencialidade (NDA) e Uso Aceitável de Ativos de TI",
+    "signers": [
+      {
+        "role": "Colaborador(a) Declarante e Custodiante",
+        "docLabel": "CPF",
+        "placeholder": "Ex: Nome Completo do Titular"
+      },
+      {
+        "role": "Gestor da Área / T.I. — AC Engenharia",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-USR-02": {
+    "title": "Formulário de Concessão, Revisão Trimestral e Revogação de Acessos (RBAC & SoD)",
+    "signers": [
+      {
+        "role": "Gestor Solicitante / Recursos Humanos",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      },
+      {
+        "role": "Administrador de Acessos (T.I. / SecOps)",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-USR-03": {
+    "title": "Termo de Desligamento (Offboarding), Devolução de Ativos e Revogação de Acessos",
+    "signers": [
+      {
+        "role": "Profissional Desligado (Entrega de Ativos e Ciência)",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Recursos Humanos — AC Engenharia",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      },
+      {
+        "role": "T.I. & SecOps (Confirmação de Bloqueio Lógico)",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-USR-04": {
+    "title": "Termo de Trabalho Remoto (Teletrabalho / Campo), VPN Obrigatória e Dispositivos Móveis",
+    "signers": [
+      {
+        "role": "Colaborador(a) Autorizado(a)",
+        "docLabel": "CPF",
+        "placeholder": "Ex: Nome Completo do Titular"
+      },
+      {
+        "role": "Gestor de T.I. & SecOps — AC Engenharia",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-GOV-01": {
+    "title": "Ata de Reunião e Análise Crítica do Comitê Gestor do SGSI e Privacidade",
+    "signers": [
+      {
+        "role": "Presidente do Comitê / Diretoria Executiva",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Encarregado(a) pelo Tratamento de Dados (DPO)",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      },
+      {
+        "role": "Gestor de T.I. & Operações SecOps",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Representante de Engenharia de Obras / RH & SST",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-GOV-02": {
+    "title": "Portaria Diretiva de Nomeação Oficial do(a) Encarregado(a) de Dados (DPO)",
+    "signers": [
+      {
+        "role": "Diretor-Presidente / Representante Legal — AC Engenharia",
+        "docLabel": "Diretoria Executiva",
+        "placeholder": "Ex: Eng. João da Silva"
+      },
+      {
+        "role": "Ciência e Aceite do(a) Encarregado(a) Nomeado(a) — DPO",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-GOV-03": {
+    "title": "Termo Individual de Ciência e Adesão à Política de Segurança da Informação (PSI)",
+    "signers": [
+      {
+        "role": "Colaborador(a) / Profissional Declarante",
+        "docLabel": "CPF",
+        "placeholder": "Ex: Nome Completo do Titular"
+      },
+      {
+        "role": "Conferência e Arquivamento — RH / Governança SGSI",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-GOV-04": {
+    "title": "Ata e Lista de Presença de Treinamento / DDS de Segurança da Informação e LGPD",
+    "signers": [
+      {
+        "role": "Instrutor(a) / Multiplicador SGSI & LGPD",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Coordenador(a) RH / Técnico de SST (NR-18)",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      }
+    ],
+    "fields": [
+      {
+        "key": "trainingTopic",
+        "label": "Tema do DDS / Treinamento",
+        "placeholder": "Ex: Conscientização em Segurança da Informação e LGPD"
+      },
+      {
+        "key": "trainingLocation",
+        "label": "Local / Canteiro",
+        "placeholder": "Ex: Matriz / Canteiro Obra Jardins"
+      }
+    ]
+  },
+  "MOD-GOV-05": {
+    "title": "Política Geral de Segurança da Informação e Privacidade da AC Engenharia (PSI-001)",
+    "signers": [
+      {
+        "role": "Aprovação Executiva — Diretoria C-Level",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Conformidade Legal & LGPD — Encarregado(a) DPO",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      },
+      {
+        "role": "Arquitetura & Segurança Cibernética — SecOps",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-GOV-06": {
+    "title": "Matriz RACI de Resposta a Incidentes de Dados Pessoais (LGPD / ANPD)",
+    "signers": [
+      {
+        "role": "Diretor Responsável (Accountable C-Level)",
+        "docLabel": "Diretoria Executiva",
+        "placeholder": "Ex: Eng. João da Silva"
+      },
+      {
+        "role": "DPO Provisório Designado",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      },
+      {
+        "role": "Responsável pela T.I. & Segurança",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Assessoria Jurídica",
+        "docLabel": "OAB-SE",
+        "placeholder": "Ex: Assessor(a) Jurídico(a)"
+      }
+    ],
+    "fields": [
+      {
+        "key": "incidentNumber",
+        "label": "Nº do Protocolo / Incidente",
+        "placeholder": "Ex: INC-2026-001"
+      }
+    ]
+  },
+  "MOD-GOV-07": {
+    "title": "Política e Norma de Controle de Acesso Lógico, Físico, Senhas e MFA (PCA-002)",
+    "signers": [
+      {
+        "role": "Gestor de T.I. & SecOps — AC Engenharia",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Encarregado(a) de Dados (DPO)",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      },
+      {
+        "role": "Aprovação Diretoria Executiva",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-GOV-08": {
+    "title": "Diretriz e Termo de Sigilo de Dados Médicos Ocupacionais, PCMSO e ASOs (PSST-005)",
+    "signers": [
+      {
+        "role": "Responsável RH / Segurança do Trabalho (SST — NR-18)",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      },
+      {
+        "role": "Médico(a) do Trabalho / Clínica Ocupacional Credenciada",
+        "docLabel": "CRM",
+        "placeholder": "Ex: Médico(a) do Trabalho SST"
+      },
+      {
+        "role": "Encarregado(a) pelo Tratamento de Dados (DPO)",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-GOV-09": {
+    "title": "Política e Diretriz de Mesa Limpa e Tela Limpa (PML-006) — Matriz e Estandes",
+    "signers": [
+      {
+        "role": "Encarregado(a) pelo Tratamento de Dados (DPO)",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      },
+      {
+        "role": "Gestor de Infraestrutura, Segurança da Informação & SecOps",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Gestor Comercial & Estandes de Vendas",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-SEC-01": {
+    "title": "Laudo Técnico de Teste de Restauração de Backup Imutável (Sienge / BIM / S3)",
+    "signers": [
+      {
+        "role": "Executor Técnico — T.I. / SecOps AC Engenharia",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Validador Funcional / Governança DPO",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-SEC-02": {
+    "title": "Ata Pós-Incidente Cibernético (CSIRT) e Relatório de Lições Aprendidas",
+    "signers": [
+      {
+        "role": "Líder de Resposta a Incidentes (CSIRT / SecOps)",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Parecer Jurídico-Regulatório (DPO)",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      },
+      {
+        "role": "Ciência da Diretoria Executiva — AC Engenharia",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": [
+      {
+        "key": "incidentNumber",
+        "label": "Nº do Protocolo / Incidente",
+        "placeholder": "Ex: INC-2026-001"
+      }
+    ]
+  },
+  "MOD-SEC-03": {
+    "title": "Comunicação Oficial de Incidente de Segurança à ANPD e aos Titulares (3 Dias Úteis)",
+    "signers": [
+      {
+        "role": "Encarregado(a) pelo Tratamento de Dados (DPO)",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      },
+      {
+        "role": "Diretor Executivo / Representante Legal — AC Engenharia",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-SEC-04": {
+    "title": "Laudo de Homologação de Hardening, BitLocker e Bloqueio USB (GPO) em Estações",
+    "signers": [
+      {
+        "role": "Analista de Infraestrutura / Executor do Hardening",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      },
+      {
+        "role": "Gestor de T.I. & SecOps (Revisão Técnica)",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-SEC-05": {
+    "title": "Plano de Continuidade de Negócios e Recuperação de Desastres de TIC (PCN / DRP)",
+    "signers": [
+      {
+        "role": "Gestor de T.I. & SecOps (Líder DRP)",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Diretoria Executiva — AC Engenharia",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-SEC-06": {
+    "title": "Relatório de Gestão de Vulnerabilidades (CVE), Patch Management e Revisão de Firewall/VLANs",
+    "signers": [
+      {
+        "role": "Gestor de T.I. & SecOps — AC Engenharia",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Auditoria Interna / Conformidade",
+        "docLabel": "Certificação / Registro",
+        "placeholder": "Ex: Auditor(a) Independente ISO 27001"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-SEC-07": {
+    "title": "Requisição e Homologação de Mudança Crítica em Infraestrutura e Sistemas (GMUD)",
+    "signers": [
+      {
+        "role": "Solicitante / Executor Técnico",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      },
+      {
+        "role": "Aprovação de Mudança — Gestor SecOps AC Engenharia",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": [
+      {
+        "key": "changeTitle",
+        "label": "Objeto da Mudança (GMUD)",
+        "placeholder": "Ex: Upgrade do Firewall Fortigate e VLAN de Canteiro"
+      }
+    ]
+  },
+  "MOD-SUP-01": {
+    "title": "Laudo de Due Diligence, Homologação e Gestão de Riscos de Fornecedores de TIC e Nuvem (QDD-007)",
+    "signers": [
+      {
+        "role": "Gestão de Suprimentos & Homologação de Terceiros",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      },
+      {
+        "role": "Gestor de Infraestrutura, Segurança da Informação & SecOps",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Encarregado(a) pelo Tratamento de Dados (DPO)",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": [
+      {
+        "key": "providerName",
+        "label": "Razão Social do Fornecedor / Terceiro",
+        "placeholder": "Ex: Cloud Hosting Brasil Ltda"
+      },
+      {
+        "key": "providerCnpj",
+        "label": "CNPJ do Fornecedor",
+        "placeholder": "00.000.000/0001-00"
+      },
+      {
+        "key": "service",
+        "label": "Serviço Prestado / Categoria TIC",
+        "placeholder": "Ex: ERP em Nuvem / Link de Internet Dedicado"
+      }
+    ]
+  },
+  "MOD-API-01": {
+    "title": "Termo de Homologação Técnica, Sigilo e Custódia de Credenciais de APIs e Webhooks",
+    "signers": [
+      {
+        "role": "Arquitetura & Segurança de Integrações (SecOps)",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Responsável pelo Sistema / Fornecedor Integrado",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-API-02": {
+    "title": "Ata de Auditoria Trimestral de Rotação de Chaves de API, Certificados TLS/mTLS e Conectores",
+    "signers": [
+      {
+        "role": "Gestor de T.I. & SecOps — AC Engenharia",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Auditoria de Conformidade — DPO",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-RSK-01": {
+    "title": "Termo Executivo de Aceite Formal de Risco Residual e Plano de Tratamento",
+    "signers": [
+      {
+        "role": "Aprovação Executiva — Diretoria C-Level (Accountable)",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Custodiante Responsável pelo Tratamento",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      },
+      {
+        "role": "Parecer de Conformidade — Encarregado(a) DPO / SecOps",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": [
+      {
+        "key": "riskTitle",
+        "label": "Descrição Resumida do Risco Aceito",
+        "placeholder": "Ex: Risco de indisponibilidade temporária de link em canteiro"
+      },
+      {
+        "key": "riskScore",
+        "label": "Classificação do Risco Residual",
+        "placeholder": "Ex: Moderado / Aceito pelo C-Level"
+      }
+    ]
+  },
+  "MOD-RSK-02": {
+    "title": "Declaração de Aplicabilidade Oficial (SoA — Anexo A ISO/IEC 27001:2022) Homologada",
+    "signers": [
+      {
+        "role": "Diretoria Executiva — AC Engenharia (Aprovação SoA)",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Gestor de T.I. & SecOps (Responsável Técnico)",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Encarregado(a) de Proteção de Dados (DPO)",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-LGP-01": {
+    "title": "Acordo de Processamento e Proteção de Dados Pessoais — Aditivo DPA (Empreiteiras e Fornecedores)",
+    "signers": [
+      {
+        "role": "Pela CONTROLADORA — AC Engenharia",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      },
+      {
+        "role": "Pela OPERADORA CONTRATADA — Representante Legal",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      },
+      {
+        "role": "Visto Jurídico / Encarregado(a) de Dados (DPO)",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": [
+      {
+        "key": "operatorName",
+        "label": "Razão Social da Operadora / Terceirizada",
+        "placeholder": "Ex: Empreiteira Alpha Construções Ltda"
+      },
+      {
+        "key": "operatorCnpj",
+        "label": "CNPJ da Contratada",
+        "placeholder": "00.000.000/0001-00"
+      },
+      {
+        "key": "service",
+        "label": "Objeto do Tratamento de Dados",
+        "placeholder": "Ex: Controle de acesso físico e registro de ponto em obra"
+      }
+    ]
+  },
+  "MOD-LGP-02": {
+    "title": "Termo Aditivo de Confidencialidade e Não Repasse de Leads Imobiliários (PCOM-003)",
+    "signers": [
+      {
+        "role": "Controladora — AC Engenharia",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      },
+      {
+        "role": "Imobiliária Parceira / Corretor(a) Credenciado(a)",
+        "docLabel": "CRECI-SE / CPF",
+        "placeholder": "Ex: Corretor(a) Credenciado(a)"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-LGP-03": {
+    "title": "Certidão e Resposta Oficial de Atendimento aos Direitos do Titular — DSAR (Prazo 15 Dias)",
+    "signers": [
+      {
+        "role": "Encarregado(a) pelo Tratamento de Dados Pessoais (DPO) — AC Engenharia",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": [
+      {
+        "key": "holder",
+        "label": "Nome do Titular Solicitante",
+        "placeholder": "Ex: Carlos Silva"
+      },
+      {
+        "key": "type",
+        "label": "Direito Solicitado (Art. 18 LGPD)",
+        "placeholder": "Ex: Confirmação de Tratamento e Acesso aos Dados"
+      }
+    ]
+  },
+  "MOD-LGP-04": {
+    "title": "Relatório de Impacto à Proteção de Dados Pessoais (RIPD / DPIA — Art. 38 da LGPD)",
+    "signers": [
+      {
+        "role": "Elaboração e Parecer — Encarregado(a) de Dados (DPO)",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      },
+      {
+        "role": "Validação de Controles Técnicos — Gestor SecOps",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Aprovação do Controlador — Diretoria AC Engenharia",
+        "docLabel": "Diretoria Executiva",
+        "placeholder": "Ex: Eng. João da Silva"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-LGP-05": {
+    "title": "Termo de Consentimento Livre e Esclarecido para Atendimento em Estande e Simulação de Crédito",
+    "signers": [
+      {
+        "role": "Titular dos Dados / Cliente Visitante",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Corretor(a) / Atendimento Comercial — AC Engenharia",
+        "docLabel": "CRECI-SE / CPF",
+        "placeholder": "Ex: Corretor(a) Credenciado(a)"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-AUD-01": {
+    "title": "Ata e Relatório de Auditoria Interna de Conformidade SGSI (ISO 27001:2022 & LGPD)",
+    "signers": [
+      {
+        "role": "Auditor(a) Líder Independente — ISO/IEC 27001",
+        "docLabel": "Certificação / Registro",
+        "placeholder": "Ex: Auditor(a) Independente ISO 27001"
+      },
+      {
+        "role": "Ciência dos Auditados — DPO / Diretoria AC Engenharia",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-AUD-02": {
+    "title": "Termo de Cadeia de Custódia e Preservação de Evidência Digital Forense",
+    "signers": [
+      {
+        "role": "Responsável pela Coleta e Geração do Hash",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      },
+      {
+        "role": "Custodiante Receptor / Homologação Forense",
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome do Responsável"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-AUD-03": {
+    "title": "Relatório de Não Conformidade (RNC), Análise de Causa Raiz e Ação Corretiva",
+    "signers": [
+      {
+        "role": "Gestor Responsável pela Ação Corretiva",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Verificação de Eficácia — Auditoria / DPO AC Engenharia",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": []
+  },
+  "MOD-AUD-04": {
+    "title": "Certificado de Integridade Criptográfica da Trilha Forense (Merkle Hash Chain SHA-256)",
+    "signers": [
+      {
+        "role": "Custodiante Criptográfico — T.I. & SecOps",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Homologação Pericial — DPO / Auditoria AC Engenharia",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": []
+  }
+};
+
 function escapeDocHtml(val) {
   return String(val == null ? "" : val)
     .replace(/&/g, "&amp;")
@@ -103,9 +975,21 @@ function escapeDocHtml(val) {
 function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = null) {
   const allSigs = getStoredTemplateSignatures();
   const docSigs = (docCode && Array.isArray(allSigs[docCode])) ? allSigs[docCode] : [];
+  const customData = docCode ? getStoredDocumentCustomData(docCode) : { signers: [] };
+  const customSigners = Array.isArray(customData.signers) ? customData.signers : [];
 
   const cards = signers.map((s, idx) => {
     const appliedSig = docSigs[idx] || null;
+    const override = customSigners[idx] || {};
+
+    const effectiveRole = (override.role && override.role.trim()) ? override.role.trim() : s.role;
+    const effectiveName = (override.name !== undefined && override.name !== null && override.name.trim() !== "")
+      ? override.name.trim()
+      : (s.name || "");
+    const effectiveDocLabel = (override.docLabel !== undefined && override.docLabel !== null && override.docLabel.trim() !== "")
+      ? override.docLabel.trim()
+      : (s.docLabel || "___________________________");
+
     if (appliedSig) {
       return `
         <div class="sig-box sig-box-signed">
@@ -114,7 +998,7 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
             <span class="sig-crypto-pill">SHA-256</span>
           </div>
           <div class="sig-cursive">${escapeDocHtml(appliedSig.signerName)}</div>
-          <div class="sig-role">${escapeDocHtml(s.role)}</div>
+          <div class="sig-role">${escapeDocHtml(effectiveRole)}</div>
           <div class="sig-meta"><strong>Signatário:</strong> ${escapeDocHtml(appliedSig.signerName)} (${escapeDocHtml(appliedSig.signerDoc || "Verificado via RBAC")})</div>
           <div class="sig-meta"><strong>Modalidade:</strong> ${escapeDocHtml(appliedSig.method || "Assinatura Eletrônica SGSI / ICP-Brasil")}</div>
           <div class="sig-meta"><strong>Carimbo de Tempo:</strong> ${escapeDocHtml(appliedSig.timestamp)} &bull; <strong>IP:</strong> ${escapeDocHtml(appliedSig.ip || "127.0.0.1")}</div>
@@ -123,14 +1007,14 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
       `;
     }
 
-    const hasExplicitName = Boolean(s.name && s.name.trim() && !s.name.startsWith("[") && !s.name.includes("_____"));
-    const displayName = hasExplicitName ? escapeDocHtml(s.name) : "[ Preencher Nome Completo / Assinatura ]";
+    const hasExplicitName = Boolean(effectiveName && !effectiveName.startsWith("[") && !effectiveName.includes("_____"));
+    const displayName = hasExplicitName ? escapeDocHtml(effectiveName) : "[ Preencher Nome Completo / Assinatura ]";
     const nameColor = hasExplicitName ? "#0b1a30" : "#64748b";
 
     return `
       <div class="sig-box">
         <div class="sig-line"></div>
-        <div class="sig-role">${escapeDocHtml(s.role)}</div>
+        <div class="sig-role">${escapeDocHtml(effectiveRole)}</div>
         <div class="sig-name">
           <strong>Nome Legível:</strong> 
           <span class="sig-editable-slot" style="color: ${nameColor}; border-bottom: 1px dashed #94a3b8; display: inline-block; min-width: 210px; font-weight: ${hasExplicitName ? '700' : 'normal'};">
@@ -138,12 +1022,12 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
           </span>
         </div>
         <div class="sig-meta">
-          <strong>Cargo / Setor:</strong> ${escapeDocHtml(s.role)}
+          <strong>Cargo / Setor:</strong> ${escapeDocHtml(effectiveRole)}
         </div>
         <div class="sig-meta">
           <strong>CPF / CREA / OAB:</strong> 
-          <span style="color: #64748b; border-bottom: 1px dashed #cbd5e1; display: inline-block; min-width: 140px;">
-            ${escapeDocHtml(s.docLabel || "___________________________")}
+          <span style="color: ${hasExplicitName ? '#0b1a30' : '#64748b'}; border-bottom: 1px dashed #cbd5e1; display: inline-block; min-width: 140px;">
+            ${escapeDocHtml(effectiveDocLabel)}
           </span>
         </div>
         <div class="sig-meta" style="margin-top: 6px; font-size: 7.5pt; color: #64748b; border-top: 1px dotted #e2e8f0; padding-top: 4px;">
@@ -2906,10 +3790,36 @@ function getTemplateByCode(code) {
 function buildRenderedTemplateHTML(code, customData = {}, options = {}) {
   const tpl = getTemplateByCode(code);
   if (!tpl) return "";
-  const ctx = getTemplateContextDefaults();
-  const bodyHtml = tpl.buildBody(ctx, customData);
+  const ctx = Object.assign({}, getTemplateContextDefaults());
+  const storedDoc = getStoredDocumentCustomData(code);
+  const mergedCustom = Object.assign({}, storedDoc.fields || {}, customData || {});
+
+  // Aplica signatários customizados salvos especificamente neste documento no contexto ctx
+  if (Array.isArray(storedDoc.signers)) {
+    storedDoc.signers.forEach((s) => {
+      if (s && s.name && s.name.trim()) {
+        const lowerRole = (s.role || "").toLowerCase();
+        if (lowerRole.includes("diretor") || lowerRole.includes("controlador") || lowerRole.includes("c-level")) {
+          ctx.directorName = s.name.trim();
+          mergedCustom.directorName = s.name.trim();
+        } else if (lowerRole.includes("dpo") || lowerRole.includes("encarregado")) {
+          ctx.dpoName = s.name.trim();
+          mergedCustom.dpoName = s.name.trim();
+        } else if (lowerRole.includes("secops") || lowerRole.includes("t.i.") || lowerRole.includes("ti")) {
+          ctx.secopsName = s.name.trim();
+          mergedCustom.secopsName = s.name.trim();
+        } else if (lowerRole.includes("engenheiro") || lowerRole.includes("obra")) {
+          ctx.obraManagerName = s.name.trim();
+          mergedCustom.engineer = s.name.trim();
+        }
+      }
+    });
+  }
+
+  const activeObra = mergedCustom.obra || mergedCustom.obra_local;
+  const bodyHtml = tpl.buildBody(ctx, mergedCustom);
   return buildCorporateDocumentHTML(tpl, bodyHtml, {
-    unit: customData.obra_local || customData.obra || ctx.activeUnit,
+    unit: activeObra || ctx.activeUnit,
     forWord: Boolean(options.forWord)
   });
 }
@@ -3043,9 +3953,14 @@ function renderDocumentTemplatesGrid() {
     <div class="card-white rounded-lg p-4 border border-slate-200 hover:border-[#004b93]/60 transition-all flex flex-col justify-between gap-3 shadow-2xs">
       <div class="space-y-2">
         <div class="flex items-center justify-between gap-2 flex-wrap">
-          <div class="flex items-center gap-1.5">
+          <div class="flex items-center gap-1.5 flex-wrap">
             <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#0f2942] text-white">${escapeDocHtml(t.code)}</span>
             <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-[#004b93] border border-blue-200">${escapeDocHtml(TEMPLATE_MODULE_LABELS[t.module] || t.module)}</span>
+            ${(() => {
+              const cData = getStoredDocumentCustomData(t.code);
+              const isCust = (cData.signers && cData.signers.some(s => s.name && s.name.trim())) || (cData.fields && Object.values(cData.fields).some(v => v && v.trim()));
+              return isCust ? '<span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">✓ Personalizado</span>' : '';
+            })()}
           </div>
           ${sigBadge}
         </div>
@@ -3064,6 +3979,10 @@ function renderDocumentTemplatesGrid() {
           <button type="button" onclick="previewCorporateTemplate('${t.code}')" class="px-2.5 py-1.5 rounded bg-[#0f2942] hover:bg-[#163a5c] text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors" title="Visualizar documento formatado A4 e Imprimir / Salvar como PDF">
             <i data-lucide="printer" class="w-3.5 h-3.5"></i>
             <span>Ver / PDF</span>
+          </button>
+          <button type="button" onclick="openDocumentSignersModal('${t.code}')" class="px-2 py-1.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors" title="Preencher ou personalizar signatários e campos exclusivos deste modelo">
+            <i data-lucide="sliders" class="w-3.5 h-3.5 text-slate-600"></i>
+            <span>Campos</span>
           </button>
           <button type="button" onclick="openDigitalSignatureModal('${t.code}')" class="px-2.5 py-1.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors" title="Assinar eletronicamente este documento com Hash SHA-256">
             <i data-lucide="pen-tool" class="w-3.5 h-3.5 text-amber-700"></i>
@@ -3239,98 +4158,169 @@ function attachPreviewedAsEvidence() {
   if (code) attachSignedTemplateAsEvidence(code);
 }
 
-function openCorporateSignersModal() {
-  let modal = document.getElementById("modal-corporate-signers");
+function openDocumentSignersModal(docCode = null) {
+  const targetCode = docCode || TemplateHubState.previewingCode || "MOD-OBR-01";
+  const tpl = getTemplateByCode(targetCode);
+  if (!tpl) return;
+
+  const schema = (DOCUMENT_CUSTOM_FIELDS_SCHEMA && DOCUMENT_CUSTOM_FIELDS_SCHEMA[targetCode])
+    ? DOCUMENT_CUSTOM_FIELDS_SCHEMA[targetCode]
+    : { title: tpl.title, signers: [{ role: "Responsável pelo Documento", docLabel: "CPF / Registro", placeholder: "Ex: Nome Completo" }], fields: [] };
+
+  const savedData = getStoredDocumentCustomData(targetCode);
+  const savedSigners = Array.isArray(savedData.signers) ? savedData.signers : [];
+  const savedFields = (savedData.fields && typeof savedData.fields === "object") ? savedData.fields : {};
+
+  let modal = document.getElementById("modal-document-custom-fields");
   if (!modal) {
     modal = document.createElement("div");
-    modal.id = "modal-corporate-signers";
-    modal.className = "fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-[70] flex items-center justify-center p-4 hidden";
-    modal.innerHTML = `
-      <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
-        <div class="p-4 bg-[#0b1a30] text-white flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <i data-lucide="users" class="w-4 h-4 text-amber-300"></i>
-            <div>
-              <h3 class="text-sm font-bold">Definir Responsáveis e Signatários — AC Engenharia</h3>
-              <p class="text-[11px] text-slate-300">Preencha os nomes corporativos para aplicar automaticamente em todos os 40 modelos</p>
-            </div>
-          </div>
-          <button type="button" onclick="closeModal('modal-corporate-signers')" class="text-slate-300 hover:text-white cursor-pointer">
-            <i data-lucide="x" class="w-4 h-4"></i>
-          </button>
-        </div>
-        <form onsubmit="handleSaveCorporateSigners(event)" class="p-5 space-y-3 text-xs max-h-[75vh] overflow-y-auto">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Diretoria Executiva / Representante Legal (C-Level)</label>
-            <input type="text" id="signer-input-director" placeholder="Ex: Eng. João da Silva — Diretor Executivo" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-[#004b93]" />
-            <p class="text-[10px] text-slate-500 mt-0.5">Assina aceites de risco residual, atas de comitê de segurança e políticas da empresa.</p>
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Encarregado(a) de Dados (DPO Titular)</label>
-            <input type="text" id="signer-input-dpo" placeholder="Ex: Dra. Mariana Costa (OAB/SE 12345 • DPO)" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-[#004b93]" />
-            <p class="text-[10px] text-slate-500 mt-0.5">Assina laudos de privacidade, DPAs, notificações ANPD e portarias de nomeação.</p>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">E-mail Oficial do DPO / Canal Titular</label>
-              <input type="email" id="signer-input-dpo-email" placeholder="dpo@acengenhariase.com.br" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-[#004b93]" />
-            </div>
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">CNPJ da Empresa</label>
-              <input type="text" id="signer-input-cnpj" placeholder="12.345.678/0001-90" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-[#004b93]" />
-            </div>
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Gestor(a) de T.I. &amp; SecOps</label>
-            <input type="text" id="signer-input-secops" placeholder="Ex: Carlos Santos — Gestor de T.I. &amp; SecOps" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-[#004b93]" />
-            <p class="text-[10px] text-slate-500 mt-0.5">Assina laudos de restore de backup, hardening de rede/servidores e custódia de credenciais.</p>
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Engenheiro(a) Residente / Gestor de Obras</label>
-            <input type="text" id="signer-input-engineer" placeholder="Ex: Eng. Ricardo Lima — CREA/SE 98765" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:border-[#004b93]" />
-            <p class="text-[10px] text-slate-500 mt-0.5">Assina checklists de canteiro NR-18, termos de desmobilização e entrega de ativos.</p>
-          </div>
-          <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 space-y-1 text-[11px]">
-            <div class="font-bold flex items-center gap-1.5">
-              <i data-lucide="info" class="w-4 h-4 text-[#004b93]"></i>
-              <span>Flexibilidade Total: Físico, Editável ou Automatizado</span>
-            </div>
-            <p>Se deixar estes campos vazios, todos os 40 documentos mantêm espaços sublinhados abertos <code>[ Preencher Nome ... ]</code> para preenchimento manual por caneta ou digitação sob demanda no Word e na tela.</p>
-          </div>
-          <div class="pt-2 flex items-center justify-between gap-2 border-t border-slate-100 flex-wrap">
-            <button type="button" onclick="clearCorporateSigners()" class="px-3 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold cursor-pointer text-xs">
-              Deixar em Branco (Espaço Aberto)
-            </button>
-            <div class="flex items-center gap-2">
-              <button type="button" onclick="closeModal('modal-corporate-signers')" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer text-xs">
-                Cancelar
-              </button>
-              <button type="submit" class="px-4 py-2 rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white font-bold flex items-center gap-1.5 shadow-xs cursor-pointer text-xs">
-                <i data-lucide="save" class="w-4 h-4"></i>
-                <span>Salvar nos 40 Modelos</span>
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    `;
+    modal.id = "modal-document-custom-fields";
+    modal.className = "fixed inset-0 bg-slate-900/80 backdrop-blur-xs z-[75] flex items-center justify-center p-3 sm:p-5 hidden";
     document.body.appendChild(modal);
   }
 
-  const stored = getStoredCorporateSigners();
-  const dirEl = document.getElementById("signer-input-director");
-  const dpoEl = document.getElementById("signer-input-dpo");
-  const emailEl = document.getElementById("signer-input-dpo-email");
-  const cnpjEl = document.getElementById("signer-input-cnpj");
-  const secEl = document.getElementById("signer-input-secops");
-  const engEl = document.getElementById("signer-input-engineer");
+  // Seletor dinâmico com todos os 40 modelos
+  const modelOptionsHtml = CORPORATE_DOCUMENT_TEMPLATES.map(t => `
+    <option value="${t.code}" ${t.code === targetCode ? "selected" : ""}>${escapeDocHtml(t.code)} — ${escapeDocHtml(t.title)}</option>
+  `).join("");
 
-  if (dirEl) dirEl.value = stored.directorName || "";
-  if (dpoEl) dpoEl.value = stored.dpoName || "";
-  if (emailEl) emailEl.value = stored.dpoEmail || "";
-  if (cnpjEl) cnpjEl.value = stored.cnpj || "";
-  if (secEl) secEl.value = stored.secopsName || "";
-  if (engEl) engEl.value = stored.obraManagerName || "";
+  // Constrói campos de signatários específicos deste documento
+  const signersHtml = schema.signers.map((s, idx) => {
+    const curVal = savedSigners[idx] || {};
+    const nameVal = curVal.name || "";
+    const roleVal = curVal.role || s.role;
+    const docVal = curVal.docLabel !== undefined ? curVal.docLabel : (s.docLabel || "");
+
+    return `
+      <div class="bg-slate-50/90 rounded-xl p-3.5 border border-slate-200 shadow-2xs space-y-2.5">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0f2942] text-white">Signatário ${idx + 1}</span>
+            <span class="text-xs font-bold text-slate-800">${escapeDocHtml(s.role)}</span>
+          </div>
+          <span class="text-[10px] text-slate-500 font-mono">${escapeDocHtml(s.docLabel || "Documento")}</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+          <div class="sm:col-span-5">
+            <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Nome Completo do Signatário</label>
+            <input type="text" id="doc-custom-signer-name-${idx}" value="${escapeDocHtml(nameVal)}" placeholder="${escapeDocHtml(s.placeholder || 'Ex: Nome Completo')}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+          </div>
+          <div class="sm:col-span-4">
+            <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Cargo / Função no Documento</label>
+            <input type="text" id="doc-custom-signer-role-${idx}" value="${escapeDocHtml(roleVal)}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+          </div>
+          <div class="sm:col-span-3">
+            <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Registro / CPF / CREA</label>
+            <input type="text" id="doc-custom-signer-doc-${idx}" value="${escapeDocHtml(docVal)}" placeholder="${escapeDocHtml(s.docLabel || 'CPF/CREA')}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // Constrói campos de metadados específicos se existirem
+  let fieldsHtml = "";
+  if (Array.isArray(schema.fields) && schema.fields.length > 0) {
+    const fieldsInputs = schema.fields.map(f => {
+      const val = savedFields[f.key] || "";
+      return `
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">${escapeDocHtml(f.label)}</label>
+          <input type="text" id="doc-custom-field-${f.key}" value="${escapeDocHtml(val)}" placeholder="${escapeDocHtml(f.placeholder || '')}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+        </div>
+      `;
+    }).join("");
+
+    fieldsHtml = `
+      <div class="space-y-2 pt-2 border-t border-slate-200">
+        <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+          <i data-lucide="sliders" class="w-3.5 h-3.5 text-[#004b93]"></i>
+          <span>Campos &amp; Metadados Específicos deste Modelo</span>
+        </h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50/70 p-3 rounded-xl border border-slate-200">
+          ${fieldsInputs}
+        </div>
+      </div>
+    `;
+  }
+
+  modal.innerHTML = `
+    <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <!-- Cabeçalho Corporativo -->
+      <div class="p-4 bg-[#0b1a30] text-white flex items-center justify-between shrink-0 border-b border-slate-800">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
+            <i data-lucide="file-signature" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-emerald-600/30 text-emerald-300 border border-emerald-400/40">${escapeDocHtml(targetCode)}</span>
+              <h3 class="text-xs sm:text-sm font-bold truncate">Preencher Campos &amp; Signatários</h3>
+            </div>
+            <p class="text-[11px] text-slate-300 truncate mt-0.5">${escapeDocHtml(tpl.title)}</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('modal-document-custom-fields')" class="text-slate-300 hover:text-white cursor-pointer shrink-0 p-1.5 hover:bg-white/10 rounded-lg transition-colors" title="Fechar (ESC)">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Formulário com Rolagem -->
+      <form onsubmit="handleSaveDocumentCustomData(event, '${escapeDocHtml(targetCode)}')" class="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1 text-xs">
+        <!-- Seletor de Modelo e Aviso de Isolamento -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <label class="font-bold text-slate-700 text-xs">Modelo Selecionado:</label>
+            <select onchange="openDocumentSignersModal(this.value)" class="text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-slate-800 focus:outline-none focus:border-[#004b93]">
+              ${modelOptionsHtml}
+            </select>
+          </div>
+
+          <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs flex items-start gap-2.5">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"></i>
+            <div class="space-y-0.5">
+              <strong class="font-bold text-emerald-900">Isolamento Exclusivo por Documento:</strong>
+              <p class="text-[11px] text-emerald-800 leading-snug">Ao salvar, os dados serão gravados <strong>exclusivamente no modelo ${escapeDocHtml(targetCode)}</strong>. Nenhum outro modelo do catálogo será alterado. Se preferir manter espaços em branco para assinatura manual com caneta ou digitação sob demanda, clique em <em>Deixar em Branco</em>.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seção: Signatários -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <i data-lucide="users" class="w-3.5 h-3.5 text-[#004b93]"></i>
+              <span>Quadro de Signatários Oficiais de ${escapeDocHtml(targetCode)}</span>
+            </h4>
+            <span class="text-[10px] text-slate-500">${schema.signers.length} Signatário(s) Previsto(s)</span>
+          </div>
+          <div class="space-y-2">
+            ${signersHtml}
+          </div>
+        </div>
+
+        <!-- Seção: Campos Específicos -->
+        ${fieldsHtml}
+
+        <!-- Botões de Ação -->
+        <div class="pt-3 border-t border-slate-200 flex items-center justify-between gap-2 flex-wrap">
+          <button type="button" onclick="clearDocumentCustomData('${escapeDocHtml(targetCode)}')" class="px-3 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold cursor-pointer text-xs flex items-center gap-1.5 transition-colors">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>Deixar em Branco (Espaços Abertos)</span>
+          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="closeModal('modal-document-custom-fields')" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer text-xs transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-1.5 shadow-xs cursor-pointer text-xs transition-colors">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>Salvar apenas em ${escapeDocHtml(targetCode)}</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  `;
 
   modal.classList.remove("hidden");
   if (window.lucide && typeof window.lucide.createIcons === "function") {
@@ -3338,50 +4328,94 @@ function openCorporateSignersModal() {
   }
 }
 
-function handleSaveCorporateSigners(e) {
-  e.preventDefault();
-  const dirEl = document.getElementById("signer-input-director");
-  const dpoEl = document.getElementById("signer-input-dpo");
-  const emailEl = document.getElementById("signer-input-dpo-email");
-  const cnpjEl = document.getElementById("signer-input-cnpj");
-  const secEl = document.getElementById("signer-input-secops");
-  const engEl = document.getElementById("signer-input-engineer");
+function handleSaveDocumentCustomData(e, docCode) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (!docCode) return;
 
-  const data = {
-    directorName: dirEl ? dirEl.value.trim() : "",
-    dpoName: dpoEl ? dpoEl.value.trim() : "",
-    dpoEmail: emailEl ? emailEl.value.trim() : "",
-    cnpj: cnpjEl ? cnpjEl.value.trim() : "",
-    secopsName: secEl ? secEl.value.trim() : "",
-    obraManagerName: engEl ? engEl.value.trim() : ""
+  const schema = (DOCUMENT_CUSTOM_FIELDS_SCHEMA && DOCUMENT_CUSTOM_FIELDS_SCHEMA[docCode])
+    ? DOCUMENT_CUSTOM_FIELDS_SCHEMA[docCode]
+    : { signers: [], fields: [] };
+
+  const signers = [];
+  schema.signers.forEach((s, idx) => {
+    const nameEl = document.getElementById(`doc-custom-signer-name-${idx}`);
+    const roleEl = document.getElementById(`doc-custom-signer-role-${idx}`);
+    const docEl = document.getElementById(`doc-custom-signer-doc-${idx}`);
+
+    signers.push({
+      name: nameEl ? nameEl.value.trim() : "",
+      role: roleEl ? roleEl.value.trim() : s.role,
+      docLabel: docEl ? docEl.value.trim() : s.docLabel
+    });
+  });
+
+  const fields = {};
+  if (Array.isArray(schema.fields)) {
+    schema.fields.forEach(f => {
+      const fieldEl = document.getElementById(`doc-custom-field-${f.key}`);
+      if (fieldEl) {
+        fields[f.key] = fieldEl.value.trim();
+      }
+    });
+  }
+
+  const customDocData = {
+    docCode,
+    signers,
+    fields,
+    updatedAt: new Date().toISOString()
   };
 
-  saveStoredCorporateSigners(data);
-  if (typeof closeModal === "function") closeModal("modal-corporate-signers");
+  saveStoredDocumentCustomData(docCode, customDocData);
 
-  if (TemplateHubState.previewingCode) {
-    previewCorporateTemplate(TemplateHubState.previewingCode, TemplateHubState.previewingCustomData || {});
+  if (typeof closeModal === "function") {
+    closeModal("modal-document-custom-fields");
   }
+
+  // Se este documento estiver sendo visualizado no iframe, re-renderiza imediatamente com as novas informações!
+  if (TemplateHubState.previewingCode === docCode) {
+    previewCorporateTemplate(docCode, TemplateHubState.previewingCustomData || {});
+  }
+
   renderDocumentTemplatesGrid();
 
   if (window.showToast) {
-    window.showToast("Responsáveis corporativos salvos com sucesso nos 40 modelos!", "success");
+    window.showToast(`Campos e signatários salvos com sucesso EXCLUSIVAMENTE no documento ${docCode}!`, "success");
   }
+}
+
+function clearDocumentCustomData(docCode) {
+  if (!docCode) return;
+  clearStoredDocumentCustomData(docCode);
+
+  if (typeof closeModal === "function") {
+    closeModal("modal-document-custom-fields");
+  }
+
+  if (TemplateHubState.previewingCode === docCode) {
+    previewCorporateTemplate(docCode, TemplateHubState.previewingCustomData || {});
+  }
+
+  renderDocumentTemplatesGrid();
+
+  if (window.showToast) {
+    window.showToast(`Documento ${docCode} restaurado para o padrão original (espaços em branco).`, "info");
+  }
+}
+
+// Compatibilidade retroativa para chamadas antigas
+function openCorporateSignersModal(docCode = null) {
+  openDocumentSignersModal(docCode || TemplateHubState.previewingCode || "MOD-OBR-01");
+}
+
+function handleSaveCorporateSigners(e) {
+  handleSaveDocumentCustomData(e, TemplateHubState.previewingCode || "MOD-OBR-01");
 }
 
 function clearCorporateSigners() {
-  saveStoredCorporateSigners({});
-  if (typeof closeModal === "function") closeModal("modal-corporate-signers");
-  if (TemplateHubState.previewingCode) {
-    previewCorporateTemplate(TemplateHubState.previewingCode, TemplateHubState.previewingCustomData || {});
-  }
-  renderDocumentTemplatesGrid();
-  if (window.showToast) {
-    window.showToast("Responsáveis removidos: todos os modelos agora exibem espaços abertos para edição futura.", "info");
-  }
+  clearDocumentCustomData(TemplateHubState.previewingCode || "MOD-OBR-01");
 }
 
-// ============================================================================
 // MOTOR DE ASSINATURA ELETRÔNICA E CARIMBO CRIPTOGRÁFICO SHA-256
 // ============================================================================
 
@@ -3747,6 +4781,14 @@ window.generateOperatorDpaDocument = generateOperatorDpaDocument;
 window.generateDsarCertificateDocument = generateDsarCertificateDocument;
 window.generateOffcanvasEntityDocument = generateOffcanvasEntityDocument;
 window.toggleDocEditMode = toggleDocEditMode;
+window.buildRenderedTemplateHTML = buildRenderedTemplateHTML;
+window.openDocumentSignersModal = openDocumentSignersModal;
+window.handleSaveDocumentCustomData = handleSaveDocumentCustomData;
+window.clearDocumentCustomData = clearDocumentCustomData;
+window.getStoredDocumentCustomData = getStoredDocumentCustomData;
+window.saveStoredDocumentCustomData = saveStoredDocumentCustomData;
+window.clearStoredDocumentCustomData = clearStoredDocumentCustomData;
+window.DOCUMENT_CUSTOM_FIELDS_SCHEMA = DOCUMENT_CUSTOM_FIELDS_SCHEMA;
 window.openCorporateSignersModal = openCorporateSignersModal;
 window.handleSaveCorporateSigners = handleSaveCorporateSigners;
 window.clearCorporateSigners = clearCorporateSigners;
