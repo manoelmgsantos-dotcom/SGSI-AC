@@ -961,6 +961,90 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
       }
     ],
     "fields": []
+  },
+  "MOD-SEC-08": {
+    "title": "Relatório Técnico de Investigação de Login Suspeito e Tentativa de Invasão",
+    "signers": [
+      {
+        "role": "Analista Técnico de T.I. / CSIRT Investigador",
+        "docLabel": "CPF / Registro Técnico",
+        "placeholder": "Ex: Analista Investigador de T.I."
+      },
+      {
+        "role": "Gestor Executivo de T.I. & SecOps",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Encarregado(a) de Dados (DPO) — Parecer Regulatório",
+        "docLabel": "OAB / Certificação DPO",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": [
+      {
+        "key": "incidentNumber",
+        "label": "Nº do Protocolo do Incidente",
+        "placeholder": "Ex: INC-SEG-2026-0042"
+      },
+      {
+        "key": "affectedUser",
+        "label": "Nome / Login do Usuário Afetado",
+        "placeholder": "Ex: joao.silva@acengenhariase.com.br"
+      },
+      {
+        "key": "targetSystem",
+        "label": "Sistema Alvo da Invasão",
+        "placeholder": "Ex: ERP Sienge / Google Workspace / CV CRM"
+      },
+      {
+        "key": "originIp",
+        "label": "IP de Origem e Localização Detectada",
+        "placeholder": "Ex: 185.220.101.5 (Frankfurt / Tor Exit)"
+      }
+    ]
+  },
+  "MOD-GOV-10": {
+    "title": "Termo de Responsabilidade e Custódia de Certificado Digital (ICP-Brasil e-CNPJ / e-CPF)",
+    "signers": [
+      {
+        "role": "Colaborador(a) Custodiante Declarador",
+        "docLabel": "CPF",
+        "placeholder": "Ex: Nome do Colaborador Custodiante"
+      },
+      {
+        "role": "Gestor Imediato da Área Solicitante",
+        "docLabel": "Matrícula / Cargo",
+        "placeholder": "Ex: Gestor Imediato"
+      },
+      {
+        "role": "Gestor Executivo de T.I. & SecOps — AC Engenharia",
+        "docLabel": "CPF / Registro SecOps",
+        "placeholder": "Ex: Carlos Santos"
+      }
+    ],
+    "fields": [
+      {
+        "key": "certType",
+        "label": "Tipo e Titularidade do Certificado",
+        "placeholder": "Ex: e-CNPJ A3 Token USB (Série 987654321)"
+      },
+      {
+        "key": "certSerialNumber",
+        "label": "Nº de Série Criptográfico do Certificado",
+        "placeholder": "Ex: 1A:2B:3C:4D:5E:6F:70:81"
+      },
+      {
+        "key": "certValidity",
+        "label": "Data de Validade do Certificado",
+        "placeholder": "Ex: 18/11/2027"
+      },
+      {
+        "key": "certScope",
+        "label": "Escopo / Alçadas Autorizadas",
+        "placeholder": "Ex: Emissão de NF-e no Sienge e Conectividade Social ICP"
+      }
+    ]
   }
 };
 
@@ -3765,6 +3849,310 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           { role: "Custodiante Criptográfico — T.I. & SecOps", name: ctx.secopsName },
           { role: "Homologação Pericial — DPO / Auditoria AC Engenharia", name: ctx.dpoName }
         ], false, "MOD-AUD-04")}
+      `;
+    }
+  },
+  {
+    code: "MOD-SEC-08",
+    module: "secops",
+    docType: "Laudo Pericial & CSIRT",
+    requiresSignature: true,
+    title: "Relatório Técnico de Investigação de Login Suspeito e Tentativa de Invasão",
+    normative: "ISO/IEC 27001:2022 A.5.24 a A.5.28 & Resolução CD/ANPD nº 15/2024",
+    evidenceCategory: "Segurança & CSIRT",
+    signersSummary: "Analista Investigador T.I. + Gestor SecOps + DPO (se notificado)",
+    summary: "Laudo pericial e forense de rastreamento de tentativas de invasão e login anômalo (Active Directory, Sienge, CV CRM, Google Workspace), contendo telemetria de IP, validação de MFA, entrevista com o usuário e protocolo de resposta a incidentes da ANPD.",
+    buildBody: (ctx, custom = {}) => {
+      const incNum = custom.incidentNumber || "INC-SEG-202___-_________";
+      const userTarget = custom.affectedUser || "[ Nome / E-mail do Colaborador Afetado ]";
+      const sysTarget = custom.targetSystem || "Google Workspace / ERP Sienge / CV CRM";
+      const ipOrigin = custom.originIp || "___.___.___.___ (Geolocalização a Auditar)";
+
+      return `
+        <h2>1. Identificação do Alerta e Vetor de Detecção</h2>
+        <table class="data-table">
+          <tr>
+            <td width="30%"><strong>Protocolo do Incidente:</strong></td>
+            <td><code>${escapeDocHtml(incNum)}</code></td>
+          </tr>
+          <tr>
+            <td><strong>Data e Hora da Detecção:</strong></td>
+            <td>Data: ${escapeDocHtml(ctx.todayBr)} às ${escapeDocHtml(ctx.nowBr.split(" ")[1] || "___:___")} h (Horário de Brasília)</td>
+          </tr>
+          <tr>
+            <td><strong>Origem Primária do Alerta:</strong></td>
+            <td>[ &nbsp; ] SIEM / Log Centralizado &nbsp;&nbsp;&nbsp; [ &nbsp; ] Google Workspace Alert Center &nbsp;&nbsp;&nbsp; [ &nbsp; ] EDR / Antivírus Corporativo<br/>
+                [ &nbsp; ] Notificação Espontânea do Usuário &nbsp;&nbsp;&nbsp; [ &nbsp; ] Alerta de Firewall/VPN Fortigate &nbsp;&nbsp;&nbsp; [ &nbsp; ] Auditoria Automática</td>
+          </tr>
+          <tr>
+            <td><strong>Conta e Login Afetados:</strong></td>
+            <td><strong>${escapeDocHtml(userTarget)}</strong> &nbsp;|&nbsp; <strong>Lotação:</strong> ${escapeDocHtml(ctx.activeUnit)}</td>
+          </tr>
+          <tr>
+            <td><strong>Sistema / Ativo Alvo:</strong></td>
+            <td><strong>${escapeDocHtml(sysTarget)}</strong></td>
+          </tr>
+        </table>
+
+        <h2>2. Análise Técnica Forense Preliminar (SecOps)</h2>
+        <table class="data-table">
+          <tr>
+            <td width="30%"><strong>IP de Origem e Telemetria:</strong></td>
+            <td><code>${escapeDocHtml(ipOrigin)}</code> &nbsp;|&nbsp; <strong>Detecção de Proxy/Tor/VPN:</strong> [ &nbsp; ] Sim &nbsp; [ &nbsp; ] Não</td>
+          </tr>
+          <tr>
+            <td><strong>Dispositivo / User-Agent:</strong></td>
+            <td>[ &nbsp; ] Windows 10/11 &nbsp;&nbsp; [ &nbsp; ] Android / iOS &nbsp;&nbsp; [ &nbsp; ] macOS / Linux &nbsp;&nbsp;|&nbsp; <strong>Homologado no MDM?</strong> [ &nbsp; ] Sim &nbsp; [ &nbsp; ] Não (BYOD)</td>
+          </tr>
+          <tr>
+            <td><strong>Padrão da Tentativa:</strong></td>
+            <td>[ &nbsp; ] Viagem Impossível (*Impossible Travel*) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Força Bruta (*Brute-force*)<br/>
+                [ &nbsp; ] Pulverização de Senha (*Password Spraying*) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Roubo de Sessão / Token Replay</td>
+          </tr>
+          <tr>
+            <td><strong>Status da Autenticação:</strong></td>
+            <td>[ &nbsp; ] <strong>Tentativa Frustrada</strong> (Bloqueado) &nbsp;&nbsp;&nbsp; [ &nbsp; ] <strong>Login Efetuado com Sucesso</strong> (Sessão Estabelecida)</td>
+          </tr>
+          <tr>
+            <td><strong>Validação do 2º Fator (MFA):</strong></td>
+            <td>[ &nbsp; ] MFA Bloqueou o Acesso &nbsp;&nbsp;&nbsp; [ &nbsp; ] MFA Aprovado por Fadiga de Notificação (*Push Fatigue*)<br/>
+                [ &nbsp; ] Código TOTP inserido &nbsp;&nbsp;&nbsp; [ &nbsp; ] Ausência de MFA na Conta (Não Conformidade PCA-002)</td>
+          </tr>
+          <tr>
+            <td><strong>Trilha de Ações pós-Login:</strong></td>
+            <td>[ &nbsp; ] Criação de regras de encaminhamento oculto no Gmail &nbsp;&nbsp;&nbsp; [ &nbsp; ] Download anômalo de arquivos/relatórios<br/>
+                [ &nbsp; ] Tentativa de alteração bancária/PIX no Sienge &nbsp;&nbsp;&nbsp; [ &nbsp; ] Nenhuma ação hostil identificada antes da contenção</td>
+          </tr>
+        </table>
+
+        <h2>3. Entrevista Técnica e Validação com o Usuário Titular</h2>
+        <p>Questionário pericial aplicado pela equipe de T.I. para confirmação do contexto fático e exclusão de falsos positivos:</p>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th width="65%">Pergunta de Verificação Fática</th>
+              <th width="15%">Resposta</th>
+              <th width="20%">Observação / Justificativa</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1. Você realizou ou tentou realizar login no sistema indicado na data e horário registrados?</td>
+              <td>[ &nbsp; ] SIM &nbsp; [ &nbsp; ] NÃO</td>
+              <td>____________________</td>
+            </tr>
+            <tr>
+              <td>2. Você estava em viagem, deslocamento ou utilizando conexões VPN particulares ou Wi-Fi público?</td>
+              <td>[ &nbsp; ] SIM &nbsp; [ &nbsp; ] NÃO</td>
+              <td>____________________</td>
+            </tr>
+            <tr>
+              <td>3. Nas últimas 72 horas, você clicou em links de e-mail, WhatsApp ou SMS solicitando confirmação de senha?</td>
+              <td>[ &nbsp; ] SIM &nbsp; [ &nbsp; ] NÃO</td>
+              <td>____________________</td>
+            </tr>
+            <tr>
+              <td>4. Você digitou credenciais corporativas em alguma página que não seja a tela oficial da AC Engenharia?</td>
+              <td>[ &nbsp; ] SIM &nbsp; [ &nbsp; ] NÃO</td>
+              <td>____________________</td>
+            </tr>
+            <tr>
+              <td>5. Você recebeu notificações repetidas de aprovação (Push) no autenticador sem estar tentando logar?</td>
+              <td>[ &nbsp; ] SIM &nbsp; [ &nbsp; ] NÃO</td>
+              <td>____________________</td>
+            </tr>
+            <tr>
+              <td>6. O acesso partiu de computador pessoal não homologado, celular particular ou de terceiros?</td>
+              <td>[ &nbsp; ] SIM &nbsp; [ &nbsp; ] NÃO</td>
+              <td>____________________</td>
+            </tr>
+            <tr>
+              <td>7. Houve compartilhamento involuntário ou voluntário da sua senha com colegas ou estagiários?</td>
+              <td>[ &nbsp; ] SIM &nbsp; [ &nbsp; ] NÃO</td>
+              <td>____________________</td>
+            </tr>
+            <tr>
+              <td>8. Houve contato telefônico de suposto 'suporte técnico' solicitando códigos de verificação?</td>
+              <td>[ &nbsp; ] SIM &nbsp; [ &nbsp; ] NÃO</td>
+              <td>____________________</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>4. Avaliação de Impacto e Medidas de Contenção Imediata</h2>
+        <div class="callout callout-warning">
+          <strong>Nível de Acesso da Conta Afetada:</strong><br/>
+          [ &nbsp; ] Operacional de Canteiro &nbsp;&nbsp;&nbsp; [ &nbsp; ] Administrativo / Financeiro Sienge &nbsp;&nbsp;&nbsp; [ &nbsp; ] Comercial CV CRM (Dados de Clientes)<br/>
+          [ &nbsp; ] RH / SST (Dados Pessoais Sensíveis / Biometria NR-18) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Administrador de TI / Acesso Privilegiado
+        </div>
+
+        <p><strong>Ações Técnicas Imediatas Executadas pela T.I. / SecOps:</strong></p>
+        <table class="data-table">
+          <tr>
+            <td>[ &nbsp; ] <strong>Reset Compulsório de Senha</strong> (Complexidade elevada)</td>
+            <td>[ &nbsp; ] <strong>Revogação Global de Sessões</strong> (*Revoke Refresh Tokens*)</td>
+          </tr>
+          <tr>
+            <td>[ &nbsp; ] <strong>Reconfiguração e Expurgo de MFA</strong> prévio</td>
+            <td>[ &nbsp; ] <strong>Isolamento Lógico de Endpoint</strong> via EDR</td>
+          </tr>
+          <tr>
+            <td>[ &nbsp; ] <strong>Varredura Forense Antimalware</strong> no computador</td>
+            <td>[ &nbsp; ] <strong>Bloqueio de IP/ASN Hostil</strong> no Firewall Fortigate / WAF</td>
+          </tr>
+          <tr>
+            <td>[ &nbsp; ] <strong>Auditoria de Regras de Encaminhamento</strong> de e-mail</td>
+            <td>[ &nbsp; ] <strong>Suspensão Cautelar Provisória</strong> da Conta</td>
+          </tr>
+        </table>
+        <p><strong>Término da Contenção:</strong> ___/___/202___ às ___:___ h &nbsp;|&nbsp; <strong>Tempo Total de Resposta (TTR):</strong> [ &nbsp; ] &lt; 30 min &nbsp;&nbsp; [ &nbsp; ] 30 min a 2h &nbsp;&nbsp; [ &nbsp; ] &gt; 2h</p>
+
+        <h2>5. Conclusão Pericial, Governança e Enquadramento LGPD</h2>
+        <table class="data-table">
+          <tr>
+            <td width="30%"><strong>Veredito Técnico:</strong></td>
+            <td>
+              [ &nbsp; ] <strong>FALSO POSITIVO:</strong> Acesso legítimo comprovado (usuário em viagem / VPN particular).<br/>
+              [ &nbsp; ] <strong>TENTATIVA FRUSTRADA:</strong> Atacante bloqueado pelo perímetro/MFA sem acesso a dados.<br/>
+              [ &nbsp; ] <strong>INCIDENTE CONFIRMADO SEM EXFILTRAÇÃO:</strong> Conta violada e contida antes do vazamento.<br/>
+              [ &nbsp; ] <strong>INCIDENTE CRÍTICO DE SEGURANÇA:</strong> Comprometimento de dados pessoais de titulares.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Acionamento do DPO:</strong></td>
+            <td>
+              [ &nbsp; ] <strong>NÃO REQUER ACIONAMENTO DO DPO</strong> (Falso positivo ou tentativa frustrada sem risco residual).<br/>
+              [ &nbsp; ] <strong>REQUER ACIONAMENTO IMEDIATO DO ENCARREGADO DE DADOS (DPO):</strong> Instaurar procedimento de crise conforme Resolução CD/ANPD nº 15/2024 para avaliação de notificação formal à ANPD no prazo de 3 (três) dias úteis.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Recomendações e Lições Aprendidas:</strong></td>
+            <td>____________________________________________________________________________________________________<br/>
+                ____________________________________________________________________________________________________</td>
+          </tr>
+        </table>
+
+        ${buildSignatureGridHTML([
+          { role: "Analista Técnico de T.I. / CSIRT Investigador", name: "" },
+          { role: "Gestor Executivo de T.I. & SecOps", name: ctx.secopsName },
+          { role: "Encarregado(a) de Dados (DPO) — Parecer Regulatório", name: ctx.dpoName }
+        ], false, "MOD-SEC-08")}
+      `;
+    }
+  },
+
+  {
+    code: "MOD-GOV-10",
+    module: "raci",
+    docType: "Termo de Custódia (ICP-Brasil)",
+    requiresSignature: true,
+    title: "Termo de Responsabilidade e Custódia de Certificado Digital (ICP-Brasil e-CNPJ / e-CPF)",
+    normative: "Medida Provisória nº 2.200-2/2001, Lei nº 14.063/2020 & Art. 462 da CLT",
+    evidenceCategory: "Privacidade & Contratos",
+    signersSummary: "Colaborador Custodiante + Gestor Imediato + Gestor de T.I. & SecOps + Testemunhas",
+    summary: "Instrumento jurídico-corporativo de custódia e responsabilidade legal para uso de certificados digitais ICP-Brasil (e-CNPJ ou e-CPF, modelos A1 em arquivo e A3 em token físico/smartcard) da AC Engenharia, com cláusula de ressarcimento por extravio (CLT Art. 462), sigilo de PIN/PUK e protocolo de devolução no desligamento.",
+    buildBody: (ctx, custom = {}) => {
+      const cType = custom.certType || "Certificado Digital e-CNPJ / e-CPF ICP-Brasil";
+      const cSerial = custom.certSerialNumber || "________________________________________________";
+      const cValidity = custom.certValidity || "____ / ____ / 202___";
+      const cScope = custom.certScope || "Emissão de NF-e no Sienge, Conectividade Social ICP/FGTS e e-CAC";
+
+      return `
+        <h2>1. Qualificação das Partes e do Ativo Criptográfico</h2>
+        <table class="data-table">
+          <tr>
+            <td width="30%"><strong>Empregador / Controlador:</strong></td>
+            <td><strong>${escapeDocHtml(ctx.companyLegal)}</strong> &nbsp;|&nbsp; <strong>CNPJ:</strong> ${escapeDocHtml(ctx.cnpj)} &nbsp;|&nbsp; <strong>Sede:</strong> Aracaju/SE</td>
+          </tr>
+          <tr>
+            <td><strong>Colaborador(a) Custodiante:</strong></td>
+            <td>Nome: <strong>${escapeDocHtml(custom.signerName || "[ Nome Completo do Colaborador Custodiante ]")}</strong> &nbsp;|&nbsp; CPF: ___________________________<br/>
+                Cargo: ____________________________________ &nbsp;|&nbsp; Setor: _________________________________</td>
+          </tr>
+          <tr>
+            <td><strong>Especificação do Certificado:</strong></td>
+            <td><strong>${escapeDocHtml(cType)}</strong><br/>
+                Titularidade: [ &nbsp; ] AC Engenharia Ltda (e-CNPJ) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Procurador / Representante Legal (e-CPF)<br/>
+                Formato: [ &nbsp; ] Arquivo A1 (Instalado na máquina patrimônio nº _________) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Token Físico USB A3 &nbsp;&nbsp;&nbsp; [ &nbsp; ] Nuvem</td>
+          </tr>
+          <tr>
+            <td><strong>Número de Série Criptográfico:</strong></td>
+            <td><code>${escapeDocHtml(cSerial)}</code> &nbsp;|&nbsp; <strong>Validade:</strong> <strong>${escapeDocHtml(cValidity)}</strong></td>
+          </tr>
+        </table>
+
+        <h2>2. Finalidade Estrita e Alçadas de Uso Autorizadas</h2>
+        <p>A custódia do certificado digital é outorgada em caráter <strong>precário, estritamente funcional, pessoal e intransferível</strong> para as seguintes atividades:</p>
+        <div class="callout callout-info">
+          <strong>Escopo Autorizado:</strong> ${escapeDocHtml(cScope)}<br/>
+          [ &nbsp; ] Emissão e transmissão de Notas Fiscais Eletrônicas (NF-e/NFS-e) no ERP Sienge<br/>
+          [ &nbsp; ] Conectividade Social ICP / FGTS (Caixa Econômica Federal) para canteiros NR-18<br/>
+          [ &nbsp; ] Centro Virtual de Atendimento da Receita Federal (e-CAC) e eSocial<br/>
+          [ &nbsp; ] Assinatura Eletrônica Qualificada de Contratos Imobiliários e Fornecedores
+        </div>
+
+        <h2>3. Declarações e Obrigações Legais do Custodiante (Ciência Obrigatória)</h2>
+        <p>O Colaborador declara ter lido e estar de pleno acordo com as seguintes obrigações:</p>
+        <table class="data-table">
+          <tr>
+            <td width="5%">[ &nbsp; ]</td>
+            <td><strong>CLÁUSULA 1ª — EFICÁCIA LEGAL PLENA (EQUIPARAÇÃO À FIRMA RECONHECIDA):</strong> Declaro ciência de que a assinatura digital ICP-Brasil possui validade jurídica plena e eficácia probatória idêntica ao reconhecimento de firma de próprio punho em cartório (Art. 10 da MP nº 2.200-2/2001 e Lei 14.063/2020), vinculando irrevogavelmente a AC Engenharia.</td>
+          </tr>
+          <tr>
+            <td>[ &nbsp; ]</td>
+            <td><strong>CLÁUSULA 2ª — SIGILO INVIOLÁVEL DE SENHAS (PIN / PUK):</strong> Comprometo-me a manter senhas (PIN/PUK) sob sigilo rigoroso e pessoal, sendo vedado compartilhá-las com colegas de equipe, subordinados ou gestores.</td>
+          </tr>
+          <tr>
+            <td>[ &nbsp; ]</td>
+            <td><strong>CLÁUSULA 3ª — PROIBIÇÃO DE CÓPIA E EXPORTAÇÃO (CERTIFICADO A1):</strong> Tratando-se de arquivo A1, comprometo-me a instalá-lo somente na máquina autorizada pela T.I., sendo terminantemente vedado copiá-lo para pendrives, e-mails pessoais ou nuvens públicas (Google Drive, Dropbox).</td>
+          </tr>
+          <tr>
+            <td>[ &nbsp; ]</td>
+            <td><strong>CLÁUSULA 4ª — GUARDA FÍSICA E CUIDADOS COM O TOKEN USB (A3):</strong> Tratando-se de token A3, comprometo-me a desconectá-lo da máquina ao me afastar da mesa de trabalho e guardá-lo em local trancado ao término do expediente, nunca deixando o dispositivo plugado sem vigilância.</td>
+          </tr>
+          <tr>
+            <td>[ &nbsp; ]</td>
+            <td><strong>CLÁUSULA 5ª — PROIBIÇÃO ABSOLUTA DE USO PARTICULAR:</strong> É estritamente vedado utilizar o certificado digital corporativo para fins privados do colaborador (ex: declaração de IRPF pessoal, procurações particulares ou atos estranhos ao contrato de trabalho).</td>
+          </tr>
+          <tr>
+            <td>[ &nbsp; ]</td>
+            <td><strong>CLÁUSULA 6ª — COMUNICAÇÃO IMEDIATA EM CASO DE EXTRAVIO (REVOGAÇÃO):</strong> Em caso de perda, furto, quebra do token ou suspeita de vazamento de senha, comprometo-me a notificar a T.I. em até 1 (uma) hora para imediata revogação junto à Autoridade Certificadora.</td>
+          </tr>
+          <tr>
+            <td>[ &nbsp; ]</td>
+            <td><strong>CLÁUSULA 7ª — AUDITORIA E RASTREABILIDADE (ISO 27001):</strong> Todas as assinaturas e operações realizadas são monitoradas e auditadas em trilha forense imutável com carimbo temporal.</td>
+          </tr>
+        </table>
+
+        <h2>4. Responsabilização Disciplinar e Custeio (CLT Art. 462 e 482)</h2>
+        <div class="callout callout-danger">
+          <p><strong>Sanções Trabalhistas e Penais:</strong> O descumprimento deste termo ou a cessão de senha a terceiros constitui <strong>falta grave passível de demissão por justa causa (Art. 482 da CLT)</strong>, sem prejuízo de responsabilização civil e persecução penal (Art. 299 e 154-A do Código Penal).</p>
+          <p><strong>Ressarcimento de Despesas (Art. 462, § 1º da CLT):</strong> Em consonância com o Artigo 462, § 1º da CLT, em caso de dano físico, perda, extravio do token A3 ou inutilização por tentativas incorretas de PIN/PUK decorrente de negligência ou dolo comprovado, <strong>o valor integral de reposição do hardware e taxas cartorárias da Autoridade Certificadora será ressarcido pelo Colaborador à AC Engenharia</strong>, mediante desconto em folha ou rescisão.</p>
+        </div>
+
+        <h2>5. Termo de Encerramento de Custódia e Devolução (Offboarding)</h2>
+        <p class="muted"><em>(Preenchido exclusivamente no desligamento do colaborador, expiração da validade ou mudança de setor)</em></p>
+        <table class="data-table">
+          <tr>
+            <td width="30%"><strong>Motivo do Encerramento:</strong></td>
+            <td>[ &nbsp; ] Desligamento da Empresa &nbsp;&nbsp;&nbsp; [ &nbsp; ] Mudança de Cargo &nbsp;&nbsp;&nbsp; [ &nbsp; ] Expiração &nbsp;&nbsp;&nbsp; [ &nbsp; ] Revogação Preventiva</td>
+          </tr>
+          <tr>
+            <td><strong>Ações Técnicas da T.I.:</strong></td>
+            <td>[ &nbsp; ] Token Físico A3 recolhido intacto &nbsp;&nbsp;&nbsp; [ &nbsp; ] Certificado A1 desinstalado e sanitizado do disco rígido<br/>
+                [ &nbsp; ] Revogação homologada na Autoridade Certificadora &nbsp;|&nbsp; <strong>Protocolo AC:</strong> ________________________</td>
+          </tr>
+          <tr>
+            <td><strong>Data e Assinaturas de Baixa:</strong></td>
+            <td>Data: ____/____/202___ &nbsp;|&nbsp; Assinatura Colaborador: _____________________ &nbsp;|&nbsp; T.I. Receptor: _____________________</td>
+          </tr>
+        </table>
+
+        ${buildSignatureGridHTML([
+          { role: "Colaborador(a) Custodiante Declarador", name: "" },
+          { role: "Gestor Imediato da Área Solicitante", name: "" },
+          { role: "Gestor Executivo de T.I. & SecOps — AC Engenharia", name: ctx.secopsName }
+        ], true, "MOD-GOV-10")}
       `;
     }
   }
