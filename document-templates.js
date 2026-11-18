@@ -21,7 +21,13 @@ const TEMPLATE_MODULE_LABELS = {
 function getStoredTemplateSignatures() {
   try {
     const raw = localStorage.getItem("AC_ENGENHARIA_DOC_SIGNATURES_V1");
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const map = JSON.parse(raw);
+      // Alias bidirecional para MOD-SEG-08-B e MOD-SEC-08
+      if (!map["MOD-SEG-08-B"] && map["MOD-SEC-08"]) map["MOD-SEG-08-B"] = map["MOD-SEC-08"];
+      if (!map["MOD-SEC-08"] && map["MOD-SEG-08-B"]) map["MOD-SEC-08"] = map["MOD-SEG-08-B"];
+      return map;
+    }
   } catch (e) {
     console.warn("Erro ao ler assinaturas de documentos:", e);
   }
@@ -53,7 +59,12 @@ function saveStoredCorporateSigners(data) {
 function getStoredDocumentCustomData(code) {
   if (!code) return { signers: [], fields: {} };
   try {
-    const raw = localStorage.getItem("sgsi_doc_custom_" + code);
+    let raw = localStorage.getItem("sgsi_doc_custom_" + code);
+    if (!raw && code === "MOD-SEG-08-B") {
+      raw = localStorage.getItem("sgsi_doc_custom_MOD-SEC-08");
+    } else if (!raw && code === "MOD-SEC-08") {
+      raw = localStorage.getItem("sgsi_doc_custom_MOD-SEG-08-B");
+    }
     if (raw) {
       const parsed = JSON.parse(raw);
       return {
@@ -1024,22 +1035,104 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
       }
     ]
   },
-  "MOD-SEC-08": {
-    "title": "Relatório Técnico de Investigação de Login Suspeito e Tentativa de Invasão",
+  "MOD-SEG-08-B": {
+    "title": "Relatório Técnico de Incursão Hostil e Compromisso de Credencial",
     "signers": [
       {
         "role": "Analista Técnico de T.I. / CSIRT Investigador",
-        "docLabel": "CPF / Registro Técnico",
+        "docLabel": "Nome Completo e Rubrica",
         "placeholder": "Ex: Analista Investigador de T.I."
       },
       {
         "role": "Gestor Executivo de T.I. & SecOps",
-        "docLabel": "CPF / Registro SecOps",
+        "docLabel": "Nome Completo e Rubrica",
         "placeholder": "Ex: Carlos Santos"
       },
       {
         "role": "Encarregado(a) de Dados (DPO) — Parecer Regulatório",
-        "docLabel": "OAB / Certificação DPO",
+        "docLabel": "Nome Completo e Rubrica",
+        "placeholder": "Ex: Dra. Mariana Costa"
+      }
+    ],
+    "fields": [
+      {
+        "key": "incidentNumber",
+        "label": "Nº do Protocolo do Alerta / Incidente",
+        "placeholder": "Ex: INC-SEG-2026-0042"
+      },
+      {
+        "key": "detectionDateTime",
+        "label": "Data e Hora da Detecção do Alerta",
+        "placeholder": "Ex: 18/11/2026 às 14:35"
+      },
+      {
+        "key": "alertOrigin",
+        "label": "Origem Primária do Alerta",
+        "placeholder": "Ex: Sienge / Construtor de Vendas / Gmail / Antivírus"
+      },
+      {
+        "key": "targetSystem",
+        "label": "Sistema Objeto do Acesso / Alerta",
+        "placeholder": "Ex: ERP Sienge / CV CRM / Gmail / VPN Fortigate"
+      },
+      {
+        "key": "affectedUser",
+        "label": "Nome Completo do Colaborador Titular",
+        "placeholder": "Ex: João da Silva"
+      },
+      {
+        "key": "affectedEmail",
+        "label": "E-mail Corporativo do Usuário",
+        "placeholder": "Ex: joao.silva@acengenhariase.com.br"
+      },
+      {
+        "key": "affectedLogin",
+        "label": "Login / Usuário Específico no Sistema",
+        "placeholder": "Ex: jsilva (Sienge) / eng.joao (Rede)"
+      },
+      {
+        "key": "affectedRole",
+        "label": "Cargo / Função e Setor",
+        "placeholder": "Ex: Engenheiro Residente / Canteiro Obra Jardins"
+      },
+      {
+        "key": "originIp",
+        "label": "IP de Origem e Geolocalização Identificada",
+        "placeholder": "Ex: 185.220.101.5 (Frankfurt / Tor) OU 179.180.x.x (Claro 4G/Aracaju)"
+      },
+      {
+        "key": "attackerActions",
+        "label": "Resumo das Ações na Sessão (Uso Normal ou Atividade Suspeita)",
+        "placeholder": "Ex: Acesso regular confirmado pelo usuário OU Invasor tentou alterar PIX no Sienge"
+      },
+      {
+        "key": "exfiltrationStatus",
+        "label": "Diagnóstico de Exfiltração / Integridade da Base",
+        "placeholder": "Ex: Tráfego rotineiro regular sem exfiltração OU Sob auditoria de tráfego"
+      },
+      {
+        "key": "attackerTimeline",
+        "label": "Linha do Tempo dos Logs (Timeline Pericial)",
+        "placeholder": "Ex: 14:20 Alerta disparado -> 14:22 Entrevista com colaborador -> 14:25 Validação fática"
+      }
+    ]
+  },
+  "MOD-SEC-08": {
+    "title": "Relatório Técnico de Incursão Hostil e Compromisso de Credencial",
+    "signers": [
+      {
+        "role": "Analista Técnico de T.I. / CSIRT Investigador",
+        "docLabel": "Nome Completo e Rubrica",
+        "placeholder": "Ex: Analista Investigador de T.I."
+      },
+      {
+        "role": "Gestor Executivo de T.I. & SecOps",
+        "docLabel": "Nome Completo e Rubrica",
+        "placeholder": "Ex: Carlos Santos"
+      },
+      {
+        "role": "Encarregado(a) de Dados (DPO) — Parecer Regulatório",
+        "docLabel": "Nome Completo e Rubrica",
         "placeholder": "Ex: Dra. Mariana Costa"
       }
     ],
@@ -4126,7 +4219,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
               O alerta foi gerado por processo automatizado de software, sincronização programada de API entre sistemas (ex: ERP Sienge e CV CRM), script interno ou rotina de manutenção. Nenhuma intervenção de conta necessária. <strong>Chamado encerrado na Fase 1.</strong></p>
 
               <p style="margin-bottom: 0;"><strong>[ &nbsp; ] SUSPEITA NÃO RECONHECIDA (Escalonamento Necessário):</strong><br/>
-              O colaborador <u>não reconhece</u> o acesso e foram constatadas divergências técnicas ou geográficas relevantes. Conforme a Política de Segurança da AC Engenharia, foram adotadas as seguintes medidas imediatas de salvaguarda: redefinição preventiva de credenciais e encerramento de todas as sessões ativas. O evento é formalmente escalonado para <strong>Fase 2 (Investigação Aprofundada e Contenção - MOD-SEC-08 / MOD-SEG-08-B)</strong> sob condução da equipe de Segurança da Informação.</p>
+              O colaborador <u>não reconhece</u> o acesso e foram constatadas divergências técnicas ou geográficas relevantes. Conforme a Política de Segurança da AC Engenharia, foram adotadas as seguintes medidas imediatas de salvaguarda: redefinição preventiva de credenciais e encerramento de todas as sessões ativas. O evento é formalmente escalonado para <strong>Fase 2 (Relatório Técnico de Incursão Hostil e Compromisso de Credencial - MOD-SEG-08-B)</strong> sob condução da equipe de Segurança da Informação.</p>
             </td>
           </tr>
         </table>
@@ -4139,15 +4232,17 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     }
   },
   {
-    code: "MOD-SEC-08",
+    code: "MOD-SEG-08-B",
+    legacyCode: "MOD-SEC-08",
+    aliases: ["MOD-SEC-08", "MOD-SEG-08"],
     module: "secops",
     docType: "Laudo Pericial & CSIRT",
     requiresSignature: true,
-    title: "Relatório Técnico de Investigação de Login Suspeito e Tentativa de Invasão",
+    title: "Relatório Técnico de Incursão Hostil e Compromisso de Credencial",
     normative: "ISO/IEC 27001:2022 A.5.24 a A.5.28 & Resolução CD/ANPD nº 15/2024",
     evidenceCategory: "Segurança & CSIRT",
     signersSummary: "Analista Investigador T.I. + Gestor SecOps + DPO (se notificado)",
-    summary: "Laudo pericial e forense de investigação de alertas de login e acessos anômalos (Sienge, Construtor de Vendas, Gmail, Antivírus), destinado a apurar e distinguir tecnicamente entre uso legítimo/falso positivo e tentativa real de invasão, com telemetria de IP, auditoria de ações por sistema, entrevista fática, contenção e 7 vereditos periciais.",
+    summary: "Fase 2 de Investigação Forense e Apuração Aprofundada: Relatório Técnico de Incursão Hostil e Compromisso de Credencial (Investigação de Login Suspeito e Tentativa de Invasão). Laudo pericial e forense destinado a apurar detalhadamente alertas escalonados de login e acessos atípicos (ERP Sienge, Construtor de Vendas CV, Gmail, Antivírus e VPN), com telemetria forense de IP, rastreamento minucioso de ações do invasor por sistema, entrevista fática, contenção técnica imediata, diagnóstico de exfiltração de dados e 7 vereditos periciais com parecer regulatório para a ANPD.",
     buildBody: (ctx, custom = {}) => {
       const incNum = custom.incidentNumber || "INC-SEG-_________";
       const dtDetection = custom.detectionDateTime || (ctx.todayBr + " às " + (ctx.nowBr.split(" ")[1] || "___:___") + " h");
@@ -4475,7 +4570,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           { role: "Analista Técnico de T.I. / CSIRT Investigador", name: "" },
           { role: "Gestor Executivo de T.I. & SecOps", name: ctx.secopsName },
           { role: "Encarregado(a) de Dados (DPO) — Parecer Regulatório", name: ctx.dpoName }
-        ], false, "MOD-SEC-08")}
+        ], false, "MOD-SEG-08-B")}
       `;
     }
   },
@@ -4619,7 +4714,13 @@ const TemplateHubState = {
 };
 
 function getTemplateByCode(code) {
-  return CORPORATE_DOCUMENT_TEMPLATES.find(t => t.code === code) || null;
+  if (!code) return null;
+  const clean = String(code).trim().toUpperCase();
+  return CORPORATE_DOCUMENT_TEMPLATES.find(t => 
+    t.code.toUpperCase() === clean || 
+    (t.legacyCode && t.legacyCode.toUpperCase() === clean) ||
+    (Array.isArray(t.aliases) && t.aliases.some(a => a.toUpperCase() === clean))
+  ) || null;
 }
 
 function buildRenderedTemplateHTML(code, customData = {}, options = {}) {
@@ -4757,9 +4858,11 @@ function renderDocumentTemplatesGrid() {
     else if (TemplateHubState.typeFilter === "ata") matchType = t.docType.includes("Ata") || t.docType.includes("Relatório") || t.docType.includes("Plano");
     else if (TemplateHubState.typeFilter === "laudo") matchType = t.docType.includes("Laudo") || t.docType.includes("Checklist") || t.docType.includes("Cadeia") || t.docType.includes("Certidão") || t.docType.includes("Notificação") || t.docType.includes("Formulário") || t.docType.includes("Certificado");
 
-    const q = TemplateHubState.searchQuery;
+    const q = (TemplateHubState.searchQuery || "").toLowerCase().trim();
     const matchText = !q ||
       t.code.toLowerCase().includes(q) ||
+      (t.legacyCode && t.legacyCode.toLowerCase().includes(q)) ||
+      (Array.isArray(t.aliases) && t.aliases.some(a => a.toLowerCase().includes(q))) ||
       t.title.toLowerCase().includes(q) ||
       t.normative.toLowerCase().includes(q) ||
       t.summary.toLowerCase().includes(q) ||
@@ -4795,6 +4898,7 @@ function renderDocumentTemplatesGrid() {
         <div class="flex items-center justify-between gap-2 flex-wrap">
           <div class="flex items-center gap-1.5 flex-wrap">
             <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#0f2942] text-white">${escapeDocHtml(t.code)}</span>
+            ${t.legacyCode ? `<span class="px-1.5 py-0.5 rounded text-[9.5px] font-mono text-slate-500 bg-slate-100 border border-slate-200" title="Código de Referência / Alias">(${escapeDocHtml(t.legacyCode)})</span>` : ""}
             <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-[#004b93] border border-blue-200">${escapeDocHtml(TEMPLATE_MODULE_LABELS[t.module] || t.module)}</span>
             ${(() => {
               const cData = getStoredDocumentCustomData(t.code);
