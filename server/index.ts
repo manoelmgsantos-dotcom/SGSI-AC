@@ -972,58 +972,76 @@ app.post('/api/auth/google', asyncRoute(async (request, response) => {
     }
   }
 
-  // Se for Manoel Martins acessando via Google Workspace, assegura provisionamento como usuário normal (não-admin)
-  if (!user && email.toLowerCase() === 'manoelmgsantos@acengenhariase.com.br') {
+  // Provisionamento Just-in-Time (JIT) para colaboradores com e-mail corporativo válido da AC Engenharia:
+  // Se a conta Google já foi autenticada pelo Google Workspace e pertence a um dos domínios oficiais, cria o acesso automaticamente
+  if (!user && !isSuperAdmin) {
+    const isManoel = email.toLowerCase() === 'manoelmgsantos@acengenhariase.com.br';
+    const roleKey = isManoel ? 'gestor_obra' : (ssoConfig.defaultRole || 'gestor_obra');
+    const roleNameMap: Record<string, string> = {
+      secops: 'Gestor de T.I. & SecOps',
+      dpo: 'Encarregado de Dados (DPO)',
+      diretoria: 'Diretoria Executiva',
+      gestor_obra: 'Engenheiro Residente / Obras',
+      colaborador_canteiro: 'Colaborador / Operações de Canteiro',
+      rh_sst: 'RH & SST (NR-18)',
+      suprimentos: 'Suprimentos & Terceirização',
+      comercial: 'Comercial & Vendas',
+      auditor_leitor: 'Auditor Interno / Leitor'
+    };
+
+    const cleanName = name || email.split('@')[0].replace(/\./g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+    const initials = cleanName
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w: string) => w[0].toUpperCase())
+      .join('') || 'AC';
+
     user = {
-      id: 'usr-manoel',
-      name: name || 'Manoel Martins',
+      id: isManoel ? 'usr-manoel' : `usr-jit-${Date.now().toString(36)}`,
+      name: cleanName,
       email: email,
-      role: 'gestor_obra',
-      roleName: 'Engenheiro Residente / Obras',
-      department: 'Diretoria de Operações & Obras',
+      role: roleKey,
+      roleName: roleNameMap[roleKey] || 'Colaborador SGSI',
+      department: isManoel ? 'Diretoria de Operações & Obras' : 'Engenharia de Obras',
       location: 'Escritório Central (Matriz)',
-      avatar: 'MM',
-      color: 'amber',
+      avatar: initials,
+      color: isManoel ? 'amber' : 'blue',
       status: 'Ativo',
+      picture: picture || null,
       isSuperAdmin: false,
     };
+
     if (pgUp) {
       try {
         await pool.query(
           `INSERT INTO grc_records (collection, record_id, payload, sort_order)
-           VALUES ('users', 'usr-manoel', $1, 1)
+           VALUES ('users', $1, $2, 1)
            ON CONFLICT (collection, record_id) DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()`,
-          [JSON.stringify(user)]
+          [user.id, JSON.stringify(user)]
         );
         await pool.query(
           `INSERT INTO app_users (email, password_hash, role, active, created_at, updated_at)
-           VALUES ($1, 'GOOGLE_WORKSPACE_SSO', 'gestor_obra', TRUE, NOW(), NOW())
-           ON CONFLICT (email) DO UPDATE SET role = 'gestor_obra', active = TRUE, updated_at = NOW()`,
-          [email]
+           VALUES ($1, 'GOOGLE_WORKSPACE_SSO', $2, TRUE, NOW(), NOW())
+           ON CONFLICT (email) DO UPDATE SET role = $2, active = TRUE, updated_at = NOW()`,
+          [email, roleKey]
         );
       } catch (autoErr) {
-        console.warn('Aviso ao auto-provisionar Manoel Martins:', autoErr);
+        console.warn('Aviso ao auto-provisionar colaborador via Google SSO:', autoErr);
       }
     }
-  }
 
-  // Se não é o SuperAdmin e não foi encontrado nenhum registro prévio de convite: BLOQUEIA!
-  if (!user && !isSuperAdmin) {
-    recordLoginFailure(request, email);
-    await appendAuditLog({
-      category: 'AUTENTICACAO_FALHA',
-      module: 'AUTH',
-      action: 'GOOGLE_SSO_CONVITE_INEXISTENTE',
-      severity: 'WARN',
-      actor: email,
-      target_module: 'Google Workspace SSO',
-      description: `Tentativa de login via Google recusada para ${email}: conta corporativa sem convite prévio emitido pelo Administrador.`,
-      ip: clientIp,
-    });
-    throw new HttpError(
-      403,
-      `Acesso não autorizado: o e-mail corporativo (${email}) ainda não possui um convite cadastrado pelo Administrador. Solicite seu convite de acesso.`
+    const diskData = await readLocalDiskDB();
+    if (!Array.isArray(diskData.users)) diskData.users = [];
+    const existingIdx = (diskData.users as Array<Record<string, unknown>>).findIndex(
+      u => String(u.email).toLowerCase() === email
     );
+    if (existingIdx !== -1) {
+      (diskData.users as Array<Record<string, unknown>>)[existingIdx] = user;
+    } else {
+      (diskData.users as Array<Record<string, unknown>>).push(user);
+    }
+    await writeLocalDiskDB(diskData).catch(() => {});
   }
 
   // Se usuário foi encontrado mas está explicitamente inativo ou bloqueado:
