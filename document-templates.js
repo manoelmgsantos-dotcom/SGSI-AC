@@ -1049,13 +1049,13 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
     "signers": [
       {
         "role": "Colaborador(a) Custodiante Declarador",
-        "docLabel": "CPF",
-        "placeholder": "Ex: Nome do Colaborador Custodiante"
+        "docLabel": "CPF / Matrícula",
+        "placeholder": "Ex: Nome Completo do Colaborador"
       },
       {
         "role": "Gestor Imediato da Área Solicitante",
-        "docLabel": "Matrícula / Cargo",
-        "placeholder": "Ex: Gestor Imediato"
+        "docLabel": "Cargo / Lotação",
+        "placeholder": "Ex: Nome do Gestor Imediato"
       },
       {
         "role": "Gestor Executivo de T.I. & SecOps — AC Engenharia",
@@ -1067,17 +1067,12 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
       {
         "key": "certType",
         "label": "Tipo e Titularidade do Certificado",
-        "placeholder": "Ex: e-CNPJ A3 Token USB / e-CNPJ A1 Arquivo"
+        "placeholder": "Ex: e-CNPJ A1 (Arquivo / Máquina) ou e-CNPJ A3 (Token Físico)"
       },
       {
-        "key": "tokenAssetId",
-        "label": "Patrimônio do Token ou Máquina (Opcional)",
-        "placeholder": "Ex: Token USB nº 042 / Máquina TI-FIN-08"
-      },
-      {
-        "key": "certValidity",
-        "label": "Data de Validade do Certificado",
-        "placeholder": "Ex: 18/11/2027"
+        "key": "machineAsset",
+        "label": "Estação de Trabalho / Máquina Autorizada (T.I.)",
+        "placeholder": "Ex: PC-FIN-01 (Setor Financeiro / Matriz) ou Notebook Patrimônio nº 1042"
       },
       {
         "key": "certScope",
@@ -1101,6 +1096,8 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
   const docSigs = (docCode && Array.isArray(allSigs[docCode])) ? allSigs[docCode] : [];
   const customData = docCode ? getStoredDocumentCustomData(docCode) : { signers: [] };
   const customSigners = Array.isArray(customData.signers) ? customData.signers : [];
+  const customDocDate = (customData && customData.docDate && customData.docDate.trim()) ? customData.docDate.trim() : null;
+  const effectiveDateStr = customDocDate ? escapeDocHtml(customDocDate) : "_____ / _____ / _________";
 
   const cards = signers.map((s, idx) => {
     const appliedSig = docSigs[idx] || null;
@@ -1137,25 +1134,28 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
 
     return `
       <div class="sig-box">
-        <div class="sig-line"></div>
-        <div class="sig-role">${escapeDocHtml(effectiveRole)}</div>
-        <div class="sig-name">
-          <strong>Nome Legível:</strong> 
+        <div style="min-height: 38px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 2px;">
+          <span style="font-size: 7.5pt; color: #94a3b8; font-style: italic;">[ Assinatura Manuscrita ou Rubrica ]</span>
+        </div>
+        <div class="sig-line" style="margin-bottom: 8px;"></div>
+        <div class="sig-role" style="font-weight: 700; font-size: 8.5pt; color: #0b1a30; margin-bottom: 4px;">${escapeDocHtml(effectiveRole)}</div>
+        <div class="sig-name" style="margin-bottom: 2px;">
+          <strong>Nome Completo:</strong> 
           <span class="sig-editable-slot" style="color: ${nameColor}; border-bottom: 1px dashed #94a3b8; display: inline-block; min-width: 210px; font-weight: ${hasExplicitName ? '700' : 'normal'};">
             ${displayName}
           </span>
         </div>
-        <div class="sig-meta">
+        <div class="sig-meta" style="margin-bottom: 2px;">
           <strong>Cargo / Setor:</strong> ${escapeDocHtml(effectiveRole)}
         </div>
-        <div class="sig-meta">
-          <strong>CPF / CREA / OAB:</strong> 
+        <div class="sig-meta" style="margin-bottom: 2px;">
+          <strong>CPF / Registro Profissional:</strong> 
           <span style="color: ${hasExplicitName ? '#0b1a30' : '#64748b'}; border-bottom: 1px dashed #cbd5e1; display: inline-block; min-width: 140px;">
             ${escapeDocHtml(effectiveDocLabel)}
           </span>
         </div>
         <div class="sig-meta" style="margin-top: 6px; font-size: 7.5pt; color: #64748b; border-top: 1px dotted #e2e8f0; padding-top: 4px;">
-          <strong>Data da Homologação:</strong> ____ / ____ / 202___ &nbsp;|&nbsp; <em>Homologação Gerencial &bull; Assinatura Física ou Digital</em>
+          <strong>Data:</strong> ${effectiveDateStr} &nbsp;|&nbsp; <em>Assinatura Física / Rubrica ou Certificação Digital</em>
         </div>
       </div>
     `;
@@ -1181,16 +1181,22 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
       <div class="sec-sub">Testemunhas Instrumentárias Homologadas</div>
       <div class="sig-grid">
         <div class="sig-box">
-          <div class="sig-line"></div>
+          <div style="min-height: 34px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 2px;">
+            <span style="font-size: 7.5pt; color: #94a3b8; font-style: italic;">[ Assinatura / Rubrica da Testemunha ]</span>
+          </div>
+          <div class="sig-line" style="margin-bottom: 6px;"></div>
           <div class="sig-role">1ª Testemunha Instrumentária</div>
-          <div class="sig-name"><strong>Nome:</strong> <span style="border-bottom: 1px dashed #94a3b8; display: inline-block; min-width: 180px;">___________________________</span></div>
-          <div class="sig-meta"><strong>CPF:</strong> _________________________</div>
+          <div class="sig-name"><strong>Nome Completo:</strong> <span style="border-bottom: 1px dashed #94a3b8; display: inline-block; min-width: 180px;">___________________________</span></div>
+          <div class="sig-meta"><strong>CPF / Documento:</strong> _________________________</div>
         </div>
         <div class="sig-box">
-          <div class="sig-line"></div>
+          <div style="min-height: 34px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 2px;">
+            <span style="font-size: 7.5pt; color: #94a3b8; font-style: italic;">[ Assinatura / Rubrica da Testemunha ]</span>
+          </div>
+          <div class="sig-line" style="margin-bottom: 6px;"></div>
           <div class="sig-role">2ª Testemunha Instrumentária</div>
-          <div class="sig-name"><strong>Nome:</strong> <span style="border-bottom: 1px dashed #94a3b8; display: inline-block; min-width: 180px;">___________________________</span></div>
-          <div class="sig-meta"><strong>CPF:</strong> _________________________</div>
+          <div class="sig-name"><strong>Nome Completo:</strong> <span style="border-bottom: 1px dashed #94a3b8; display: inline-block; min-width: 180px;">___________________________</span></div>
+          <div class="sig-meta"><strong>CPF / Documento:</strong> _________________________</div>
         </div>
       </div>
     </div>
@@ -1758,7 +1764,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <table class="data-table">
         <tr>
           <td width="50%"><strong>Unidade / Obra:</strong> ${escapeDocHtml(custom.obra || ctx.activeUnit)}</td>
-          <td width="50%"><strong>Data da Vistoria:</strong> ____/____/202___</td>
+          <td width="50%"><strong>Data da Vistoria:</strong> _____ / _____ / _________</td>
         </tr>
         <tr>
           <td><strong>Engenheiro(a) Residente:</strong> ${escapeDocHtml(custom.engineer || "___________________________________")}</td>
@@ -1988,7 +1994,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     summary: "Ata formal de encerramento tecnológico de canteiro: recolhimento de MikroTik, switches, notebooks, NVR, revogação do túnel VPN IPSec e baixa patrimonial no GLPI.",
     buildBody: (ctx, custom = {}) => `
       <h2>1. Identificação do Canteiro Desmobilizado</h2>
-      <p>Aos ____ dias do mês de __________________ de 202___, na unidade <strong>${escapeDocHtml(custom.obra || ctx.activeUnit)}</strong> da <strong>${escapeDocHtml(ctx.company)}</strong>, reuniram-se os responsáveis abaixo assinados para atestar a desmobilização tecnológica segura e o recolhimento integral dos ativos de TI e telecomunicações.</p>
+      <p>Aos _____ dias do mês de __________________ de _________, na unidade <strong>${escapeDocHtml(custom.obra || ctx.activeUnit)}</strong> da <strong>${escapeDocHtml(ctx.company)}</strong>, reuniram-se os responsáveis abaixo assinados para atestar a desmobilização tecnológica segura e o recolhimento integral dos ativos de TI e telecomunicações.</p>
 
       <h2>2. Conferência de Recolhimento e Baixa de Ativos Críticos (GLPI)</h2>
       <table class="data-table">
@@ -2130,7 +2136,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <table class="data-table">
         <tr>
           <td width="55%"><strong>Nome do Profissional:</strong> _____________________________________________</td>
-          <td width="45%"><strong>Data do Desligamento:</strong> ____/____/202___</td>
+          <td width="45%"><strong>Data do Desligamento:</strong> _____ / _____ / _________</td>
         </tr>
         <tr>
           <td><strong>Cargo / Departamento:</strong> _____________________________________________</td>
@@ -2210,7 +2216,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <h2>1. Dados da Sessão Ordinária / Extraordinária do Comitê da AC Engenharia</h2>
       <table class="data-table">
         <tr>
-          <td width="34%"><strong>Data:</strong> ____/____/202___</td>
+          <td width="34%"><strong>Data:</strong> _____ / _____ / _________</td>
           <td width="33%"><strong>Horário:</strong> ____h____ às ____h____</td>
           <td width="33%"><strong>Local:</strong> Sala de Reuniões Matriz / Videoconferência</td>
         </tr>
@@ -2239,10 +2245,10 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           </tr>
         </thead>
         <tbody>
-          <tr><td>01</td><td style="height:28px;"></td><td></td><td>____/____/202___</td></tr>
-          <tr><td>02</td><td style="height:28px;"></td><td></td><td>____/____/202___</td></tr>
-          <tr><td>03</td><td style="height:28px;"></td><td></td><td>____/____/202___</td></tr>
-          <tr><td>04</td><td style="height:28px;"></td><td></td><td>____/____/202___</td></tr>
+          <tr><td>01</td><td style="height:28px;"></td><td></td><td>_____ / _____ / _________</td></tr>
+          <tr><td>02</td><td style="height:28px;"></td><td></td><td>_____ / _____ / _________</td></tr>
+          <tr><td>03</td><td style="height:28px;"></td><td></td><td>_____ / _____ / _________</td></tr>
+          <tr><td>04</td><td style="height:28px;"></td><td></td><td>_____ / _____ / _________</td></tr>
         </tbody>
       </table>
 
@@ -2339,7 +2345,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <table class="data-table">
         <tr>
           <td width="55%"><strong>Tema / Semana da Campanha ANPD:</strong> _____________________________________</td>
-          <td width="45%"><strong>Data / Carga Horária:</strong> ____/____/202___ (____h)</td>
+          <td width="45%"><strong>Data / Carga Horária:</strong> _____ / _____ / _________ (____h)</td>
         </tr>
         <tr>
           <td><strong>Unidade / Canteiro / Estande:</strong> ${escapeDocHtml(ctx.activeUnit)}</td>
@@ -2901,8 +2907,8 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <h2>1. Escopo do Exercício de Recuperação de Desastres (Restore Test) — AC Engenharia</h2>
       <table class="data-table">
         <tr>
-          <td width="50%"><strong>Data/Hora de Início:</strong> ____/____/202___ às ____:____</td>
-          <td width="50%"><strong>Data/Hora de Conclusão:</strong> ____/____/202___ às ____:____</td>
+          <td width="50%"><strong>Data/Hora de Início:</strong> _____ / _____ / _________ às ____:____</td>
+          <td width="50%"><strong>Data/Hora de Conclusão:</strong> _____ / _____ / _________ às ____:____</td>
         </tr>
         <tr>
           <td><strong>Origem do Backup:</strong> [ ] AWS S3 Object Lock (WORM) &nbsp;[ ] Cofre Offsite</td>
@@ -2970,7 +2976,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <h2>1. Sumário Executivo do Incidente de Segurança</h2>
       <table class="data-table">
         <tr>
-          <td width="35%"><strong>ID do Incidente:</strong> INC-202___-____</td>
+          <td width="35%"><strong>ID do Incidente:</strong> INC-_________</td>
           <td width="35%"><strong>Severidade:</strong> [ ] Crítica [ ] Alta [ ] Média</td>
           <td width="30%"><strong>Regra Wazuh / MITRE:</strong> ____________</td>
         </tr>
@@ -3036,7 +3042,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           <td><strong>Contato DPO:</strong> ${escapeDocHtml(ctx.dpoEmail)}</td>
         </tr>
         <tr>
-          <td><strong>Data/Hora da Ciência do Incidente:</strong> ____/____/202___ às ____:____</td>
+          <td><strong>Data/Hora da Ciência do Incidente:</strong> _____ / _____ / _________ às ____:____</td>
           <td><strong>Tipo de Comunicação:</strong> [ ] Preliminar &nbsp;[ ] Completa</td>
         </tr>
       </table>
@@ -3055,7 +3061,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
 
       <h2>3. Minuta de Comunicado Direto aos Titulares (Linguagem Simples — Art. 9º)</h2>
       <div class="callout">
-        "Prezado(a) Titular, a AC Engenharia informa com total transparência que identificou, em ___/___/202___, um evento de segurança envolvendo [descrever dados]. Adotamos imediatamente todas as medidas técnicas de bloqueio e contenção. Recomendamos atenção redobrada a mensagens suspeitas ou boletos fora do portal oficial do cliente. Nosso Encarregado de Dados (DPO) está à disposição pelo canal ${escapeDocHtml(ctx.dpoEmail)}."
+        "Prezado(a) Titular, a AC Engenharia informa com total transparência que identificou, em _____ / _____ / _________, um evento de segurança envolvendo [descrever dados]. Adotamos imediatamente todas as medidas técnicas de bloqueio e contenção. Recomendamos atenção redobrada a mensagens suspeitas ou boletos fora do portal oficial do cliente. Nosso Encarregado de Dados (DPO) está à disposição pelo canal ${escapeDocHtml(ctx.dpoEmail)}."
       </div>
 
       ${buildSignatureGridHTML([
@@ -3198,8 +3204,8 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <h2>1. Especificação da Mudança Técnica (Change Request)</h2>
       <table class="data-table">
         <tr>
-          <td width="50%"><strong>Código GMUD:</strong> GMUD-202___-____</td>
-          <td width="50%"><strong>Janela de Execução:</strong> ____/____/202___ das ____h às ____h</td>
+          <td width="50%"><strong>Código GMUD:</strong> GMUD-_________</td>
+          <td width="50%"><strong>Janela de Execução:</strong> _____ / _____ / _________ das ____h às ____h</td>
         </tr>
         <tr>
           <td><strong>Sistema / Ativo Alvo:</strong> ____________________________________</td>
@@ -3364,13 +3370,13 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           </tr>
         </thead>
         <tbody>
-          <tr><td>01. Sienge ERP (REST API v1)</td><td>OAuth2 + TLS 1.3</td><td>____/____/202___</td><td>[ ] Íntegro (200 OK)</td></tr>
-          <tr><td>02. CV — Construtor de Vendas CRM</td><td>Webhook HMAC-SHA256</td><td>____/____/202___</td><td>[ ] Íntegro (200 OK)</td></tr>
-          <tr><td>03. Catracas Faciais Canteiros (ISAPI)</td><td>HTTPS + Hash Template</td><td>____/____/202___</td><td>[ ] Íntegro (200 OK)</td></tr>
-          <tr><td>04. Wazuh SIEM &amp; XDR Manager</td><td>JWT + TLS 1.3</td><td>____/____/202___</td><td>[ ] Íntegro (200 OK)</td></tr>
-          <tr><td>05. Active Directory / GLPI IAM</td><td>LDAPS (Porta 636)</td><td>____/____/202___</td><td>[ ] Íntegro (200 OK)</td></tr>
-          <tr><td>06. Concentrador VPN MikroTik Canteiros</td><td>IPSec IKEv2 AES-256</td><td>____/____/202___</td><td>[ ] Íntegro (200 OK)</td></tr>
-          <tr><td>07. Autoridade Carimbo de Tempo (TSA)</td><td>RFC 3161 ICP-Brasil</td><td>____/____/202___</td><td>[ ] Íntegro (200 OK)</td></tr>
+          <tr><td>01. Sienge ERP (REST API v1)</td><td>OAuth2 + TLS 1.3</td><td>_____ / _____ / _________</td><td>[ ] Íntegro (200 OK)</td></tr>
+          <tr><td>02. CV — Construtor de Vendas CRM</td><td>Webhook HMAC-SHA256</td><td>_____ / _____ / _________</td><td>[ ] Íntegro (200 OK)</td></tr>
+          <tr><td>03. Catracas Faciais Canteiros (ISAPI)</td><td>HTTPS + Hash Template</td><td>_____ / _____ / _________</td><td>[ ] Íntegro (200 OK)</td></tr>
+          <tr><td>04. Wazuh SIEM &amp; XDR Manager</td><td>JWT + TLS 1.3</td><td>_____ / _____ / _________</td><td>[ ] Íntegro (200 OK)</td></tr>
+          <tr><td>05. Active Directory / GLPI IAM</td><td>LDAPS (Porta 636)</td><td>_____ / _____ / _________</td><td>[ ] Íntegro (200 OK)</td></tr>
+          <tr><td>06. Concentrador VPN MikroTik Canteiros</td><td>IPSec IKEv2 AES-256</td><td>_____ / _____ / _________</td><td>[ ] Íntegro (200 OK)</td></tr>
+          <tr><td>07. Autoridade Carimbo de Tempo (TSA)</td><td>RFC 3161 ICP-Brasil</td><td>_____ / _____ / _________</td><td>[ ] Íntegro (200 OK)</td></tr>
         </tbody>
       </table>
 
@@ -3592,8 +3598,8 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <h2>1. Dados do Requerimento do Titular (Protocolo DSAR)</h2>
       <table class="data-table">
         <tr>
-          <td width="35%"><strong>Protocolo:</strong> ${escapeDocHtml(custom.id || "DSAR-202___-___")}</td>
-          <td width="35%"><strong>Data de Abertura:</strong> ${escapeDocHtml(custom.openDate || "____/____/202___")}</td>
+          <td width="35%"><strong>Protocolo:</strong> ${escapeDocHtml(custom.id || "DSAR-_________")}</td>
+          <td width="35%"><strong>Data de Abertura:</strong> ${escapeDocHtml(custom.openDate || "_____ / _____ / _________")}</td>
           <td width="30%"><strong>Status SLA (15d):</strong> ${escapeDocHtml(custom.status || "Atendido no Prazo")}</td>
         </tr>
         <tr>
@@ -3733,7 +3739,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <h2>1. Escopo, Critérios e Independência da Auditoria (ISO 19011) — AC Engenharia</h2>
       <table class="data-table">
         <tr>
-          <td width="50%"><strong>Período da Auditoria:</strong> ____/____/202___ a ____/____/202___</td>
+          <td width="50%"><strong>Período da Auditoria:</strong> _____ / _____ / _________ a _____ / _____ / _________</td>
           <td width="50%"><strong>Unidades Auditadas:</strong> Matriz + Canteiros: __________________</td>
         </tr>
         <tr>
@@ -3755,10 +3761,10 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           </tr>
         </thead>
         <tbody>
-          <tr><td>Cl. ___ / A.___</td><td>[ ] Conforme [ ] NC Maior [ ] NC Menor [ ] OM</td><td style="height:28px;"></td><td>____/____/202___</td></tr>
-          <tr><td>Cl. ___ / A.___</td><td>[ ] Conforme [ ] NC Maior [ ] NC Menor [ ] OM</td><td style="height:28px;"></td><td>____/____/202___</td></tr>
-          <tr><td>Cl. ___ / A.___</td><td>[ ] Conforme [ ] NC Maior [ ] NC Menor [ ] OM</td><td style="height:28px;"></td><td>____/____/202___</td></tr>
-          <tr><td>LGPD Art. ___</td><td>[ ] Conforme [ ] NC Maior [ ] NC Menor [ ] OM</td><td style="height:28px;"></td><td>____/____/202___</td></tr>
+          <tr><td>Cl. ___ / A.___</td><td>[ ] Conforme [ ] NC Maior [ ] NC Menor [ ] OM</td><td style="height:28px;"></td><td>_____ / _____ / _________</td></tr>
+          <tr><td>Cl. ___ / A.___</td><td>[ ] Conforme [ ] NC Maior [ ] NC Menor [ ] OM</td><td style="height:28px;"></td><td>_____ / _____ / _________</td></tr>
+          <tr><td>Cl. ___ / A.___</td><td>[ ] Conforme [ ] NC Maior [ ] NC Menor [ ] OM</td><td style="height:28px;"></td><td>_____ / _____ / _________</td></tr>
+          <tr><td>LGPD Art. ___</td><td>[ ] Conforme [ ] NC Maior [ ] NC Menor [ ] OM</td><td style="height:28px;"></td><td>_____ / _____ / _________</td></tr>
         </tbody>
       </table>
 
@@ -3786,7 +3792,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <table class="data-table">
         <tr>
           <td width="35%"><strong>ID da Evidência:</strong> EVID-_______</td>
-          <td width="35%"><strong>Data/Hora da Coleta:</strong> ____/____/202___ ____:____</td>
+          <td width="35%"><strong>Data/Hora da Coleta:</strong> _____ / _____ / _________ ____:____</td>
           <td width="30%"><strong>Local:</strong> ${escapeDocHtml(ctx.activeUnit)}</td>
         </tr>
         <tr>
@@ -3835,7 +3841,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       <h2>1. Registro do Desvio / Não Conformidade Identificada</h2>
       <table class="data-table">
         <tr>
-          <td width="35%"><strong>Nº da RNC:</strong> RNC-202___-____</td>
+          <td width="35%"><strong>Nº da RNC:</strong> RNC-_________</td>
           <td width="35%"><strong>Cláusula / Controle ISO:</strong> ____________</td>
           <td width="30%"><strong>Grau:</strong> [ ] Maior &nbsp;[ ] Menor</td>
         </tr>
@@ -3849,7 +3855,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
         <tr><td width="28%"><strong>Causa Raiz Identificada:</strong></td><td>____________________________________________________________________________________</td></tr>
         <tr><td><strong>Ação de Contenção Imediata:</strong></td><td>____________________________________________________________________________________</td></tr>
         <tr><td><strong>Ação Corretiva Definitiva:</strong></td><td>____________________________________________________________________________________</td></tr>
-        <tr><td><strong>Verificação de Eficácia:</strong></td><td>[ &nbsp; ] Eficaz — Não conformidade eliminada sem reincidência. (Data: ____/____/202___)</td></tr>
+        <tr><td><strong>Verificação de Eficácia:</strong></td><td>[ &nbsp; ] Eficaz — Não conformidade eliminada sem reincidência. (Data: _____ / _____ / _________)</td></tr>
       </table>
 
       ${buildSignatureGridHTML([
@@ -3903,7 +3909,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     signersSummary: "Analista Investigador T.I. + Gestor SecOps + DPO (se notificado)",
     summary: "Laudo pericial e forense de investigação de alertas de login e acessos anômalos (Sienge, Construtor de Vendas, Gmail, Antivírus), destinado a apurar e distinguir tecnicamente entre uso legítimo/falso positivo e tentativa real de invasão, com telemetria de IP, auditoria de ações por sistema, entrevista fática, contenção e 7 vereditos periciais.",
     buildBody: (ctx, custom = {}) => {
-      const incNum = custom.incidentNumber || "INC-SEG-202___-_________";
+      const incNum = custom.incidentNumber || "INC-SEG-_________";
       const dtDetection = custom.detectionDateTime || (ctx.todayBr + " às " + (ctx.nowBr.split(" ")[1] || "___:___") + " h");
       const alertOrig = custom.alertOrigin || "Alerta Automatizado de Segurança (Sienge / CV CRM / Gmail / Antivírus)";
       const sysTarget = custom.targetSystem || "ERP Sienge / Construtor de Vendas (CV CRM) / Google Workspace";
@@ -4194,7 +4200,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
             <td>[ &nbsp; ] <strong>Suspensão Cautelar Provisória</strong> da Conta</td>
           </tr>
         </table>
-        <p><strong>Término da Contenção:</strong> ___/___/202___ às ___:___ h &nbsp;|&nbsp; <strong>Tempo Total de Resposta (TTR):</strong> [ &nbsp; ] &lt; 30 min &nbsp;&nbsp; [ &nbsp; ] 30 min a 2h &nbsp;&nbsp; [ &nbsp; ] &gt; 2h</p>
+        <p><strong>Término da Contenção:</strong> _____ / _____ / _________ às ___:___ h &nbsp;|&nbsp; <strong>Tempo Total de Resposta (TTR):</strong> [ &nbsp; ] &lt; 30 min &nbsp;&nbsp; [ &nbsp; ] 30 min a 2h &nbsp;&nbsp; [ &nbsp; ] &gt; 2h</p>
 
         <h2>6. Conclusão Pericial, Veredito e Enquadramento LGPD</h2>
         <table class="data-table">
@@ -4246,8 +4252,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     summary: "Instrumento jurídico-corporativo de custódia e responsabilidade legal para uso de certificados digitais ICP-Brasil (e-CNPJ ou e-CPF, modelos A1 em arquivo e A3 em token físico/smartcard) da AC Engenharia, com instalação exclusiva pela T.I., escopo fiscal/SPED (ECD, ECF, EFD), cláusula de ressarcimento por extravio (CLT Art. 462) e protocolo de devolução.",
     buildBody: (ctx, custom = {}) => {
       const cType = custom.certType || "Certificado Digital e-CNPJ / e-CPF ICP-Brasil";
-      const tokenAsset = custom.tokenAssetId || "Token Corporativo / Estação Homologada T.I.";
-      const cValidity = custom.certValidity || "____ / ____ / 202___";
+      const machineAsset = custom.machineAsset || custom.tokenAssetId || "Estação de Trabalho Homologada pela T.I.";
       const cScope = custom.certScope || "Transmissão SPED (ECD, ECF, EFD), Emissão de NF-e no Sienge e Conectividade Social ICP";
 
       return `
@@ -4259,18 +4264,22 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           </tr>
           <tr>
             <td><strong>Colaborador(a) Custodiante:</strong></td>
-            <td>Nome: <strong>${escapeDocHtml(custom.signerName || "[ Nome Completo do Colaborador Custodiante ]")}</strong> &nbsp;|&nbsp; CPF: ___________________________<br/>
-                Cargo: ____________________________________ &nbsp;|&nbsp; Setor: _________________________________</td>
+            <td>Nome Completo: <strong>${escapeDocHtml(custom.signerName || "[ Nome Completo do Colaborador Custodiante ]")}</strong> &nbsp;|&nbsp; CPF: ___________________________<br/>
+                Cargo / Função: ____________________________________ &nbsp;|&nbsp; Setor / Lotação: _________________________________</td>
           </tr>
           <tr>
             <td><strong>Especificação do Certificado:</strong></td>
             <td><strong>${escapeDocHtml(cType)}</strong><br/>
                 Titularidade: [ &nbsp; ] AC Engenharia Ltda (e-CNPJ) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Procurador / Representante Legal (e-CPF)<br/>
-                Formato: [ &nbsp; ] Arquivo A1 (Instalação exclusiva T.I.) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Token USB Físico A3 &nbsp;&nbsp;&nbsp; [ &nbsp; ] Nuvem Corporativa</td>
+                Formato: [ &nbsp; ] Arquivo A1 (Instalação restrita à T.I.) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Token USB Físico A3 &nbsp;&nbsp;&nbsp; [ &nbsp; ] Nuvem Corporativa</td>
           </tr>
           <tr>
-            <td><strong>Identificação do Token / Máquina:</strong></td>
-            <td><strong>${escapeDocHtml(tokenAsset)}</strong> &nbsp;|&nbsp; <strong>Validade do Certificado:</strong> <strong>${escapeDocHtml(cValidity)}</strong></td>
+            <td><strong>Estação de Trabalho Autorizada:</strong></td>
+            <td><strong>${escapeDocHtml(machineAsset)}</strong> &nbsp;|&nbsp; <em>(Máquina com instalação e configuração restrita à T.I.)</em></td>
+          </tr>
+          <tr>
+            <td><strong>Vigência da Custódia:</strong></td>
+            <td><strong>Prazo Indeterminado</strong> &nbsp;|&nbsp; <em>(Válido enquanto perdurar o vínculo funcional no cargo/setor ou até revogação formal pela T.I.)</em></td>
           </tr>
         </table>
 
@@ -4329,20 +4338,20 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
         </div>
 
         <h2>5. Termo de Encerramento de Custódia e Devolução (Offboarding)</h2>
-        <p class="muted"><em>(Preenchido exclusivamente no desligamento do colaborador, expiração da validade ou mudança de setor)</em></p>
+        <p class="muted"><em>(Preenchido exclusivamente no desligamento do colaborador, mudança de cargo/setor ou revogação formal pela T.I.)</em></p>
         <table class="data-table">
           <tr>
             <td width="30%"><strong>Motivo do Encerramento:</strong></td>
-            <td>[ &nbsp; ] Desligamento da Empresa &nbsp;&nbsp;&nbsp; [ &nbsp; ] Mudança de Cargo &nbsp;&nbsp;&nbsp; [ &nbsp; ] Expiração &nbsp;&nbsp;&nbsp; [ &nbsp; ] Revogação Preventiva</td>
+            <td>[ &nbsp; ] Desligamento da Empresa &nbsp;&nbsp;&nbsp; [ &nbsp; ] Mudança de Cargo / Setor &nbsp;&nbsp;&nbsp; [ &nbsp; ] Revogação Preventiva pela T.I.</td>
           </tr>
           <tr>
             <td><strong>Ações Técnicas da T.I.:</strong></td>
-            <td>[ &nbsp; ] Token Físico A3 recolhido intacto &nbsp;&nbsp;&nbsp; [ &nbsp; ] Certificado A1 desinstalado e sanitizado do disco rígido<br/>
+            <td>[ &nbsp; ] Certificado A1 desinstalado e sanitizado do disco rígido &nbsp;&nbsp;&nbsp; [ &nbsp; ] Token Físico A3 recolhido intacto<br/>
                 [ &nbsp; ] Revogação homologada na Autoridade Certificadora &nbsp;|&nbsp; <strong>Protocolo AC:</strong> ________________________</td>
           </tr>
           <tr>
             <td><strong>Data e Assinaturas de Baixa:</strong></td>
-            <td>Data: ____/____/202___ &nbsp;|&nbsp; Assinatura Colaborador: _____________________ &nbsp;|&nbsp; T.I. Receptor: _____________________</td>
+            <td>Data: _____ / _____ / _________ &nbsp;|&nbsp; Assinatura / Rubrica Colaborador: _____________________ &nbsp;|&nbsp; T.I. Receptor: _____________________</td>
           </tr>
         </table>
 
@@ -4379,6 +4388,11 @@ function buildRenderedTemplateHTML(code, customData = {}, options = {}) {
   const ctx = Object.assign({}, getTemplateContextDefaults());
   const storedDoc = getStoredDocumentCustomData(code);
   const mergedCustom = Object.assign({}, storedDoc.fields || {}, customData || {});
+
+  if (storedDoc.docDate && storedDoc.docDate.trim()) {
+    ctx.todayBr = storedDoc.docDate.trim();
+    mergedCustom.docDate = storedDoc.docDate.trim();
+  }
 
   // Aplica signatários customizados salvos especificamente neste documento no contexto ctx
   if (Array.isArray(storedDoc.signers)) {
@@ -4871,6 +4885,22 @@ function openDocumentSignersModal(docCode = null) {
           </div>
         </div>
 
+        <!-- Seção: Data Oficial do Documento / Assinatura -->
+        <div class="bg-blue-50/70 border border-blue-200/80 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="space-y-0.5">
+            <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-[#004b93]"></i>
+              <span>Data Oficial do Documento / Assinatura:</span>
+            </span>
+            <p class="text-[11px] text-slate-500">
+              Digite a data desejada (ex: 18/11/2026) ou deixe em branco para manter linhas abertas (_____ / _____ / _________) para preenchimento manual à caneta.
+            </p>
+          </div>
+          <div class="w-full sm:w-48 shrink-0">
+            <input type="text" id="doc-custom-doc-date" value="${escapeDocHtml(savedData.docDate || "")}" placeholder="Ex: 18/11/2026" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+          </div>
+        </div>
+
         <!-- Seção: Signatários -->
         <div class="space-y-2.5">
           <div class="flex items-center justify-between">
@@ -4945,8 +4975,12 @@ function handleSaveDocumentCustomData(e, docCode) {
     });
   }
 
+  const dateEl = document.getElementById("doc-custom-doc-date");
+  const docDate = dateEl ? dateEl.value.trim() : "";
+
   const customDocData = {
     docCode,
+    docDate,
     signers,
     fields,
     updatedAt: new Date().toISOString()
