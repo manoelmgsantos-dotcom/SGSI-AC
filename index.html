@@ -4462,13 +4462,13 @@ openssl ts -reply -in response.tsr -text</pre>
             <!-- BOTÃO PRINCIPAL: LOGIN VIA GOOGLE WORKSPACE (CONVITE OBRIGATÓRIO) -->
             <div class="space-y-3 pt-2">
               <!-- Banner Dinâmico de Convite Detectado -->
-              <div id="login-invite-alert-banner" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs space-y-1 animate-in fade-in duration-200">
+              <div id="login-invite-alert-banner" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs space-y-1.5 animate-in fade-in duration-200">
                 <div class="flex items-center gap-1.5 font-bold">
                   <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600"></i>
                   <span>Convite Identificado!</span>
                 </div>
                 <p class="text-[11px] text-emerald-800 leading-snug">
-                  Você foi convidado(a) com o e-mail <strong id="login-invite-banner-email" class="font-mono text-emerald-950"></strong>. Clique no botão Google abaixo com esta conta para aceitar o convite e ativar seu acesso.
+                  Você foi convidado(a) com o e-mail <strong id="login-invite-banner-email" class="font-mono text-emerald-950"></strong>. Clique no botão Google abaixo para acessar com esta conta, ou utilize o campo de senha corporativa abaixo caso sua credencial tenha sido definida pelo Administrador.
                 </p>
               </div>
 
@@ -4502,51 +4502,51 @@ openssl ts -reply -in response.tsr -text</pre>
               </div>
             </div>
 
-            <!-- DIVISOR DISCRETO PARA ÁREA DO ADMINISTRADOR -->
+            <!-- DIVISOR DISCRETO PARA LOGIN POR SENHA -->
             <div class="relative my-4">
               <div class="absolute inset-0 flex items-center">
                 <div class="w-full border-t border-slate-200"></div>
               </div>
               <div class="relative flex justify-center text-[10px] uppercase font-semibold text-slate-400 bg-white px-2">
-                Acesso Restrito ao Administrador
+                Ou Acesso por E-mail e Senha
               </div>
             </div>
 
-            <!-- BOTÃO EXPANSOR DO LOGIN EXCLUSIVO DO ADMINISTRADOR -->
+            <!-- BOTÃO EXPANSOR DO LOGIN POR SENHA (ADMINISTRADOR / CADASTRO DIRETO) -->
             <div>
               <button type="button" id="btn-toggle-admin-login" onclick="toggleAdminLoginForm()" class="w-full py-2 px-3 rounded-lg border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium text-xs flex items-center justify-center gap-2 transition-all cursor-pointer">
                 <i data-lucide="key-round" class="w-3.5 h-3.5 text-slate-500"></i>
-                <span>Acesso do Administrador Principal (Setup / Senha)</span>
+                <span>Acesso com E-mail e Senha Corporativa</span>
               </button>
 
-              <!-- CONTAINER EXPANSÍVEL DO LOGIN DO ADMINISTRADOR -->
-              <div id="admin-password-login-box" class="hidden mt-3 p-4 rounded-xl bg-amber-50/70 border border-amber-200/90 space-y-3">
+              <!-- CONTAINER EXPANSÍVEL DO LOGIN POR SENHA -->
+              <div id="admin-password-login-box" class="hidden mt-3 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                 <div class="flex items-start gap-2">
-                  <i data-lucide="shield-alert" class="w-4 h-4 text-amber-700 mt-0.5 shrink-0"></i>
+                  <i data-lucide="shield-check" class="w-4 h-4 text-[#004b93] mt-0.5 shrink-0"></i>
                   <div>
-                    <div class="text-xs font-bold text-amber-900">Administrador de Configuração</div>
-                    <p class="text-[11px] text-amber-800 leading-tight mt-0.5">
-                      Área exclusiva para o Administrador Principal realizar parametrizações do SGSI e do Google SSO.
+                    <div class="text-xs font-bold text-slate-800">Autenticação Corporativa SGSI</div>
+                    <p class="text-[11px] text-slate-500 leading-tight mt-0.5">
+                      Para administradores e colaboradores cadastrados diretamente pela gestão de acessos.
                     </p>
                   </div>
                 </div>
 
                 <form onsubmit="loginWithForm(event)" autocomplete="off" class="space-y-3">
                   <div>
-                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">E-mail do Administrador</label>
+                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">E-mail Corporativo</label>
                     <div class="relative">
                       <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5"></i>
-                      <input type="email" id="login-input-email" required value="" autocomplete="username" placeholder="Digite o e-mail do administrador" class="w-full pl-8 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+                      <input type="email" id="login-input-email" required value="" autocomplete="username" placeholder="seu.email@acengenhariase.com.br" class="w-full pl-8 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
                     </div>
                   </div>
 
                   <div>
                     <div class="flex items-center justify-between mb-1">
-                      <label class="block text-[11px] font-semibold text-slate-700">Senha Mestra</label>
+                      <label class="block text-[11px] font-semibold text-slate-700">Senha de Acesso</label>
                     </div>
                     <div class="relative">
                       <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5"></i>
-                      <input type="password" id="login-input-password" required value="" autocomplete="current-password" placeholder="Digite a senha mestra" class="w-full pl-8 pr-9 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+                      <input type="password" id="login-input-password" required value="" autocomplete="current-password" placeholder="Digite sua senha de acesso" class="w-full pl-8 pr-9 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
                       <button type="button" onclick="togglePasswordVisibility()" title="Mostrar ou ocultar senha" class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 p-0.5 cursor-pointer">
                         <i data-lucide="eye" id="login-eye-icon" class="w-3.5 h-3.5"></i>
                       </button>

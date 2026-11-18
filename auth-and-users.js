@@ -934,9 +934,9 @@ async function loginWithForm(e) {
 
   if (!email || !pass) {
     if (window.showToast) {
-      window.showToast("Informe o e-mail do Administrador e a senha mestra.", "warning");
+      window.showToast("Informe o e-mail corporativo e a senha de acesso.", "warning");
     } else {
-      alert("Informe o e-mail do Administrador e a senha mestra.");
+      alert("Informe o e-mail corporativo e a senha de acesso.");
     }
     return;
   }

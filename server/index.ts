@@ -634,10 +634,10 @@ app.post('/api/auth/login', asyncRoute(async (request, response) => {
       ? await bcrypt.compare(password, dbUser.password_hash)
       : await bcrypt.compare(password, DUMMY_BCRYPT_HASH);
 
-    const isDbAdmin = Boolean(dbUser && (dbUser.role === 'secops' || dbUser.role === 'diretoria'));
+    const isDbUserValid = Boolean(dbUser && dbUser.active && passwordMatches);
     const isMasterEnvAuth = isBootstrapAdmin && (password === expectedMasterPass);
 
-    if ((isDbAdmin && passwordMatches) || isMasterEnvAuth) {
+    if (isDbUserValid || isMasterEnvAuth) {
       if (isMasterEnvAuth && !hasValidHash) {
         const newHash = await bcrypt.hash(expectedMasterPass, 10);
         await pool.query(
