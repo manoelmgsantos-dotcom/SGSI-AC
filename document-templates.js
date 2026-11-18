@@ -1005,22 +1005,22 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
       },
       {
         "key": "userName",
-        "label": "Nome Completo do Colaborador",
-        "placeholder": "Ex: João da Silva"
+        "label": "Nome da Pessoa Investigada / Colaborador Titular",
+        "placeholder": "Ex: Davis Damasceno / Nome Completo"
       },
       {
         "key": "userEmail",
-        "label": "E-mail Corporativo",
-        "placeholder": "Ex: joao.silva@acengenhariase.com.br"
+        "label": "E-mail da Pessoa Investigada",
+        "placeholder": "Ex: davisdamasceno@acengenhariase.com.br"
       },
       {
         "key": "userLogin",
-        "label": "Login / Usuário no Sistema",
-        "placeholder": "Ex: jsilva"
+        "label": "Login / Usuário da Pessoa Investigada",
+        "placeholder": "Ex: davis.damasceno"
       },
       {
         "key": "userDepartment",
-        "label": "Cargo / Setor / Lotação",
+        "label": "Cargo / Setor da Pessoa Investigada",
         "placeholder": "Ex: Engenheiro Residente / Obras"
       },
       {
@@ -4067,8 +4067,8 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       const protocol = custom.triageProtocol || "TRI-SEG-2026-_________";
       const dtCheck = custom.checkDateTime || (ctx.todayBr + " às " + (ctx.nowBr.split(" ")[1] || "___:___") + " h");
       const originSystem = custom.alertOriginSystem || "ERP Sienge / Construtor de Vendas (CV CRM) / Google Workspace / Active Directory / Firewall";
-      const uName = custom.userName || "__________________________________________________";
-      const uEmail = custom.userEmail || "_________________________________@acengenhariase.com.br";
+      const uName = custom.investigatedPerson || custom.userName || "__________________________________________________";
+      const uEmail = custom.investigatedEmail || custom.userEmail || "_________________________________@acengenhariase.com.br";
       const uLogin = custom.userLogin || "_________________________";
       const uDept = custom.userDepartment || "__________________________________________________";
       const ipAnalyzed = custom.analyzedIp || "___.___.___.___ (Geolocalização / Provedor)";
@@ -4099,7 +4099,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
             </td>
           </tr>
           <tr>
-            <td><strong>Colaborador Titular da Conta:</strong></td>
+            <td><strong>Pessoa Investigada / Titular:</strong></td>
             <td>
               <table style="width: 100%; border: 1px solid #cbd5e1; margin-top: 4px; font-size: 8.5pt;">
                 <tr>
@@ -5759,6 +5759,8 @@ function generateOffcanvasEntityDocument(type, idOrCode) {
 
 let currentDocumentEvidenceTargetCode = "MOD-SEG-08-A";
 let activeEvidenceUploadFile = null;
+let docEvidSearchQuery = "";
+let docEvidCategoryFilter = "todas";
 
 function isEvidenceHubEnabledForDoc(docCode) {
   if (!docCode) return false;
@@ -5781,10 +5783,25 @@ function getEvidencesForDocument(docCode) {
   });
 }
 
+function applyDocumentEvidenceFilters() {
+  const searchEl = document.getElementById("doc-evid-filter-search");
+  const catEl = document.getElementById("doc-evid-filter-category");
+  if (searchEl) docEvidSearchQuery = (searchEl.value || "").toLowerCase().trim();
+  if (catEl) docEvidCategoryFilter = catEl.value || "todas";
+  renderDocumentEvidenceList(currentDocumentEvidenceTargetCode);
+}
+
 function openDocumentEvidenceModal(docCode = null, activeTab = "list") {
   const targetCode = docCode || TemplateHubState.previewingCode || "MOD-SEG-08-A";
   currentDocumentEvidenceTargetCode = targetCode;
   activeEvidenceUploadFile = null;
+  docEvidSearchQuery = "";
+  docEvidCategoryFilter = "todas";
+
+  const searchInput = document.getElementById("doc-evid-filter-search");
+  const catSelect = document.getElementById("doc-evid-filter-category");
+  if (searchInput) searchInput.value = "";
+  if (catSelect) catSelect.value = "todas";
 
   const tpl = getTemplateByCode(targetCode) || {
     code: targetCode,
@@ -5798,13 +5815,14 @@ function openDocumentEvidenceModal(docCode = null, activeTab = "list") {
   const subEl = document.getElementById("doc-evidence-modal-subtitle");
 
   if (badgeCode) badgeCode.textContent = tpl.code;
-  if (titleEl) titleEl.textContent = `Evidências Anexadas — ${tpl.title}`;
-  if (subEl) subEl.textContent = `Repositório forense e custódia digital vinculado ao modelo ${tpl.code} (${tpl.normative})`;
+  if (titleEl) titleEl.textContent = `Central de Evidências — ${tpl.title}`;
+  if (subEl) subEl.textContent = `Custódia digital, trilha de telemetrias e histórico forense do modelo ${tpl.code} (${tpl.normative})`;
 
   switchDocumentEvidenceTab(activeTab);
 
   if (modal) {
     modal.classList.remove("hidden");
+    document.body.style.overflow = "hidden"; // Trava scroll da página de trás
     if (window.lucide && typeof window.lucide.createIcons === "function") {
       window.lucide.createIcons();
     }
@@ -5815,6 +5833,7 @@ function closeDocumentEvidenceModal() {
   const modal = document.getElementById("modal-document-evidence");
   if (modal) {
     modal.classList.add("hidden");
+    document.body.style.overflow = ""; // Restaura scroll normal
   }
   activeEvidenceUploadFile = null;
 }
@@ -5824,20 +5843,23 @@ function switchDocumentEvidenceTab(tab = "list") {
   const btnUpload = document.getElementById("tab-btn-doc-evid-upload");
   const panelList = document.getElementById("panel-doc-evid-list");
   const panelUpload = document.getElementById("panel-doc-evid-upload");
+  const filtersToolbar = document.getElementById("doc-evid-filters-toolbar");
 
   if (!panelList || !panelUpload) return;
 
   if (tab === "upload") {
     panelList.classList.add("hidden");
     panelUpload.classList.remove("hidden");
-    if (btnList) btnList.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 flex items-center gap-1.5 cursor-pointer transition-all";
-    if (btnUpload) btnUpload.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-[#004b93] shadow-xs border border-slate-200 flex items-center gap-1.5 cursor-pointer transition-all";
+    if (filtersToolbar) filtersToolbar.classList.add("hidden");
+    if (btnList) btnList.className = "px-4 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-2 cursor-pointer transition-all";
+    if (btnUpload) btnUpload.className = "px-4 py-2 rounded-lg text-xs font-bold bg-[#004b93] text-white shadow-xs flex items-center gap-2 cursor-pointer transition-all";
     renderDocumentEvidenceUploadForm(currentDocumentEvidenceTargetCode);
   } else {
     panelUpload.classList.add("hidden");
     panelList.classList.remove("hidden");
-    if (btnUpload) btnUpload.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 flex items-center gap-1.5 cursor-pointer transition-all";
-    if (btnList) btnList.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-[#004b93] shadow-xs border border-slate-200 flex items-center gap-1.5 cursor-pointer transition-all";
+    if (filtersToolbar) filtersToolbar.classList.remove("hidden");
+    if (btnUpload) btnUpload.className = "px-4 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-2 cursor-pointer transition-all";
+    if (btnList) btnList.className = "px-4 py-2 rounded-lg text-xs font-bold bg-[#004b93] text-white shadow-xs flex items-center gap-2 cursor-pointer transition-all";
     renderDocumentEvidenceList(currentDocumentEvidenceTargetCode);
   }
 
@@ -5851,26 +5873,76 @@ function renderDocumentEvidenceList(docCode) {
   const btnListText = document.getElementById("tab-btn-doc-evid-list-text");
   if (!panel) return;
 
-  const evidences = getEvidencesForDocument(docCode);
+  const allEvidences = getEvidencesForDocument(docCode);
+
+  // Calcula contadores de KPI para o topo da tela
+  const totalCount = allEvidences.length;
+  const investigatedSet = new Set();
+  allEvidences.forEach(e => {
+    const person = (e.investigatedPerson || e.userName || "").trim();
+    if (person) investigatedSet.add(person);
+  });
+  const categoriesSet = new Set(allEvidences.map(e => e.category).filter(Boolean));
+
+  const statTotalEl = document.getElementById("doc-evid-stat-total");
+  const statInvestigatedEl = document.getElementById("doc-evid-stat-investigated");
+  const statCategoriesEl = document.getElementById("doc-evid-stat-categories");
+  if (statTotalEl) statTotalEl.textContent = totalCount;
+  if (statInvestigatedEl) statInvestigatedEl.textContent = investigatedSet.size;
+  if (statCategoriesEl) statCategoriesEl.textContent = categoriesSet.size;
+
+  // Aplica filtros de pesquisa e categoria
+  const q = (docEvidSearchQuery || "").toLowerCase();
+  const filtered = allEvidences.filter(e => {
+    const matchCat = docEvidCategoryFilter === "todas" || (e.category && e.category.toLowerCase().includes(docEvidCategoryFilter.toLowerCase()));
+    const matchSearch = !q ||
+      (e.id && e.id.toLowerCase().includes(q)) ||
+      (e.title && e.title.toLowerCase().includes(q)) ||
+      (e.investigatedPerson && e.investigatedPerson.toLowerCase().includes(q)) ||
+      (e.userName && e.userName.toLowerCase().includes(q)) ||
+      (e.investigatedEmail && e.investigatedEmail.toLowerCase().includes(q)) ||
+      (e.originSystem && e.originSystem.toLowerCase().includes(q)) ||
+      (e.responsible && e.responsible.toLowerCase().includes(q)) ||
+      (e.fileName && e.fileName.toLowerCase().includes(q)) ||
+      (e.sha256 && e.sha256.toLowerCase().includes(q)) ||
+      (e.description && e.description.toLowerCase().includes(q));
+    return matchCat && matchSearch;
+  });
+
   if (btnListText) {
-    btnListText.textContent = `Evidências Anexadas (${evidences.length})`;
+    btnListText.textContent = `Todos os Registros de Anexos (${allEvidences.length})`;
   }
 
-  if (evidences.length === 0) {
+  if (allEvidences.length === 0) {
     panel.innerHTML = `
-      <div class="card-white rounded-xl p-8 text-center border border-slate-200 space-y-3.5 shadow-2xs">
-        <div class="w-12 h-12 mx-auto rounded-full bg-sky-50 text-sky-700 flex items-center justify-center border border-sky-100 shadow-2xs">
-          <i data-lucide="paperclip" class="w-6 h-6"></i>
+      <div class="card-white rounded-2xl p-12 text-center border border-slate-200 space-y-4 shadow-sm max-w-2xl mx-auto my-6">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-sky-50 text-[#004b93] flex items-center justify-center border border-sky-100 shadow-sm">
+          <i data-lucide="paperclip" class="w-8 h-8"></i>
         </div>
-        <div class="space-y-1">
-          <h4 class="text-sm font-bold text-slate-800">Nenhuma evidência anexada a este documento ainda</h4>
-          <p class="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed">
+        <div class="space-y-1.5">
+          <h3 class="text-base font-bold text-slate-800">Nenhuma evidência anexada a este modelo de documento ainda</h3>
+          <p class="text-xs text-slate-500 leading-relaxed max-w-lg mx-auto">
             Nenhum arquivo ou log foi vinculado a <strong>${escapeDocHtml(docCode)}</strong>. Você pode anexar telemetrias de rede, capturas de tela do login, export de logs do sistema (Sienge, Google Workspace, AD, Firewall), entrevista rápida com o colaborador ou o formulário assinado.
           </p>
         </div>
-        <button type="button" onclick="switchDocumentEvidenceTab('upload')" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white text-xs font-bold cursor-pointer transition-colors shadow-xs">
-          <i data-lucide="plus" class="w-4 h-4"></i>
-          <span>Anexar Primeira Evidência</span>
+        <div class="pt-2">
+          <button type="button" onclick="switchDocumentEvidenceTab('upload')" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#004b93] hover:bg-[#003d78] text-white text-xs font-bold cursor-pointer transition-colors shadow-md">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>+ Anexar Primeira Evidência a este Modelo</span>
+          </button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if (filtered.length === 0) {
+    panel.innerHTML = `
+      <div class="card-white rounded-xl p-8 text-center border border-slate-200 space-y-2.5 shadow-2xs">
+        <p class="text-sm font-bold text-slate-800">Nenhum anexo encontrado para o filtro aplicado</p>
+        <p class="text-xs text-slate-500">Tente buscar por outro termo ou limpe os filtros de pesquisa.</p>
+        <button type="button" onclick="docEvidSearchQuery=''; docEvidCategoryFilter='todas'; document.getElementById('doc-evid-filter-search').value=''; document.getElementById('doc-evid-filter-category').value='todas'; renderDocumentEvidenceList('${docCode}');" class="mt-2 px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold cursor-pointer">
+          Limpar Filtros
         </button>
       </div>
     `;
@@ -5878,34 +5950,48 @@ function renderDocumentEvidenceList(docCode) {
   }
 
   panel.innerHTML = `
-    <div class="flex items-center justify-between pb-1 text-xs text-slate-500">
-      <span>Total de <strong>${evidences.length}</strong> evidência(s) indexada(s) e protegidas por SHA-256</span>
-      <button type="button" onclick="switchDocumentEvidenceTab('upload')" class="text-xs font-bold text-[#004b93] hover:underline flex items-center gap-1 cursor-pointer">
-        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-        <span>Adicionar Mais Evidências</span>
+    <div class="flex items-center justify-between pb-1 text-xs text-slate-500 px-1">
+      <span>Exibindo <strong>${filtered.length}</strong> de <strong>${allEvidences.length}</strong> registro(s) de evidências vinculadas</span>
+      <button type="button" onclick="switchDocumentEvidenceTab('upload')" class="text-xs font-bold text-[#004b93] hover:underline flex items-center gap-1.5 cursor-pointer">
+        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+        <span>Adicionar Novo Registro</span>
       </button>
     </div>
-    <div class="space-y-3">
-      ${evidences.map(e => `
-        <div class="card-white rounded-xl p-4 border border-slate-200 hover:border-sky-300 transition-all space-y-3 shadow-2xs">
+
+    <div class="space-y-3.5">
+      ${filtered.map(e => {
+        const investigatedDisplay = e.investigatedPerson || e.userName || "Colaborador Titular da Conta (Acesso Atípico)";
+        return `
+        <div class="card-white rounded-xl p-5 border border-slate-200/90 hover:border-[#004b93]/50 transition-all space-y-3.5 shadow-2xs hover:shadow-sm">
+          
+          <!-- LINHA 1: CABEÇALHO DO REGISTRO COM PESSOA INVESTIGADA -->
           <div class="flex items-start justify-between gap-3 flex-wrap">
-            <div class="space-y-1 min-w-0 flex-1">
+            <div class="space-y-2 min-w-0 flex-1">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#0f2942] text-white">${escapeDocHtml(e.id)}</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-50 text-sky-800 border border-sky-200">${escapeDocHtml(e.category || 'Auditoria & Triagem')}</span>
+                <span class="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[#0f2942] text-white">${escapeDocHtml(e.id)}</span>
+                <span class="px-2.5 py-0.5 rounded text-[10px] font-semibold bg-sky-50 text-sky-800 border border-sky-200">${escapeDocHtml(e.category || 'Auditoria & Triagem')}</span>
                 <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">✓ ${escapeDocHtml(e.status || 'Homologada')}</span>
                 <span class="text-[11px] text-slate-400 font-mono">${escapeDocHtml(e.date || '')}</span>
               </div>
-              <h4 class="text-xs font-bold text-slate-900">${escapeDocHtml(e.title)}</h4>
-              ${e.description ? `<p class="text-[11px] text-slate-600 leading-relaxed">${escapeDocHtml(e.description)}</p>` : ''}
+
+              <!-- DESTAQUE VISUAL EXCLUSIVO DA PESSOA INVESTIGADA -->
+              <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50/90 border border-blue-200 text-xs text-blue-950 font-medium shadow-2xs flex-wrap">
+                <i data-lucide="user-x" class="w-4 h-4 text-[#004b93] shrink-0"></i>
+                <span>Pessoa Investigada / Titular: <strong class="text-[#004b93] font-extrabold text-[12.5px]">${escapeDocHtml(investigatedDisplay)}</strong></span>
+                ${e.investigatedEmail ? `<span class="text-blue-300 font-normal">|</span><span class="font-mono text-[11px] text-blue-800">${escapeDocHtml(e.investigatedEmail)}</span>` : ''}
+                ${e.originSystem ? `<span class="text-blue-300 font-normal">|</span><span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-white border border-blue-200 text-blue-700">Sistema: ${escapeDocHtml(e.originSystem)}</span>` : ''}
+              </div>
+
+              <h4 class="text-sm font-bold text-slate-900 pt-0.5">${escapeDocHtml(e.title)}</h4>
+              ${e.description ? `<p class="text-xs text-slate-600 leading-relaxed">${escapeDocHtml(e.description)}</p>` : ''}
             </div>
 
-            <div class="flex items-center gap-1.5 shrink-0">
-              <button type="button" onclick="downloadDocumentEvidenceFile('${e.id}')" class="px-2.5 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors" title="Visualizar / Baixar arquivo anexado">
+            <div class="flex items-center gap-2 shrink-0 pt-1">
+              <button type="button" onclick="downloadDocumentEvidenceFile('${e.id}')" class="px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs" title="Visualizar / Baixar arquivo original mantido sob custódia">
                 <i data-lucide="download" class="w-3.5 h-3.5 text-sky-600"></i>
                 <span>Baixar</span>
               </button>
-              <button type="button" onclick="printEvidenceForensicCertificate('${e.id}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors" title="Emitir Certidão de Custódia Forense">
+              <button type="button" onclick="printEvidenceForensicCertificate('${e.id}')" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs" title="Emitir Certidão Oficial de Custódia Forense (ISO 27037)">
                 <i data-lucide="award" class="w-3.5 h-3.5 text-slate-600"></i>
                 <span>Certidão Forense</span>
               </button>
@@ -5915,25 +6001,28 @@ function renderDocumentEvidenceList(docCode) {
             </div>
           </div>
 
-          <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px]">
-            <div class="flex items-center gap-2 text-slate-600 min-w-0">
-              <i data-lucide="file-check" class="w-4 h-4 text-slate-400 shrink-0"></i>
-              <span class="font-mono font-semibold text-slate-800 truncate">${escapeDocHtml(e.fileName || 'arquivo-evidencia')}</span>
+          <!-- LINHA 2: METADADOS DE ARQUIVO E HASH CRIPTOGRÁFICO DE INTEGRIDADE -->
+          <div class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-2.5 text-[11px]">
+            <div class="flex items-center gap-2 text-slate-600 min-w-0 flex-wrap">
+              <i data-lucide="file-check" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+              <span class="font-mono font-bold text-slate-800 truncate">${escapeDocHtml(e.fileName || 'arquivo-evidencia')}</span>
               <span class="text-slate-400 font-mono">(${escapeDocHtml(e.fileSize || '1.0 MB')})</span>
               <span class="text-slate-300">•</span>
-              <span class="text-slate-500">Resp: <strong>${escapeDocHtml(e.responsible || 'Analista de T.I.')}</strong></span>
+              <span class="text-slate-500">Analista Coletor: <strong>${escapeDocHtml(e.responsible || 'Analista de T.I.')}</strong></span>
             </div>
 
-            <div class="flex items-center gap-1.5 shrink-0">
-              <span class="text-[10px] text-slate-400 uppercase font-mono">SHA-256:</span>
-              <code class="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[10px] font-mono text-slate-700 max-w-[180px] sm:max-w-[220px] truncate" title="${e.sha256}">${(e.sha256 || '').slice(0, 16)}...${(e.sha256 || '').slice(-8)}</code>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-[10px] text-slate-500 font-bold uppercase font-mono">SHA-256:</span>
+              <code class="px-2 py-0.5 rounded bg-white border border-slate-200 text-[10.5px] font-mono text-slate-800 max-w-[200px] sm:max-w-[260px] truncate select-all" title="${e.sha256}">${(e.sha256 || '').slice(0, 18)}...${(e.sha256 || '').slice(-8)}</code>
               <button type="button" onclick="navigator.clipboard.writeText('${e.sha256}'); if(window.showToast) window.showToast('Hash SHA-256 copiado para a área de transferência!', 'success');" class="p-1 text-slate-400 hover:text-slate-700 cursor-pointer" title="Copiar Hash Completo">
                 <i data-lucide="copy" class="w-3.5 h-3.5"></i>
               </button>
             </div>
           </div>
+
         </div>
-      `).join("")}
+        `;
+      }).join("")}
     </div>
   `;
 }
@@ -5946,80 +6035,123 @@ function renderDocumentEvidenceUploadForm(docCode) {
   const ctx = getTemplateContextDefaults();
 
   panel.innerHTML = `
-    <form id="form-doc-evidence-upload" onsubmit="handleSaveDocumentEvidence(event, '${docCode}')" class="space-y-4 text-xs">
-      
-      <!-- DROPZONE DE ARQUIVO INTERATIVA COM CÁLCULO SHA-256 EM TEMPO REAL -->
-      <div>
-        <label class="block text-slate-700 font-semibold mb-1">Arquivo da Evidência * (PDF, Prints/PNG/JPG, TXT, CSV, LOG, ZIP)</label>
-        <div id="doc-evid-dropzone" onclick="document.getElementById('doc-evid-file-input').click()" class="border-2 border-dashed border-slate-300 hover:border-[#004b93] rounded-xl p-5 text-center bg-white cursor-pointer transition-all">
-          <input type="file" id="doc-evid-file-input" class="hidden" onchange="handleDocumentEvidenceFileSelect(this)" />
-          
-          <div id="doc-evid-file-prompt" class="space-y-1.5">
-            <div class="w-10 h-10 mx-auto rounded-full bg-blue-50 text-[#004b93] flex items-center justify-center">
-              <i data-lucide="upload-cloud" class="w-5 h-5"></i>
-            </div>
-            <p class="font-bold text-slate-800">Clique para selecionar ou arraste o arquivo aqui</p>
-            <p class="text-[11px] text-slate-400">Prints do login atípico, relatório do firewall, export Google Workspace/Sienge/AD, telemetria de IP</p>
+    <div class="card-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-6">
+      <div class="border-b border-slate-100 pb-3">
+        <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-[#004b93]"></i>
+          <span>Anexar Nova Evidência / Arquivo ao Modelo ${escapeDocHtml(docCode)}</span>
+        </h3>
+        <p class="text-xs text-slate-500 mt-0.5">Preencha os dados da pessoa investigada, o parecer técnico e vincule os artefatos com cálculo automático de Hash SHA-256.</p>
+      </div>
+
+      <form id="form-doc-evidence-upload" onsubmit="handleSaveDocumentEvidence(event, '${docCode}')" class="space-y-5 text-xs">
+        
+        <!-- BLOCO 1: DADOS DA PESSOA INVESTIGADA -->
+        <div class="p-4 rounded-xl bg-blue-50/60 border border-blue-200/80 space-y-3">
+          <div class="flex items-center gap-2 text-xs font-bold text-[#004b93]">
+            <i data-lucide="user-x" class="w-4 h-4"></i>
+            <span>Identificação da Pessoa Investigada / Titular da Conta</span>
           </div>
 
-          <div id="doc-evid-file-selected" class="hidden space-y-2">
-            <div class="flex items-center justify-center gap-2 text-emerald-700 font-bold">
-              <i data-lucide="check-circle" class="w-4 h-4"></i>
-              <span id="doc-evid-selected-name" class="font-mono text-xs"></span>
-              <span id="doc-evid-selected-size" class="text-[11px] text-slate-500 font-normal"></span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label class="block text-slate-700 font-semibold mb-1">Nome da Pessoa Investigada (Titular) *</label>
+              <input type="text" id="doc-evid-input-investigated" required placeholder="Ex: Davis Damasceno (ou Nome Completo)" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs" />
             </div>
-            <div class="p-2 rounded bg-slate-50 border border-slate-200 text-left font-mono text-[10px] text-slate-600 break-all">
-              <strong class="text-slate-800">Hash SHA-256 Calculado em Tempo Real:</strong><br />
-              <span id="doc-evid-selected-hash" class="text-emerald-800 select-all font-bold"></span>
+            <div>
+              <label class="block text-slate-700 font-semibold mb-1">E-mail Corporativo da Pessoa Investigada</label>
+              <input type="email" id="doc-evid-input-investigated-email" placeholder="Ex: davisdamasceno@acengenhariase.com.br" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label class="block text-slate-700 font-semibold mb-1">Sistema de Origem do Alerta / Verificação *</label>
+              <select id="doc-evid-input-origin-system" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs">
+                <option value="Google Workspace (Gmail / Drive / SSO)">Google Workspace (Gmail / Drive / SSO)</option>
+                <option value="ERP Sienge (Engenharia / Financeiro)">ERP Sienge (Engenharia / Financeiro)</option>
+                <option value="Construtor de Vendas (CV CRM)">Construtor de Vendas (CV CRM)</option>
+                <option value="Active Directory / Servidor Windows">Active Directory / Servidor Windows</option>
+                <option value="Firewall MikroTik / Túnel VPN">Firewall MikroTik / Túnel VPN</option>
+                <option value="SIEM Wazuh / EDR">SIEM Wazuh / EDR</option>
+                <option value="Outro Sistema Corporativo">Outro Sistema Corporativo</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-700 font-semibold mb-1">Categoria Forense da Evidência *</label>
+              <select id="doc-evid-input-category" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs">
+                <option value="Logs de Autenticação & MFA (Google / AD / Sienge)">Logs de Autenticação & MFA (Google / AD / Sienge)</option>
+                <option value="Entrevista Fática com Colaborador (Triagem Fase 1)">Entrevista Fática com Colaborador (Triagem Fase 1)</option>
+                <option value="Telemetria de Rede, IP & Geolocalização (Firewall / ISP)">Telemetria de Rede, IP & Geolocalização (Firewall / ISP)</option>
+                <option value="Export de Alerta de Segurança (CV CRM / Sienge / SIEM)">Export de Alerta de Segurança (CV CRM / Sienge / SIEM)</option>
+                <option value="Formulário MOD-SEG-08-A Digitalizado / Assinado">Formulário MOD-SEG-08-A Digitalizado / Assinado</option>
+                <option value="Outros Comprovantes Forenses">Outros Comprovantes Forenses</option>
+              </select>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- BLOCO 2: DROPZONE DE ARQUIVO INTERATIVA COM CÁLCULO SHA-256 EM TEMPO REAL -->
+        <div>
+          <label class="block text-slate-700 font-semibold mb-1.5">Arquivo da Evidência * (PDF, Prints/PNG/JPG, TXT, CSV, LOG, ZIP)</label>
+          <div id="doc-evid-dropzone" onclick="document.getElementById('doc-evid-file-input').click()" class="border-2 border-dashed border-slate-300 hover:border-[#004b93] rounded-xl p-6 text-center bg-white cursor-pointer transition-all hover:bg-slate-50/50">
+            <input type="file" id="doc-evid-file-input" class="hidden" onchange="handleDocumentEvidenceFileSelect(this)" />
+            
+            <div id="doc-evid-file-prompt" class="space-y-2">
+              <div class="w-12 h-12 mx-auto rounded-full bg-blue-50 text-[#004b93] flex items-center justify-center">
+                <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+              </div>
+              <p class="font-bold text-slate-800 text-sm">Clique para selecionar ou arraste o arquivo aqui</p>
+              <p class="text-xs text-slate-400 max-w-md mx-auto">Prints do login atípico, relatório do firewall, export Google Workspace/Sienge/AD, telemetria de IP</p>
+            </div>
+
+            <div id="doc-evid-file-selected" class="hidden space-y-2.5">
+              <div class="flex items-center justify-center gap-2 text-emerald-700 font-bold text-sm">
+                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                <span id="doc-evid-selected-name" class="font-mono"></span>
+                <span id="doc-evid-selected-size" class="text-xs text-slate-500 font-normal"></span>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-left font-mono text-[11px] text-slate-700 break-all max-w-xl mx-auto shadow-2xs">
+                <strong class="text-slate-900 block mb-0.5">Hash SHA-256 Calculado em Tempo Real:</strong>
+                <span id="doc-evid-selected-hash" class="text-emerald-800 select-all font-bold"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BLOCO 3: DETALHES TÉCNICOS DA EVIDÊNCIA -->
         <div>
           <label class="block text-slate-700 font-semibold mb-1">Título da Evidência *</label>
-          <input type="text" id="doc-evid-input-title" required placeholder="Ex: Print do Log de Acesso Atípico no Google Workspace" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 focus:outline-none focus:border-[#004b93]" />
+          <input type="text" id="doc-evid-input-title" required placeholder="Ex: Print do Log de Acesso Atípico no Google Workspace" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs" />
         </div>
-        <div>
-          <label class="block text-slate-700 font-semibold mb-1">Categoria da Evidência *</label>
-          <select id="doc-evid-input-category" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 focus:outline-none focus:border-[#004b93]">
-            <option value="Logs de Autenticação & MFA (Google / AD / Sienge)">Logs de Autenticação & MFA (Google / AD / Sienge)</option>
-            <option value="Entrevista Fática com Colaborador (Triagem Fase 1)">Entrevista Fática com Colaborador (Triagem Fase 1)</option>
-            <option value="Telemetria de Rede, IP & Geolocalização (Firewall / ISP)">Telemetria de Rede, IP & Geolocalização (Firewall / ISP)</option>
-            <option value="Export de Alerta de Segurança (CV CRM / Sienge / SIEM)">Export de Alerta de Segurança (CV CRM / Sienge / SIEM)</option>
-            <option value="Formulário MOD-SEG-08-A Digitalizado / Assinado">Formulário MOD-SEG-08-A Digitalizado / Assinado</option>
-            <option value="Outros Comprovantes Forenses">Outros Comprovantes Forenses</option>
-          </select>
-        </div>
-      </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="block text-slate-700 font-semibold mb-1">Responsável pela Coleta / Analista *</label>
-          <input type="text" id="doc-evid-input-resp" required value="${escapeDocHtml(ctx.currentUserName || 'Analista de T.I. - CSIRT')}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 focus:outline-none focus:border-[#004b93]" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-slate-700 font-semibold mb-1">Analista Responsável pela Triagem *</label>
+            <input type="text" id="doc-evid-input-resp" required value="${escapeDocHtml(ctx.currentUserName || 'Analista de T.I. - CSIRT')}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs" />
+          </div>
+          <div>
+            <label class="block text-slate-700 font-semibold mb-1">Data da Coleta / Triagem *</label>
+            <input type="date" id="doc-evid-input-date" required value="${new Date().toISOString().split('T')[0]}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs" />
+          </div>
         </div>
+
         <div>
-          <label class="block text-slate-700 font-semibold mb-1">Data da Coleta / Triagem *</label>
-          <input type="date" id="doc-evid-input-date" required value="${new Date().toISOString().split('T')[0]}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 focus:outline-none focus:border-[#004b93]" />
+          <label class="block text-slate-700 font-semibold mb-1">Parecer da Triagem / Observações Técnicas</label>
+          <textarea id="doc-evid-input-notes" rows="3" placeholder="Descreva o contexto do anexo (ex: 'O usuário confirmou que estava em trânsito conectando via 5G em Aracaju-SE, MFA aprovado pelo próprio titular sem divergências técnicas')..." class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs"></textarea>
         </div>
-      </div>
 
-      <div>
-        <label class="block text-slate-700 font-semibold mb-1">Parecer da Triagem / Observações Técnicas</label>
-        <textarea id="doc-evid-input-notes" rows="3" placeholder="Descreva o contexto do anexo (ex: 'O usuário confirmou que estava em trânsito conectando via 5G em Aracaju-SE, MFA aprovado pelo próprio titular sem divergências técnicas')..." class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 focus:outline-none focus:border-[#004b93]"></textarea>
-      </div>
-
-      <div class="pt-2 flex items-center justify-end gap-2">
-        <button type="button" onclick="switchDocumentEvidenceTab('list')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-200 text-xs font-semibold cursor-pointer transition-colors">
-          Cancelar
-        </button>
-        <button type="submit" class="px-4 py-1.5 rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs">
-          <i data-lucide="check" class="w-3.5 h-3.5"></i>
-          <span>Salvar e Vincular Evidência ao Documento</span>
-        </button>
-      </div>
-    </form>
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="switchDocumentEvidenceTab('list')" class="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 text-xs font-semibold cursor-pointer transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-colors shadow-xs">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Salvar e Vincular Registro ao Modelo</span>
+          </button>
+        </div>
+      </form>
+    </div>
   `;
 
   const dropzone = document.getElementById("doc-evid-dropzone");
@@ -6115,6 +6247,9 @@ async function handleSaveDocumentEvidence(e, docCode) {
   e.preventDefault();
 
   const title = (document.getElementById("doc-evid-input-title")?.value || "").trim();
+  const investigatedPerson = (document.getElementById("doc-evid-input-investigated")?.value || "").trim();
+  const investigatedEmail = (document.getElementById("doc-evid-input-investigated-email")?.value || "").trim();
+  const originSystem = document.getElementById("doc-evid-input-origin-system")?.value || "Google Workspace";
   const category = document.getElementById("doc-evid-input-category")?.value || "Logs de Autenticação & MFA";
   const responsible = (document.getElementById("doc-evid-input-resp")?.value || "Analista de T.I. - CSIRT").trim();
   const date = document.getElementById("doc-evid-input-date")?.value || new Date().toISOString().split("T")[0];
@@ -6122,6 +6257,11 @@ async function handleSaveDocumentEvidence(e, docCode) {
 
   if (!title) {
     if (window.showToast) window.showToast("Informe o título da evidência.", "warning");
+    return;
+  }
+
+  if (!investigatedPerson) {
+    if (window.showToast) window.showToast("Informe a pessoa investigada / titular da conta sob verificação.", "warning");
     return;
   }
 
@@ -6139,7 +6279,7 @@ async function handleSaveDocumentEvidence(e, docCode) {
     fileDataUrl = activeEvidenceUploadFile.dataUrl;
   } else {
     try {
-      const enc = new TextEncoder().encode(`${title}-${date}-${responsible}-${notes}`);
+      const enc = new TextEncoder().encode(`${title}-${investigatedPerson}-${date}-${responsible}-${notes}`);
       const hBuf = await crypto.subtle.digest("SHA-256", enc);
       sha256 = Array.from(new Uint8Array(hBuf)).map(b => b.toString(16).padStart(2, "0")).join("");
     } catch (_) {}
@@ -6156,13 +6296,17 @@ async function handleSaveDocumentEvidence(e, docCode) {
     category,
     location: "Escritório Central (Matriz)",
     responsible,
+    investigatedPerson,
+    investigatedEmail,
+    originSystem,
+    userName: investigatedPerson, // Compatibilidade retroativa
     date,
     fileName,
     fileSize,
     sha256,
     status: "Homologada",
     approvedBy: responsible,
-    description: notes || `Evidência vinculada à verificação de acesso atípico (${tpl.code}).`,
+    description: notes || `Evidência de verificação de acesso atípico vinculada a ${investigatedPerson}.`,
     documentCode: docCode,
     relatedDoc: docCode,
     fileDataUrl: fileDataUrl,
@@ -6178,12 +6322,12 @@ async function handleSaveDocumentEvidence(e, docCode) {
     window.ApiService.addAuditRecord({
       action: "ANEXO_EVIDENCIA_DOCUMENTO",
       module: "Documentos",
-      details: `Evidência ${newEvid.id} vinculada ao modelo ${docCode}: "${title}" (SHA-256: ${sha256.slice(0, 16)}...)`
+      details: `Evidência ${newEvid.id} vinculada ao modelo ${docCode} para o titular ${investigatedPerson}: "${title}" (SHA-256: ${sha256.slice(0, 16)}...)`
     });
   }
 
   if (window.showToast) {
-    window.showToast(`Evidência [${newId}] anexada com sucesso ao documento ${docCode}!`, "success");
+    window.showToast(`Evidência [${newId}] da pessoa investigada "${investigatedPerson}" anexada com sucesso!`, "success");
   }
 
   activeEvidenceUploadFile = null;
@@ -6242,11 +6386,15 @@ function downloadDocumentEvidenceFile(evidenceId) {
     a.click();
     document.body.removeChild(a);
   } else {
+    const investigatedDisplay = ev.investigatedPerson || ev.userName || "Não especificado";
     const content = `AC ENGENHARIA LTDA. — SISTEMA DE GESTÃO DE SEGURANÇA DA INFORMAÇÃO (SGSI)
 EVIDÊNCIA FORENSE DE CONTROLE AUDITÁVEL (ISO/IEC 27001 & LGPD)
 --------------------------------------------------------------------------------
 Identificador da Evidência: ${ev.id}
 Documento Vinculado: ${ev.documentCode || 'MOD-SEG-08-A'}
+Pessoa Investigada / Titular: ${investigatedDisplay}
+E-mail do Investigado: ${ev.investigatedEmail || 'Não informado'}
+Sistema de Origem: ${ev.originSystem || 'Google Workspace / Sienge'}
 Título: ${ev.title}
 Categoria: ${ev.category || 'Auditoria & Triagem'}
 Controle Normativo: ${ev.control || 'ISO/IEC 27001:2022 A.5.24'}
@@ -6289,6 +6437,7 @@ function printEvidenceForensicCertificate(evidenceId) {
   const tpl = getTemplateByCode(ev.documentCode || "MOD-SEG-08-A") || { code: ev.documentCode, title: ev.title, normative: "ISO/IEC 27001:2022 A.5.24" };
   const protocol = `CERT-${ev.id}-${Date.now().toString().slice(-6)}`;
   const emissionDate = new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR");
+  const investigatedDisplay = ev.investigatedPerson || ev.userName || "Colaborador Titular da Conta (Acesso Atípico)";
 
   const printHtml = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -6326,7 +6475,9 @@ function printEvidenceForensicCertificate(evidenceId) {
 
   <div class="section-title">1. Dados do Documento e Objeto de Auditoria</div>
   <table>
-    <tr><th width="30%">Modelo Vinculado</th><td><strong>${escapeDocHtml(tpl.code)}</strong> — ${escapeDocHtml(tpl.title)}</td></tr>
+    <tr><th width="32%">Modelo Vinculado</th><td><strong>${escapeDocHtml(tpl.code)}</strong> — ${escapeDocHtml(tpl.title)}</td></tr>
+    <tr><th>Pessoa Investigada / Titular:</th><td><strong style="color: #004b93; font-size: 13px;">${escapeDocHtml(investigatedDisplay)}</strong> ${ev.investigatedEmail ? `<span style="font-family: monospace; color: #475569;">(${escapeDocHtml(ev.investigatedEmail)})</span>` : ''}</td></tr>
+    <tr><th>Sistema de Origem do Alerta:</th><td><strong>${escapeDocHtml(ev.originSystem || 'Sistemas Corporativos AC Engenharia')}</strong></td></tr>
     <tr><th>Norma / Requisito</th><td>${escapeDocHtml(tpl.normative || 'ISO/IEC 27001')}</td></tr>
     <tr><th>ID da Evidência</th><td><code>${escapeDocHtml(ev.id)}</code></td></tr>
     <tr><th>Título da Evidência</th><td><strong>${escapeDocHtml(ev.title)}</strong></td></tr>
@@ -6422,6 +6573,7 @@ window.getEvidencesForDocument = getEvidencesForDocument;
 window.openDocumentEvidenceModal = openDocumentEvidenceModal;
 window.closeDocumentEvidenceModal = closeDocumentEvidenceModal;
 window.switchDocumentEvidenceTab = switchDocumentEvidenceTab;
+window.applyDocumentEvidenceFilters = applyDocumentEvidenceFilters;
 window.renderDocumentEvidenceList = renderDocumentEvidenceList;
 window.renderDocumentEvidenceUploadForm = renderDocumentEvidenceUploadForm;
 window.handleDocumentEvidenceFileSelect = handleDocumentEvidenceFileSelect;

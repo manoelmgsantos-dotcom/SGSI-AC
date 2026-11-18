@@ -5008,63 +5008,148 @@ openssl ts -reply -in response.tsr -text</pre>
       </div>
     </div>
 
-    <!-- MODAL DEDICADO: HISTÓRICO DE EVIDÊNCIAS ANEXADAS AO DOCUMENTO -->
-    <div id="modal-document-evidence" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs z-[70] flex items-center justify-center p-2 sm:p-4 md:p-6 hidden">
-      <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
-        
-        <!-- HEADER DO MODAL -->
-        <div class="px-5 py-3.5 bg-[#0f2942] text-white flex items-center justify-between gap-3 border-b border-slate-700/60 shrink-0">
-          <div class="flex items-center gap-3 min-w-0">
+    <!-- CENTRAL EM TELA COMPLETA: HISTÓRICO DE EVIDÊNCIAS & CUSTÓDIA FORENSE DO MODELO -->
+    <div id="modal-document-evidence" class="fixed inset-0 z-[100] bg-slate-100 flex flex-col w-screen h-screen overflow-hidden hidden">
+      
+      <!-- BARRA DE TOPO EXECUTIVA EM TELA COMPLETA -->
+      <header class="bg-[#0b1a30] text-white px-5 sm:px-8 py-3 flex items-center justify-between gap-4 border-b border-white/10 shrink-0 shadow-md">
+        <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+          <button type="button" onclick="closeDocumentEvidenceModal()" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-all border border-slate-700 shadow-xs shrink-0" title="Voltar para a Grade de Modelos de Documentos (ESC)">
+            <i data-lucide="arrow-left" class="w-4 h-4 text-sky-400"></i>
+            <span>Voltar aos Modelos</span>
+          </button>
+          
+          <div class="h-6 w-px bg-slate-700 hidden sm:block shrink-0"></div>
+
+          <div class="flex items-center gap-2.5 min-w-0">
             <span id="doc-evidence-badge-code" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-[#004b93] text-white shadow-2xs shrink-0">MOD-SEG-08-A</span>
             <div class="min-w-0">
-              <h3 id="doc-evidence-modal-title" class="text-sm font-bold text-white truncate">Histórico de Evidências Anexadas</h3>
-              <p id="doc-evidence-modal-subtitle" class="text-[11px] text-slate-300 truncate">Custódia digital, telemetrias e arquivos vinculados a este documento</p>
+              <h2 id="doc-evidence-modal-title" class="text-sm sm:text-base font-extrabold text-white truncate">Central de Evidências — Registro de Verificação de Acesso Atípico</h2>
+              <p id="doc-evidence-modal-subtitle" class="text-[11px] text-slate-300 truncate hidden sm:block">Custódia digital, trilha de telemetrias e histórico forense do modelo</p>
             </div>
           </div>
-          <button type="button" onclick="closeDocumentEvidenceModal()" class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer shrink-0 transition-colors" title="Fechar (ESC)">
+        </div>
+
+        <div class="flex items-center gap-2.5 shrink-0">
+          <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-[11px] font-mono font-semibold">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Trilha SHA-256 Ativa</span>
+          </span>
+          <button type="button" onclick="switchDocumentEvidenceTab('upload')" class="px-3.5 py-1.5 rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-xs">
+            <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-300"></i>
+            <span>+ Anexar Evidência</span>
+          </button>
+          <button type="button" onclick="closeDocumentEvidenceModal()" class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer transition-colors" title="Fechar Tela Completa (ESC)">
             <i data-lucide="x" class="w-5 h-5"></i>
           </button>
         </div>
+      </header>
 
-        <!-- SUB-HEADER DE NAVEGAÇÃO ENTRE ABAS -->
-        <div class="px-5 py-2.5 bg-slate-100 border-b border-slate-200 flex items-center justify-between gap-3 shrink-0">
+      <!-- CORPO PRINCIPAL EM TELA COMPLETA -->
+      <main class="flex-1 overflow-y-auto bg-slate-50/70 p-4 sm:p-6 lg:p-8 space-y-6">
+        
+        <!-- CARDS DE MÉTRICAS DA CENTRAL DE EVIDÊNCIAS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="card-white p-4 rounded-xl border border-slate-200/90 shadow-2xs space-y-1">
+            <div class="flex items-center justify-between text-slate-500 text-[11px] font-bold uppercase tracking-wider">
+              <span>Total de Anexos</span>
+              <i data-lucide="paperclip" class="w-4 h-4 text-[#004b93]"></i>
+            </div>
+            <div class="flex items-baseline justify-between pt-1">
+              <span id="doc-evid-stat-total" class="text-2xl font-black font-mono text-slate-900">0</span>
+              <span id="doc-evid-stat-badge" class="text-[10px] text-emerald-700 font-bold px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200">100% Homologado</span>
+            </div>
+            <span class="text-[11px] text-slate-500 block truncate">Evidências vinculadas a este modelo</span>
+          </div>
+
+          <div class="card-white p-4 rounded-xl border border-slate-200/90 shadow-2xs space-y-1">
+            <div class="flex items-center justify-between text-slate-500 text-[11px] font-bold uppercase tracking-wider">
+              <span>Pessoas Investigadas</span>
+              <i data-lucide="users" class="w-4 h-4 text-indigo-600"></i>
+            </div>
+            <div class="flex items-baseline justify-between pt-1">
+              <span id="doc-evid-stat-investigated" class="text-2xl font-black font-mono text-indigo-900">0</span>
+              <span class="text-[10px] text-indigo-700 font-bold px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200">Titulares</span>
+            </div>
+            <span class="text-[11px] text-slate-500 block truncate">Contas / colaboradores com verificação</span>
+          </div>
+
+          <div class="card-white p-4 rounded-xl border border-slate-200/90 shadow-2xs space-y-1">
+            <div class="flex items-center justify-between text-slate-500 text-[11px] font-bold uppercase tracking-wider">
+              <span>Categorias Forenses</span>
+              <i data-lucide="layers" class="w-4 h-4 text-amber-600"></i>
+            </div>
+            <div class="flex items-baseline justify-between pt-1">
+              <span id="doc-evid-stat-categories" class="text-2xl font-black font-mono text-slate-900">0</span>
+              <span class="text-[10px] text-amber-700 font-bold px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200">MFA / Logs / IP</span>
+            </div>
+            <span class="text-[11px] text-slate-500 block truncate">Tipos de telemetria cadastrados</span>
+          </div>
+
+          <div class="card-white p-4 rounded-xl border border-slate-200/90 shadow-2xs space-y-1">
+            <div class="flex items-center justify-between text-slate-500 text-[11px] font-bold uppercase tracking-wider">
+              <span>Conformidade & Custódia</span>
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+            </div>
+            <div class="flex items-baseline justify-between pt-1">
+              <span class="text-xl font-black font-mono text-emerald-800">ISO 27037</span>
+              <span class="text-[10px] text-emerald-700 font-bold px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200">LGPD Art. 46</span>
+            </div>
+            <span class="text-[11px] text-slate-500 block truncate">Cadeia de custódia inalterável</span>
+          </div>
+        </div>
+
+        <!-- BARRA DE NAVEGAÇÃO ENTRE ABAS E FILTROS EM TELA COMPLETA -->
+        <div class="card-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           <div class="flex items-center gap-2">
-            <button type="button" id="tab-btn-doc-evid-list" onclick="switchDocumentEvidenceTab('list')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-[#004b93] shadow-xs border border-slate-200 flex items-center gap-1.5 cursor-pointer transition-all">
-              <i data-lucide="folder-check" class="w-3.5 h-3.5 text-[#004b93]"></i>
-              <span id="tab-btn-doc-evid-list-text">Evidências Anexadas (0)</span>
+            <button type="button" id="tab-btn-doc-evid-list" onclick="switchDocumentEvidenceTab('list')" class="px-4 py-2 rounded-lg text-xs font-bold bg-[#004b93] text-white shadow-xs flex items-center gap-2 cursor-pointer transition-all">
+              <i data-lucide="folder-check" class="w-4 h-4"></i>
+              <span id="tab-btn-doc-evid-list-text">Todos os Registros de Anexos (0)</span>
             </button>
-            <button type="button" id="tab-btn-doc-evid-upload" onclick="switchDocumentEvidenceTab('upload')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 flex items-center gap-1.5 cursor-pointer transition-all">
-              <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <button type="button" id="tab-btn-doc-evid-upload" onclick="switchDocumentEvidenceTab('upload')" class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-2 cursor-pointer transition-all">
+              <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-600"></i>
               <span>+ Anexar Nova Evidência</span>
             </button>
           </div>
 
-          <div class="text-[11px] text-slate-500 font-medium hidden sm:block">
-            Hash SHA-256 verificado &bull; ISO 27001 A.5.24 / A.5.28
+          <!-- FILTROS DINÂMICOS -->
+          <div id="doc-evid-filters-toolbar" class="flex items-center gap-2 flex-wrap">
+            <div class="relative flex-1 sm:w-72">
+              <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400"></i>
+              <input type="text" id="doc-evid-filter-search" oninput="applyDocumentEvidenceFilters()" placeholder="Buscar por pessoa investigada, título, hash..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#004b93]" />
+            </div>
+            <select id="doc-evid-filter-category" onchange="applyDocumentEvidenceFilters()" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-[#004b93]">
+              <option value="todas">Todas as Categorias</option>
+              <option value="Logs de Autenticação & MFA">Logs Autenticação / MFA</option>
+              <option value="Entrevista Fática">Entrevista Fática</option>
+              <option value="Telemetria de Rede">Telemetria IP / Firewall</option>
+              <option value="Export de Alerta">Alertas (Sienge/Google/CV)</option>
+              <option value="Formulário">Formulários Assinados</option>
+            </select>
           </div>
         </div>
 
-        <!-- CONTEÚDO SCROLLÁVEL -->
-        <div class="flex-1 overflow-y-auto p-5 bg-slate-50/50 space-y-4">
-          <!-- PAINEL 1: LISTAGEM DE HISTÓRICO DE EVIDÊNCIAS -->
-          <div id="panel-doc-evid-list" class="space-y-3"></div>
+        <!-- PAINEL 1: LISTAGEM DE HISTÓRICO DE EVIDÊNCIAS -->
+        <div id="panel-doc-evid-list" class="space-y-4"></div>
 
-          <!-- PAINEL 2: FORMULÁRIO DE ANEXO DE NOVA EVIDÊNCIA -->
-          <div id="panel-doc-evid-upload" class="hidden space-y-4"></div>
+        <!-- PAINEL 2: FORMULÁRIO DE ANEXO DE NOVA EVIDÊNCIA -->
+        <div id="panel-doc-evid-upload" class="hidden space-y-4"></div>
+
+      </main>
+
+      <!-- RODAPÉ DA TELA COMPLETA -->
+      <footer class="bg-white border-t border-slate-200 px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 shrink-0 text-xs text-slate-500">
+        <div class="flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+          <span>Custódia Forense Digital — AC Engenharia &bull; Integrado ao Repositório Geral de Evidências e Trilha de Auditoria</span>
         </div>
-
-        <!-- RODAPÉ DO MODAL -->
-        <div class="px-5 py-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
-          <div class="text-[11px] text-slate-500 flex items-center gap-1.5">
-            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 shrink-0"></i>
-            <span>Os arquivos anexados ficam vinculados diretamente a este modelo de documento e ao repositório forense de evidências.</span>
-          </div>
-          <button type="button" onclick="closeDocumentEvidenceModal()" class="px-4 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold cursor-pointer transition-colors">
-            Fechar
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeDocumentEvidenceModal()" class="px-4 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold cursor-pointer transition-colors">
+            Voltar aos Modelos
           </button>
         </div>
+      </footer>
 
-      </div>
     </div>
 
     <!-- MODAL DE CADASTRO DE NOVA TAREFA NO PLANO DE AÇÃO -->
