@@ -1026,6 +1026,21 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
         "key": "originIp",
         "label": "IP de Origem e Geolocalização",
         "placeholder": "Ex: 185.220.101.5 (Frankfurt / Alemanha - Tor Exit)"
+      },
+      {
+        "key": "attackerActions",
+        "label": "Resumo das Ações Executadas pelo Invasor",
+        "placeholder": "Ex: Invasor tentou alterar PIX no Sienge e criou regra de e-mail no Gmail"
+      },
+      {
+        "key": "exfiltrationStatus",
+        "label": "Diagnóstico de Exfiltração / Vazamento de Dados",
+        "placeholder": "Ex: Não houve exfiltração confirmada após análise de tráfego de rede"
+      },
+      {
+        "key": "attackerTimeline",
+        "label": "Linha do Tempo dos Logs (Timeline Forense)",
+        "placeholder": "Ex: 14:20 Login suspeito -> 14:22 Acesso ao Contas a Pagar -> 14:25 Sessão derrubada pela TI"
       }
     ]
   },
@@ -3886,7 +3901,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     normative: "ISO/IEC 27001:2022 A.5.24 a A.5.28 & Resolução CD/ANPD nº 15/2024",
     evidenceCategory: "Segurança & CSIRT",
     signersSummary: "Analista Investigador T.I. + Gestor SecOps + DPO (se notificado)",
-    summary: "Laudo pericial e forense de rastreamento de tentativas de invasão e login anômalo (Sienge, Construtor de Vendas, Gmail, Antivírus), contendo telemetria de IP, explicação didática de vetores de ataque, entrevista técnica com o usuário, 7 vereditos periciais e protocolo ANPD.",
+    summary: "Laudo pericial e forense de rastreamento de tentativas de invasão e login anômalo (Sienge, Construtor de Vendas, Gmail, Antivírus), contendo telemetria de IP, explicação didática de vetores de ataque, mapeamento minucioso das ações do invasor por sistema (Gmail, Sienge, CV CRM e VPN), constatação de exfiltração, entrevista técnica com o usuário, 7 vereditos periciais e protocolo ANPD.",
     buildBody: (ctx, custom = {}) => {
       const incNum = custom.incidentNumber || "INC-SEG-202___-_________";
       const dtDetection = custom.detectionDateTime || (ctx.todayBr + " às " + (ctx.nowBr.split(" ")[1] || "___:___") + " h");
@@ -3897,6 +3912,9 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       const uLogin = custom.affectedLogin || "[ Login no Sistema / Rede ]";
       const uRole = custom.affectedRole || "[ Cargo / Setor do Colaborador ]";
       const ipOrigin = custom.originIp || "___.___.___.___ (Geolocalização / Provedor)";
+      const actSummary = custom.attackerActions || "Nenhuma ação hostil consumada além da tentativa de acesso.";
+      const exfilStatus = custom.exfiltrationStatus || "Não houve exfiltração de dados corporativos ou pessoais confirmada nos logs de telemetria.";
+      const timelineLogs = custom.attackerTimeline || "[ Preencher cronologia de eventos segundo os logs do firewall/aplicação ]";
 
       return `
         <h2>1. Identificação do Alerta e Escopo Afetado</h2>
@@ -3986,13 +4004,99 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
                 [ &nbsp; ] Código TOTP inserido &nbsp;&nbsp;&nbsp; [ &nbsp; ] Ausência de MFA na Conta (Não Conformidade PCA-002)</td>
           </tr>
           <tr>
-            <td><strong>Trilha de Ações pós-Login:</strong></td>
-            <td>[ &nbsp; ] Criação de regras de encaminhamento de e-mail no Gmail &nbsp;&nbsp;&nbsp; [ &nbsp; ] Download anômalo de arquivos/relatórios<br/>
-                [ &nbsp; ] Tentativa de alteração bancária/PIX no Sienge &nbsp;&nbsp;&nbsp; [ &nbsp; ] Nenhuma ação hostil identificada antes da contenção</td>
+            <td><strong>Resumo das Ações pós-Login:</strong></td>
+            <td>
+              <em>Consulte a <strong>Seção 3 (Rastreamento Forense de Ações)</strong> para o mapeamento minucioso por sistema (Gmail, Sienge, CV CRM e VPN).</em><br/>
+              [ &nbsp; ] Nenhuma ação hostil identificada antes da contenção (Ataque barrado no perímetro ou sessão derrubada imediatamente)<br/>
+              [ &nbsp; ] Ações hostis executadas e documentadas em detalhes na Seção 3 deste laudo pericial
+            </td>
           </tr>
         </table>
 
-        <h2>3. Entrevista Técnica e Validação com o Usuário Titular</h2>
+        <h2>3. Rastreamento Forense de Ações: O que o Invasor Fez ou Tentou Fazer?</h2>
+        <p>Mapeamento pericial detalhado das atividades, comandos, navegação e alterações tentadas ou consumadas pelo agente hostil durante a sessão ou na tentativa de invasão:</p>
+
+        <table class="data-table">
+          <tr>
+            <td width="28%"><strong>Profundidade da Incursão / Estado da Sessão:</strong></td>
+            <td>
+              <em>Indica se o atacante apenas tentou a autenticação ou se chegou a circular por dentro do sistema:</em><br/>
+              [ &nbsp; ] <strong>Bloqueado no Perímetro (Sem Acesso Efetivo):</strong> Tentativa barrada na tela de login por MFA, bloqueio de IP ou senha incorreta. O invasor <strong>NÃO teve acesso</strong> a telas, arquivos ou dados internos.<br/>
+              [ &nbsp; ] <strong>Login Estabelecido com Encerramento Imediato:</strong> O invasor logou com sucesso, mas o alerta em tempo real disparou e a T.I. derrubou a sessão em minutos, antes que o invasor realizasse qualquer clique ou comando hostil.<br/>
+              [ &nbsp; ] <strong>Sessão Ativa com Movimentação / Ações Executadas:</strong> O invasor permaneceu conectado e realizou navegação, buscas, downloads ou alterações nos módulos (detalhadas nos blocos a seguir).
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Ações no Gmail / Google Workspace:<br/><small class="text-slate-500 font-normal">(E-mails e Google Drive)</small></strong></td>
+            <td>
+              [ &nbsp; ] Nenhuma ação executada ou tentativa frustrada antes do login<br/>
+              [ &nbsp; ] Criação de regras ocultas de encaminhamento automático de e-mails para endereço externo do atacante<br/>
+              [ &nbsp; ] Criação de regras de filtro para exclusão automática de e-mails de segurança, bancos ou fornecedores<br/>
+              [ &nbsp; ] Leitura de mensagens confidenciais ou busca por termos críticos (ex: 'senha', 'banco', 'PIX', 'contrato')<br/>
+              [ &nbsp; ] Envio de e-mails fraudulentos em nome do colaborador (phishing interno ou falsos boletos a parceiros)<br/>
+              [ &nbsp; ] Download de arquivos, planilhas ou documentos sensíveis no Google Drive corporativo<br/>
+              [ &nbsp; ] Tentativa de alteração de senhas, telefones de recuperação ou criação de senhas de app / chaves de API
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Ações no ERP Sienge:<br/><small class="text-slate-500 font-normal">(Financeiro, Compras e Obras)</small></strong></td>
+            <td>
+              [ &nbsp; ] Nenhuma ação executada ou tentativa frustrada antes do login<br/>
+              [ &nbsp; ] Tentativa de alteração de chave PIX ou conta corrente de fornecedores cadastrados no Contas a Pagar<br/>
+              [ &nbsp; ] Tentativa de autorização, agendamento de pagamentos ou geração de borderô financeiro fraudulento<br/>
+              [ &nbsp; ] Alteração indevida de dados de medições de obras, ordens de compra ou cotações de insumos<br/>
+              [ &nbsp; ] Consulta ou extração de relatórios de folha de pagamento, pró-labore ou remuneração de funcionários<br/>
+              [ &nbsp; ] Visualização ou exportação de contratos de empreiteiras, propostas comerciais ou orçamentos de obras<br/>
+              [ &nbsp; ] Tentativa de criação de novo usuário ou elevação de alçadas de privilégio no ERP
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Ações no Construtor de Vendas (CV CRM):<br/><small class="text-slate-500 font-normal">(Vendas e Clientes)</small></strong></td>
+            <td>
+              [ &nbsp; ] Nenhuma ação executada ou tentativa frustrada antes do login<br/>
+              [ &nbsp; ] Tentativa de exportação / download em lote da base de leads e clientes (dados pessoais e CPF)<br/>
+              [ &nbsp; ] Disparo em massa de mensagens ou emissão fraudulenta de boletos de parcelas a compradores<br/>
+              [ &nbsp; ] Alteração de propostas comerciais, descontos de unidades ou comissões de corretores<br/>
+              [ &nbsp; ] Acesso visual a contratos de compra e venda de imóveis e documentos pessoais de compradores
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Ações em Rede Interna / VPN / Servidores:<br/><small class="text-slate-500 font-normal">(Infraestrutura & Domínio)</small></strong></td>
+            <td>
+              [ &nbsp; ] Nenhuma ação executada ou tentativa frustrada antes do login<br/>
+              [ &nbsp; ] Tentativa de movimentação lateral (Lateral Movement) buscando outras máquinas ou servidores na VPN<br/>
+              [ &nbsp; ] Varredura de portas (Port Scan) ou descoberta de estações de trabalho e serviços internos<br/>
+              [ &nbsp; ] Acesso ou download de arquivos em pastas de rede compartilhadas da Engenharia / Diretoria<br/>
+              [ &nbsp; ] Tentativa de elevação de privilégios para Administrador de Domínio (Active Directory)<br/>
+              [ &nbsp; ] Execução ou download de ferramentas de acesso remoto (AnyDesk, Ngrok, Cobalt Strike) ou ransomware
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Constatação de Exfiltração (Vazamento de Dados):</strong></td>
+            <td>
+              <strong>Status Pericial:</strong> [ &nbsp; ] <strong>NÃO HOUVE EXFILTRAÇÃO</strong> &nbsp;&nbsp;&nbsp; [ &nbsp; ] <strong>SOB ANÁLISE FORENSE</strong> &nbsp;&nbsp;&nbsp; [ &nbsp; ] <strong>EXFILTRAÇÃO CONFIRMADA</strong><br/>
+              <strong>Diagnóstico Técnico:</strong> ${escapeDocHtml(exfilStatus)}
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Constatação de Alteração / Dano aos Dados:</strong></td>
+            <td>
+              [ &nbsp; ] <strong>Integridade Preservada:</strong> Nenhum registro foi alterado, criado ou excluído.<br/>
+              [ &nbsp; ] <strong>Tentativa de Fraude Barrada:</strong> O invasor tentou alterar dados (ex: PIX), mas foi contido pelas travas do sistema.<br/>
+              [ &nbsp; ] <strong>Alteração Consumada:</strong> Houve alteração efetiva de dados (necessária reversão imediata pela T.I.).<br/>
+              <strong>Resumo das Ações Identificadas:</strong> ${escapeDocHtml(actSummary)}
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Linha do Tempo dos Logs:<br/><small class="text-slate-500 font-normal">(Timeline Forense)</small></strong></td>
+            <td>
+              <code>${escapeDocHtml(timelineLogs)}</code><br/>
+              <small class="text-slate-500"><em>(Registrar os carimbos de data/hora extraídos dos logs do Firewall Fortigate, Sienge, CV CRM ou Google Workspace Admin Console).</em></small>
+            </td>
+          </tr>
+        </table>
+
+        <h2>4. Entrevista Técnica e Validação com o Usuário Titular</h2>
         <p>Questionário pericial aplicado pela equipe de T.I. para confirmação do contexto fático e exclusão de falsos positivos:</p>
         <table class="data-table">
           <thead>
@@ -4046,7 +4150,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           </tbody>
         </table>
 
-        <h2>4. Avaliação de Impacto e Medidas de Contenção Imediata</h2>
+        <h2>5. Avaliação de Impacto e Medidas de Contenção Imediata</h2>
         <div class="callout callout-warning">
           <strong>Nível de Acesso da Conta Afetada:</strong><br/>
           [ &nbsp; ] Operacional de Canteiro &nbsp;&nbsp;&nbsp; [ &nbsp; ] Administrativo / Financeiro Sienge &nbsp;&nbsp;&nbsp; [ &nbsp; ] Comercial CV CRM (Dados de Clientes)<br/>
@@ -4074,7 +4178,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
         </table>
         <p><strong>Término da Contenção:</strong> ___/___/202___ às ___:___ h &nbsp;|&nbsp; <strong>Tempo Total de Resposta (TTR):</strong> [ &nbsp; ] &lt; 30 min &nbsp;&nbsp; [ &nbsp; ] 30 min a 2h &nbsp;&nbsp; [ &nbsp; ] &gt; 2h</p>
 
-        <h2>5. Conclusão Pericial, Veredito e Enquadramento LGPD</h2>
+        <h2>6. Conclusão Pericial, Veredito e Enquadramento LGPD</h2>
         <table class="data-table">
           <tr>
             <td width="28%"><strong>Veredito Técnico Pericial:</strong></td>
