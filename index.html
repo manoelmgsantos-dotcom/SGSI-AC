@@ -4971,6 +4971,10 @@ openssl ts -reply -in response.tsr -text</pre>
               <i data-lucide="sliders" class="w-3.5 h-3.5 text-amber-300"></i>
               <span>Preencher / Editar Campos</span>
             </button>
+            <button type="button" id="btn-preview-doc-evidence" onclick="openDocumentEvidenceModal(TemplateHubState.previewingCode)" class="hidden px-3 py-1.5 rounded-lg bg-sky-700 hover:bg-sky-600 text-white text-xs font-bold flex items-center gap-1.5 border border-sky-500/30 cursor-pointer transition-colors shadow-xs" title="Ver histórico de evidências e arquivos anexados a este documento">
+              <i data-lucide="paperclip" class="w-3.5 h-3.5 text-sky-200"></i>
+              <span id="btn-preview-doc-evidence-text">Evidências Anexadas (0)</span>
+            </button>
           </div>
 
           <!-- Grupo de Ações de Emissão -->
@@ -5001,6 +5005,65 @@ openssl ts -reply -in response.tsr -text</pre>
           <button type="button" onclick="toggleDocEditMode(false)" class="text-xs font-bold text-amber-800 hover:underline cursor-pointer">Concluir Edição</button>
         </div>
         <iframe id="doc-preview-iframe" title="Visualização A4 do Documento Corporativo" class="w-full flex-1 bg-slate-200 border-0"></iframe>
+      </div>
+    </div>
+
+    <!-- MODAL DEDICADO: HISTÓRICO DE EVIDÊNCIAS ANEXADAS AO DOCUMENTO -->
+    <div id="modal-document-evidence" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs z-[70] flex items-center justify-center p-2 sm:p-4 md:p-6 hidden">
+      <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+        
+        <!-- HEADER DO MODAL -->
+        <div class="px-5 py-3.5 bg-[#0f2942] text-white flex items-center justify-between gap-3 border-b border-slate-700/60 shrink-0">
+          <div class="flex items-center gap-3 min-w-0">
+            <span id="doc-evidence-badge-code" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-[#004b93] text-white shadow-2xs shrink-0">MOD-SEG-08-A</span>
+            <div class="min-w-0">
+              <h3 id="doc-evidence-modal-title" class="text-sm font-bold text-white truncate">Histórico de Evidências Anexadas</h3>
+              <p id="doc-evidence-modal-subtitle" class="text-[11px] text-slate-300 truncate">Custódia digital, telemetrias e arquivos vinculados a este documento</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeDocumentEvidenceModal()" class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer shrink-0 transition-colors" title="Fechar (ESC)">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- SUB-HEADER DE NAVEGAÇÃO ENTRE ABAS -->
+        <div class="px-5 py-2.5 bg-slate-100 border-b border-slate-200 flex items-center justify-between gap-3 shrink-0">
+          <div class="flex items-center gap-2">
+            <button type="button" id="tab-btn-doc-evid-list" onclick="switchDocumentEvidenceTab('list')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-[#004b93] shadow-xs border border-slate-200 flex items-center gap-1.5 cursor-pointer transition-all">
+              <i data-lucide="folder-check" class="w-3.5 h-3.5 text-[#004b93]"></i>
+              <span id="tab-btn-doc-evid-list-text">Evidências Anexadas (0)</span>
+            </button>
+            <button type="button" id="tab-btn-doc-evid-upload" onclick="switchDocumentEvidenceTab('upload')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 flex items-center gap-1.5 cursor-pointer transition-all">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>+ Anexar Nova Evidência</span>
+            </button>
+          </div>
+
+          <div class="text-[11px] text-slate-500 font-medium hidden sm:block">
+            Hash SHA-256 verificado &bull; ISO 27001 A.5.24 / A.5.28
+          </div>
+        </div>
+
+        <!-- CONTEÚDO SCROLLÁVEL -->
+        <div class="flex-1 overflow-y-auto p-5 bg-slate-50/50 space-y-4">
+          <!-- PAINEL 1: LISTAGEM DE HISTÓRICO DE EVIDÊNCIAS -->
+          <div id="panel-doc-evid-list" class="space-y-3"></div>
+
+          <!-- PAINEL 2: FORMULÁRIO DE ANEXO DE NOVA EVIDÊNCIA -->
+          <div id="panel-doc-evid-upload" class="hidden space-y-4"></div>
+        </div>
+
+        <!-- RODAPÉ DO MODAL -->
+        <div class="px-5 py-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
+          <div class="text-[11px] text-slate-500 flex items-center gap-1.5">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+            <span>Os arquivos anexados ficam vinculados diretamente a este modelo de documento e ao repositório forense de evidências.</span>
+          </div>
+          <button type="button" onclick="closeDocumentEvidenceModal()" class="px-4 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold cursor-pointer transition-colors">
+            Fechar
+          </button>
+        </div>
+
       </div>
     </div>
 

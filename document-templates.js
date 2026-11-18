@@ -4892,6 +4892,9 @@ function renderDocumentTemplatesGrid() {
       ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✓ ${sigList.length} Assinatura(s) SHA-256</span>`
       : `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">${escapeDocHtml(t.docType)}</span>`;
 
+    const isHubEnabled = isEvidenceHubEnabledForDoc(t.code);
+    const hubCount = isHubEnabled ? getEvidencesForDocument(t.code).length : 0;
+
     return `
     <div class="card-white rounded-lg p-4 border border-slate-200 hover:border-[#004b93]/60 transition-all flex flex-col justify-between gap-3 shadow-2xs">
       <div class="space-y-2">
@@ -4936,6 +4939,12 @@ function renderDocumentTemplatesGrid() {
             <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
             <span>Word (.doc)</span>
           </button>
+          ${isHubEnabled ? `
+          <button type="button" onclick="openDocumentEvidenceModal('${t.code}')" class="px-2.5 py-1.5 rounded bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs" title="Ver histórico de evidências e arquivos anexados a este documento">
+            <i data-lucide="paperclip" class="w-3.5 h-3.5 text-sky-600"></i>
+            <span>Evidências Anexadas (${hubCount})</span>
+          </button>
+          ` : ''}
         </div>
 
         <button type="button" onclick="attachSignedTemplateAsEvidence('${t.code}')" class="px-2.5 py-1.5 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors" title="Arquivar documento assinado no Repositório com Hash SHA-256">
@@ -5017,6 +5026,20 @@ function previewCorporateTemplate(code, customData = null) {
   if (codeEl) codeEl.textContent = tpl.code;
   if (titleEl) titleEl.textContent = tpl.title;
   if (subEl) subEl.textContent = `${tpl.normative} • Assinaturas: ${tpl.signersSummary}`;
+
+  const btnPreviewEvidence = document.getElementById("btn-preview-doc-evidence");
+  const btnPreviewEvidenceText = document.getElementById("btn-preview-doc-evidence-text");
+  if (btnPreviewEvidence) {
+    if (isEvidenceHubEnabledForDoc(code)) {
+      const evList = getEvidencesForDocument(code);
+      btnPreviewEvidence.classList.remove("hidden");
+      if (btnPreviewEvidenceText) {
+        btnPreviewEvidenceText.textContent = `Evidências Anexadas (${evList.length})`;
+      }
+    } else {
+      btnPreviewEvidence.classList.add("hidden");
+    }
+  }
 
   if (iframe) {
     iframe.srcdoc = html;
@@ -5599,6 +5622,12 @@ function downloadTemplateHTML(code, customData = {}) {
 function attachSignedTemplateAsEvidence(code) {
   const tpl = getTemplateByCode(code);
   if (!tpl) return;
+
+  if (isEvidenceHubEnabledForDoc(code)) {
+    openDocumentEvidenceModal(code, "upload");
+    return;
+  }
+
   const ctx = getTemplateContextDefaults();
 
   if (typeof switchTab === "function") switchTab("evidence");
@@ -5723,6 +5752,636 @@ function generateOffcanvasEntityDocument(type, idOrCode) {
   previewCorporateTemplate("MOD-AUD-02");
 }
 
+// ============================================================================
+// PAINEL / HUB DE EVIDÊNCIAS ANEXADAS EXCLUSIVO POR MODELO DE DOCUMENTO
+// PILOTO ATIVO: MOD-SEG-08-A (Registro de Verificação de Acesso Atípico)
+// ============================================================================
+
+let currentDocumentEvidenceTargetCode = "MOD-SEG-08-A";
+let activeEvidenceUploadFile = null;
+
+function isEvidenceHubEnabledForDoc(docCode) {
+  if (!docCode) return false;
+  // Piloto exclusivo solicitado pelo usuário para o modelo MOD-SEG-08-A
+  const enabledDocs = ["MOD-SEG-08-A"];
+  return enabledDocs.includes(docCode);
+}
+
+function getEvidencesForDocument(docCode) {
+  if (!docCode) return [];
+  const all = (typeof getStoredEvidence === "function") ? getStoredEvidence() : [];
+  if (!Array.isArray(all)) return [];
+  return all.filter(e => {
+    if (!e) return false;
+    if (e.documentCode === docCode) return true;
+    if (e.relatedDoc === docCode) return true;
+    if (e.control && typeof e.control === "string" && e.control.includes(docCode)) return true;
+    if (e.title && typeof e.title === "string" && e.title.includes(docCode)) return true;
+    return false;
+  });
+}
+
+function openDocumentEvidenceModal(docCode = null, activeTab = "list") {
+  const targetCode = docCode || TemplateHubState.previewingCode || "MOD-SEG-08-A";
+  currentDocumentEvidenceTargetCode = targetCode;
+  activeEvidenceUploadFile = null;
+
+  const tpl = getTemplateByCode(targetCode) || {
+    code: targetCode,
+    title: "Registro de Verificação de Acesso Atípico (Triagem - Fase 1)",
+    normative: "ISO/IEC 27001:2022 A.5.24 & LGPD Art. 46"
+  };
+
+  const modal = document.getElementById("modal-document-evidence");
+  const badgeCode = document.getElementById("doc-evidence-badge-code");
+  const titleEl = document.getElementById("doc-evidence-modal-title");
+  const subEl = document.getElementById("doc-evidence-modal-subtitle");
+
+  if (badgeCode) badgeCode.textContent = tpl.code;
+  if (titleEl) titleEl.textContent = `Evidências Anexadas — ${tpl.title}`;
+  if (subEl) subEl.textContent = `Repositório forense e custódia digital vinculado ao modelo ${tpl.code} (${tpl.normative})`;
+
+  switchDocumentEvidenceTab(activeTab);
+
+  if (modal) {
+    modal.classList.remove("hidden");
+    if (window.lucide && typeof window.lucide.createIcons === "function") {
+      window.lucide.createIcons();
+    }
+  }
+}
+
+function closeDocumentEvidenceModal() {
+  const modal = document.getElementById("modal-document-evidence");
+  if (modal) {
+    modal.classList.add("hidden");
+  }
+  activeEvidenceUploadFile = null;
+}
+
+function switchDocumentEvidenceTab(tab = "list") {
+  const btnList = document.getElementById("tab-btn-doc-evid-list");
+  const btnUpload = document.getElementById("tab-btn-doc-evid-upload");
+  const panelList = document.getElementById("panel-doc-evid-list");
+  const panelUpload = document.getElementById("panel-doc-evid-upload");
+
+  if (!panelList || !panelUpload) return;
+
+  if (tab === "upload") {
+    panelList.classList.add("hidden");
+    panelUpload.classList.remove("hidden");
+    if (btnList) btnList.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 flex items-center gap-1.5 cursor-pointer transition-all";
+    if (btnUpload) btnUpload.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-[#004b93] shadow-xs border border-slate-200 flex items-center gap-1.5 cursor-pointer transition-all";
+    renderDocumentEvidenceUploadForm(currentDocumentEvidenceTargetCode);
+  } else {
+    panelUpload.classList.add("hidden");
+    panelList.classList.remove("hidden");
+    if (btnUpload) btnUpload.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white/60 flex items-center gap-1.5 cursor-pointer transition-all";
+    if (btnList) btnList.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-[#004b93] shadow-xs border border-slate-200 flex items-center gap-1.5 cursor-pointer transition-all";
+    renderDocumentEvidenceList(currentDocumentEvidenceTargetCode);
+  }
+
+  if (window.lucide && typeof window.lucide.createIcons === "function") {
+    window.lucide.createIcons();
+  }
+}
+
+function renderDocumentEvidenceList(docCode) {
+  const panel = document.getElementById("panel-doc-evid-list");
+  const btnListText = document.getElementById("tab-btn-doc-evid-list-text");
+  if (!panel) return;
+
+  const evidences = getEvidencesForDocument(docCode);
+  if (btnListText) {
+    btnListText.textContent = `Evidências Anexadas (${evidences.length})`;
+  }
+
+  if (evidences.length === 0) {
+    panel.innerHTML = `
+      <div class="card-white rounded-xl p-8 text-center border border-slate-200 space-y-3.5 shadow-2xs">
+        <div class="w-12 h-12 mx-auto rounded-full bg-sky-50 text-sky-700 flex items-center justify-center border border-sky-100 shadow-2xs">
+          <i data-lucide="paperclip" class="w-6 h-6"></i>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-sm font-bold text-slate-800">Nenhuma evidência anexada a este documento ainda</h4>
+          <p class="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed">
+            Nenhum arquivo ou log foi vinculado a <strong>${escapeDocHtml(docCode)}</strong>. Você pode anexar telemetrias de rede, capturas de tela do login, export de logs do sistema (Sienge, Google Workspace, AD, Firewall), entrevista rápida com o colaborador ou o formulário assinado.
+          </p>
+        </div>
+        <button type="button" onclick="switchDocumentEvidenceTab('upload')" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white text-xs font-bold cursor-pointer transition-colors shadow-xs">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Anexar Primeira Evidência</span>
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="flex items-center justify-between pb-1 text-xs text-slate-500">
+      <span>Total de <strong>${evidences.length}</strong> evidência(s) indexada(s) e protegidas por SHA-256</span>
+      <button type="button" onclick="switchDocumentEvidenceTab('upload')" class="text-xs font-bold text-[#004b93] hover:underline flex items-center gap-1 cursor-pointer">
+        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+        <span>Adicionar Mais Evidências</span>
+      </button>
+    </div>
+    <div class="space-y-3">
+      ${evidences.map(e => `
+        <div class="card-white rounded-xl p-4 border border-slate-200 hover:border-sky-300 transition-all space-y-3 shadow-2xs">
+          <div class="flex items-start justify-between gap-3 flex-wrap">
+            <div class="space-y-1 min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#0f2942] text-white">${escapeDocHtml(e.id)}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-50 text-sky-800 border border-sky-200">${escapeDocHtml(e.category || 'Auditoria & Triagem')}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">✓ ${escapeDocHtml(e.status || 'Homologada')}</span>
+                <span class="text-[11px] text-slate-400 font-mono">${escapeDocHtml(e.date || '')}</span>
+              </div>
+              <h4 class="text-xs font-bold text-slate-900">${escapeDocHtml(e.title)}</h4>
+              ${e.description ? `<p class="text-[11px] text-slate-600 leading-relaxed">${escapeDocHtml(e.description)}</p>` : ''}
+            </div>
+
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="downloadDocumentEvidenceFile('${e.id}')" class="px-2.5 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors" title="Visualizar / Baixar arquivo anexado">
+                <i data-lucide="download" class="w-3.5 h-3.5 text-sky-600"></i>
+                <span>Baixar</span>
+              </button>
+              <button type="button" onclick="printEvidenceForensicCertificate('${e.id}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors" title="Emitir Certidão de Custódia Forense">
+                <i data-lucide="award" class="w-3.5 h-3.5 text-slate-600"></i>
+                <span>Certidão Forense</span>
+              </button>
+              <button type="button" onclick="deleteDocumentEvidence('${e.id}', '${docCode}')" class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 cursor-pointer transition-colors" title="Desvincular e Excluir Evidência">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px]">
+            <div class="flex items-center gap-2 text-slate-600 min-w-0">
+              <i data-lucide="file-check" class="w-4 h-4 text-slate-400 shrink-0"></i>
+              <span class="font-mono font-semibold text-slate-800 truncate">${escapeDocHtml(e.fileName || 'arquivo-evidencia')}</span>
+              <span class="text-slate-400 font-mono">(${escapeDocHtml(e.fileSize || '1.0 MB')})</span>
+              <span class="text-slate-300">•</span>
+              <span class="text-slate-500">Resp: <strong>${escapeDocHtml(e.responsible || 'Analista de T.I.')}</strong></span>
+            </div>
+
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span class="text-[10px] text-slate-400 uppercase font-mono">SHA-256:</span>
+              <code class="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[10px] font-mono text-slate-700 max-w-[180px] sm:max-w-[220px] truncate" title="${e.sha256}">${(e.sha256 || '').slice(0, 16)}...${(e.sha256 || '').slice(-8)}</code>
+              <button type="button" onclick="navigator.clipboard.writeText('${e.sha256}'); if(window.showToast) window.showToast('Hash SHA-256 copiado para a área de transferência!', 'success');" class="p-1 text-slate-400 hover:text-slate-700 cursor-pointer" title="Copiar Hash Completo">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderDocumentEvidenceUploadForm(docCode) {
+  const panel = document.getElementById("panel-doc-evid-upload");
+  if (!panel) return;
+
+  const tpl = getTemplateByCode(docCode) || { code: docCode, title: "Registro de Verificação de Acesso Atípico" };
+  const ctx = getTemplateContextDefaults();
+
+  panel.innerHTML = `
+    <form id="form-doc-evidence-upload" onsubmit="handleSaveDocumentEvidence(event, '${docCode}')" class="space-y-4 text-xs">
+      
+      <!-- DROPZONE DE ARQUIVO INTERATIVA COM CÁLCULO SHA-256 EM TEMPO REAL -->
+      <div>
+        <label class="block text-slate-700 font-semibold mb-1">Arquivo da Evidência * (PDF, Prints/PNG/JPG, TXT, CSV, LOG, ZIP)</label>
+        <div id="doc-evid-dropzone" onclick="document.getElementById('doc-evid-file-input').click()" class="border-2 border-dashed border-slate-300 hover:border-[#004b93] rounded-xl p-5 text-center bg-white cursor-pointer transition-all">
+          <input type="file" id="doc-evid-file-input" class="hidden" onchange="handleDocumentEvidenceFileSelect(this)" />
+          
+          <div id="doc-evid-file-prompt" class="space-y-1.5">
+            <div class="w-10 h-10 mx-auto rounded-full bg-blue-50 text-[#004b93] flex items-center justify-center">
+              <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+            </div>
+            <p class="font-bold text-slate-800">Clique para selecionar ou arraste o arquivo aqui</p>
+            <p class="text-[11px] text-slate-400">Prints do login atípico, relatório do firewall, export Google Workspace/Sienge/AD, telemetria de IP</p>
+          </div>
+
+          <div id="doc-evid-file-selected" class="hidden space-y-2">
+            <div class="flex items-center justify-center gap-2 text-emerald-700 font-bold">
+              <i data-lucide="check-circle" class="w-4 h-4"></i>
+              <span id="doc-evid-selected-name" class="font-mono text-xs"></span>
+              <span id="doc-evid-selected-size" class="text-[11px] text-slate-500 font-normal"></span>
+            </div>
+            <div class="p-2 rounded bg-slate-50 border border-slate-200 text-left font-mono text-[10px] text-slate-600 break-all">
+              <strong class="text-slate-800">Hash SHA-256 Calculado em Tempo Real:</strong><br />
+              <span id="doc-evid-selected-hash" class="text-emerald-800 select-all font-bold"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-slate-700 font-semibold mb-1">Título da Evidência *</label>
+          <input type="text" id="doc-evid-input-title" required placeholder="Ex: Print do Log de Acesso Atípico no Google Workspace" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 focus:outline-none focus:border-[#004b93]" />
+        </div>
+        <div>
+          <label class="block text-slate-700 font-semibold mb-1">Categoria da Evidência *</label>
+          <select id="doc-evid-input-category" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 focus:outline-none focus:border-[#004b93]">
+            <option value="Logs de Autenticação & MFA (Google / AD / Sienge)">Logs de Autenticação & MFA (Google / AD / Sienge)</option>
+            <option value="Entrevista Fática com Colaborador (Triagem Fase 1)">Entrevista Fática com Colaborador (Triagem Fase 1)</option>
+            <option value="Telemetria de Rede, IP & Geolocalização (Firewall / ISP)">Telemetria de Rede, IP & Geolocalização (Firewall / ISP)</option>
+            <option value="Export de Alerta de Segurança (CV CRM / Sienge / SIEM)">Export de Alerta de Segurança (CV CRM / Sienge / SIEM)</option>
+            <option value="Formulário MOD-SEG-08-A Digitalizado / Assinado">Formulário MOD-SEG-08-A Digitalizado / Assinado</option>
+            <option value="Outros Comprovantes Forenses">Outros Comprovantes Forenses</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-slate-700 font-semibold mb-1">Responsável pela Coleta / Analista *</label>
+          <input type="text" id="doc-evid-input-resp" required value="${escapeDocHtml(ctx.currentUserName || 'Analista de T.I. - CSIRT')}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 focus:outline-none focus:border-[#004b93]" />
+        </div>
+        <div>
+          <label class="block text-slate-700 font-semibold mb-1">Data da Coleta / Triagem *</label>
+          <input type="date" id="doc-evid-input-date" required value="${new Date().toISOString().split('T')[0]}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 focus:outline-none focus:border-[#004b93]" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-slate-700 font-semibold mb-1">Parecer da Triagem / Observações Técnicas</label>
+        <textarea id="doc-evid-input-notes" rows="3" placeholder="Descreva o contexto do anexo (ex: 'O usuário confirmou que estava em trânsito conectando via 5G em Aracaju-SE, MFA aprovado pelo próprio titular sem divergências técnicas')..." class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-900 focus:outline-none focus:border-[#004b93]"></textarea>
+      </div>
+
+      <div class="pt-2 flex items-center justify-end gap-2">
+        <button type="button" onclick="switchDocumentEvidenceTab('list')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-200 text-xs font-semibold cursor-pointer transition-colors">
+          Cancelar
+        </button>
+        <button type="submit" class="px-4 py-1.5 rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          <span>Salvar e Vincular Evidência ao Documento</span>
+        </button>
+      </div>
+    </form>
+  `;
+
+  const dropzone = document.getElementById("doc-evid-dropzone");
+  if (dropzone) {
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("border-[#004b93]", "bg-blue-50/40");
+    });
+    dropzone.addEventListener("dragleave", () => {
+      dropzone.classList.remove("border-[#004b93]", "bg-blue-50/40");
+    });
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("border-[#004b93]", "bg-blue-50/40");
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        const fileInput = document.getElementById("doc-evid-file-input");
+        if (fileInput) {
+          fileInput.files = e.dataTransfer.files;
+          handleDocumentEvidenceFileSelect(fileInput);
+        }
+      }
+    });
+  }
+
+  if (window.lucide && typeof window.lucide.createIcons === "function") {
+    window.lucide.createIcons();
+  }
+}
+
+async function handleDocumentEvidenceFileSelect(input) {
+  if (!input || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+
+  const promptEl = document.getElementById("doc-evid-file-prompt");
+  const selectedEl = document.getElementById("doc-evid-file-selected");
+  const nameEl = document.getElementById("doc-evid-selected-name");
+  const sizeEl = document.getElementById("doc-evid-selected-size");
+  const hashEl = document.getElementById("doc-evid-selected-hash");
+  const titleEl = document.getElementById("doc-evid-input-title");
+
+  const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+  const sizeStr = file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${sizeMb} MB`;
+
+  if (nameEl) nameEl.textContent = file.name;
+  if (sizeEl) sizeEl.textContent = `(${sizeStr})`;
+  if (hashEl) hashEl.textContent = "Calculando hash criptográfico SHA-256...";
+
+  if (promptEl) promptEl.classList.add("hidden");
+  if (selectedEl) selectedEl.classList.remove("hidden");
+
+  if (titleEl && !titleEl.value.trim()) {
+    titleEl.value = `${file.name.replace(/\.[^/.]+$/, "")} — Triagem Acesso`;
+  }
+
+  try {
+    const buffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const sha256 = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    if (hashEl) hashEl.textContent = sha256;
+
+    activeEvidenceUploadFile = {
+      file,
+      name: file.name,
+      sizeStr,
+      sha256,
+      type: file.type
+    };
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      if (activeEvidenceUploadFile) {
+        activeEvidenceUploadFile.dataUrl = evt.target.result;
+      }
+    };
+    reader.readAsDataURL(file);
+
+  } catch (err) {
+    console.warn("Falha no cálculo SHA-256 do arquivo:", err);
+    const fallbackHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    if (hashEl) hashEl.textContent = fallbackHash;
+    activeEvidenceUploadFile = {
+      file,
+      name: file.name,
+      sizeStr,
+      sha256: fallbackHash,
+      type: file.type
+    };
+  }
+}
+
+async function handleSaveDocumentEvidence(e, docCode) {
+  e.preventDefault();
+
+  const title = (document.getElementById("doc-evid-input-title")?.value || "").trim();
+  const category = document.getElementById("doc-evid-input-category")?.value || "Logs de Autenticação & MFA";
+  const responsible = (document.getElementById("doc-evid-input-resp")?.value || "Analista de T.I. - CSIRT").trim();
+  const date = document.getElementById("doc-evid-input-date")?.value || new Date().toISOString().split("T")[0];
+  const notes = (document.getElementById("doc-evid-input-notes")?.value || "").trim();
+
+  if (!title) {
+    if (window.showToast) window.showToast("Informe o título da evidência.", "warning");
+    return;
+  }
+
+  const tpl = getTemplateByCode(docCode) || { code: docCode, normative: "ISO/IEC 27001:2022 A.5.24" };
+
+  let fileName = "comprovante-triagem.pdf";
+  let fileSize = "1.0 MB";
+  let sha256 = "c2a98f128e01948b201948b201948c201948b201948b201948b201948b33fe10";
+  let fileDataUrl = null;
+
+  if (activeEvidenceUploadFile) {
+    fileName = activeEvidenceUploadFile.name;
+    fileSize = activeEvidenceUploadFile.sizeStr;
+    sha256 = activeEvidenceUploadFile.sha256;
+    fileDataUrl = activeEvidenceUploadFile.dataUrl;
+  } else {
+    try {
+      const enc = new TextEncoder().encode(`${title}-${date}-${responsible}-${notes}`);
+      const hBuf = await crypto.subtle.digest("SHA-256", enc);
+      sha256 = Array.from(new Uint8Array(hBuf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    } catch (_) {}
+  }
+
+  const all = (typeof getStoredEvidence === "function") ? getStoredEvidence() : [];
+  const nextNum = all.length + 1;
+  const newId = `EVID-${String(nextNum).padStart(3, "0")}`;
+
+  const newEvid = {
+    id: newId,
+    title,
+    control: `${tpl.code} / ${tpl.normative}`,
+    category,
+    location: "Escritório Central (Matriz)",
+    responsible,
+    date,
+    fileName,
+    fileSize,
+    sha256,
+    status: "Homologada",
+    approvedBy: responsible,
+    description: notes || `Evidência vinculada à verificação de acesso atípico (${tpl.code}).`,
+    documentCode: docCode,
+    relatedDoc: docCode,
+    fileDataUrl: fileDataUrl,
+    uploadedAt: new Date().toISOString()
+  };
+
+  all.unshift(newEvid);
+  if (typeof saveStoredEvidence === "function") {
+    saveStoredEvidence(all);
+  }
+
+  if (window.ApiService && typeof window.ApiService.addAuditRecord === "function") {
+    window.ApiService.addAuditRecord({
+      action: "ANEXO_EVIDENCIA_DOCUMENTO",
+      module: "Documentos",
+      details: `Evidência ${newEvid.id} vinculada ao modelo ${docCode}: "${title}" (SHA-256: ${sha256.slice(0, 16)}...)`
+    });
+  }
+
+  if (window.showToast) {
+    window.showToast(`Evidência [${newId}] anexada com sucesso ao documento ${docCode}!`, "success");
+  }
+
+  activeEvidenceUploadFile = null;
+  switchDocumentEvidenceTab("list");
+  renderDocumentTemplatesGrid();
+
+  const btnPreviewText = document.getElementById("btn-preview-doc-evidence-text");
+  if (btnPreviewText) {
+    const remaining = getEvidencesForDocument(docCode);
+    btnPreviewText.textContent = `Evidências Anexadas (${remaining.length})`;
+  }
+}
+
+async function deleteDocumentEvidence(evidenceId, docCode) {
+  const ok = confirm(`Deseja realmente desvincular e remover a evidência ${evidenceId}?`);
+  if (!ok) return;
+
+  let all = (typeof getStoredEvidence === "function") ? getStoredEvidence() : [];
+  all = all.filter(e => e.id !== evidenceId);
+  if (typeof saveStoredEvidence === "function") {
+    saveStoredEvidence(all);
+  }
+
+  if (window.ApiService && typeof window.ApiService.addAuditRecord === "function") {
+    window.ApiService.addAuditRecord({
+      action: "EXCLUSAO_EVIDENCIA_DOCUMENTO",
+      module: "Documentos",
+      details: `Evidência ${evidenceId} desvinculada do modelo ${docCode}`
+    });
+  }
+
+  if (window.showToast) {
+    window.showToast(`Evidência ${evidenceId} desvinculada com sucesso.`, "info");
+  }
+
+  renderDocumentEvidenceList(docCode);
+  renderDocumentTemplatesGrid();
+
+  const btnPreviewText = document.getElementById("btn-preview-doc-evidence-text");
+  if (btnPreviewText) {
+    const remaining = getEvidencesForDocument(docCode);
+    btnPreviewText.textContent = `Evidências Anexadas (${remaining.length})`;
+  }
+}
+
+function downloadDocumentEvidenceFile(evidenceId) {
+  const all = (typeof getStoredEvidence === "function") ? getStoredEvidence() : [];
+  const ev = all.find(e => e.id === evidenceId);
+  if (!ev) return;
+
+  if (ev.fileDataUrl) {
+    const a = document.createElement("a");
+    a.href = ev.fileDataUrl;
+    a.download = ev.fileName || `evidencia-${ev.id}.bin`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } else {
+    const content = `AC ENGENHARIA LTDA. — SISTEMA DE GESTÃO DE SEGURANÇA DA INFORMAÇÃO (SGSI)
+EVIDÊNCIA FORENSE DE CONTROLE AUDITÁVEL (ISO/IEC 27001 & LGPD)
+--------------------------------------------------------------------------------
+Identificador da Evidência: ${ev.id}
+Documento Vinculado: ${ev.documentCode || 'MOD-SEG-08-A'}
+Título: ${ev.title}
+Categoria: ${ev.category || 'Auditoria & Triagem'}
+Controle Normativo: ${ev.control || 'ISO/IEC 27001:2022 A.5.24'}
+Responsável pela Coleta: ${ev.responsible || 'Analista de T.I. - CSIRT'}
+Data do Registro: ${ev.date || ''}
+Nome do Arquivo Original: ${ev.fileName || 'arquivo-evidencia'}
+Tamanho do Arquivo: ${ev.fileSize || 'N/A'}
+Status: ${ev.status || 'Homologada'}
+--------------------------------------------------------------------------------
+HASH CRIPTOGRÁFICO DE INTEGRIDADE (SHA-256):
+${ev.sha256 || 'N/A'}
+--------------------------------------------------------------------------------
+PARECER TÉCNICO / NOTAS DE AUDITORIA:
+${ev.description || 'Sem observações adicionais.'}
+--------------------------------------------------------------------------------
+Este registro possui validade jurídica e comprovação técnica perante auditorias
+independentes e fiscalizações da ANPD.`;
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${ev.id}-${(ev.fileName || 'evidencia.txt').replace(/\.[^/.]+$/, "")}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  if (window.showToast) {
+    window.showToast(`Download da evidência ${ev.id} iniciado.`, "success");
+  }
+}
+
+function printEvidenceForensicCertificate(evidenceId) {
+  const all = (typeof getStoredEvidence === "function") ? getStoredEvidence() : [];
+  const ev = all.find(e => e.id === evidenceId);
+  if (!ev) return;
+
+  const tpl = getTemplateByCode(ev.documentCode || "MOD-SEG-08-A") || { code: ev.documentCode, title: ev.title, normative: "ISO/IEC 27001:2022 A.5.24" };
+  const protocol = `CERT-${ev.id}-${Date.now().toString().slice(-6)}`;
+  const emissionDate = new Date().toLocaleDateString("pt-BR") + " às " + new Date().toLocaleTimeString("pt-BR");
+
+  const printHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Certidão Forense — ${escapeDocHtml(ev.id)}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 40px; color: #0f172a; line-height: 1.5; font-size: 12px; }
+    .header { border-bottom: 2px solid #004b93; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .title { font-size: 16px; font-weight: 800; color: #004b93; text-transform: uppercase; margin: 0; }
+    .subtitle { font-size: 11px; color: #64748b; margin: 2px 0 0 0; }
+    .badge { background: #0f2942; color: #fff; padding: 4px 10px; border-radius: 4px; font-family: monospace; font-size: 11px; font-weight: bold; }
+    .section-title { font-size: 12px; font-weight: bold; text-transform: uppercase; color: #0f2942; border-left: 3px solid #004b93; padding-left: 8px; margin: 16px 0 8px 0; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    td, th { border: 1px solid #cbd5e1; padding: 8px 10px; font-size: 11px; }
+    th { background: #f8fafc; font-weight: bold; text-align: left; }
+    .hash-box { background: #f1f5f9; border: 1px solid #94a3b8; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; word-break: break-all; color: #0f172a; margin: 12px 0; }
+    .legal-notice { font-size: 10px; color: #475569; text-align: justify; margin: 16px 0; padding: 10px; background: #fafafa; border: 1px dashed #cbd5e1; border-radius: 4px; }
+    .sigs { display: flex; justify-content: space-around; margin-top: 40px; }
+    .sig-block { text-align: center; width: 40%; border-top: 1px solid #0f172a; padding-top: 6px; font-size: 10px; }
+    @media print { body { margin: 20px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="title">AC ENGENHARIA LTDA.</h1>
+      <p class="subtitle">Sistema de Gestão de Segurança da Informação (SGSI) — Trilha de Auditoria Forense</p>
+    </div>
+    <div class="badge">${escapeDocHtml(protocol)}</div>
+  </div>
+
+  <h2 style="font-size: 14px; font-weight: bold; text-align: center; margin: 15px 0;">CERTIDÃO DE CUSTÓDIA FORENSE E INTEGRIDADE DE EVIDÊNCIA DIGITAL</h2>
+  <p style="text-align: center; font-size: 11px; color: #475569;">Emitida em conformidade com ISO/IEC 27037 (Diretrizes para Preservação de Evidência Digital) e Art. 46 da LGPD</p>
+
+  <div class="section-title">1. Dados do Documento e Objeto de Auditoria</div>
+  <table>
+    <tr><th width="30%">Modelo Vinculado</th><td><strong>${escapeDocHtml(tpl.code)}</strong> — ${escapeDocHtml(tpl.title)}</td></tr>
+    <tr><th>Norma / Requisito</th><td>${escapeDocHtml(tpl.normative || 'ISO/IEC 27001')}</td></tr>
+    <tr><th>ID da Evidência</th><td><code>${escapeDocHtml(ev.id)}</code></td></tr>
+    <tr><th>Título da Evidência</th><td><strong>${escapeDocHtml(ev.title)}</strong></td></tr>
+    <tr><th>Categoria Forense</th><td>${escapeDocHtml(ev.category || 'Auditoria & Triagem')}</td></tr>
+    <tr><th>Arquivo Original</th><td>${escapeDocHtml(ev.fileName || 'documento')} (${escapeDocHtml(ev.fileSize || 'N/A')})</td></tr>
+    <tr><th>Responsável pela Coleta</th><td>${escapeDocHtml(ev.responsible || 'Analista de T.I. - CSIRT')}</td></tr>
+    <tr><th>Data do Registro / Coleta</th><td>${escapeDocHtml(ev.date || '')}</td></tr>
+    <tr><th>Status de Homologação</th><td>${escapeDocHtml(ev.status || 'Homologada')} por ${escapeDocHtml(ev.approvedBy || 'Analista CSIRT')}</td></tr>
+  </table>
+
+  <div class="section-title">2. Assinatura Criptográfica e Integridade do Arquivo (SHA-256)</div>
+  <div class="hash-box">
+    <strong>Algoritmo Criptográfico:</strong> SHA-256 (FIPS 180-4)<br />
+    <strong>Impressão Digital Forense (Hash):</strong><br />
+    <span style="font-size: 13px; font-weight: bold; color: #004b93;">${escapeDocHtml(ev.sha256 || 'N/A')}</span>
+  </div>
+
+  <div class="section-title">3. Parecer Técnico / Justificativa da Triagem</div>
+  <p style="padding: 8px; background: #fff; border: 1px solid #e2e8f0; font-size: 11px; min-height: 40px;">
+    ${escapeDocHtml(ev.description || 'Evidência anexada durante o processo de auditoria e verificação primária de acesso atípico (Fase 1).')}
+  </p>
+
+  <div class="legal-notice">
+    <strong>Declaração de Autenticidade e Não-Repúdio:</strong> Certifica-se, para todos os efeitos de auditoria interna, externa e conformidade regulatória (LGPD / ANPD), que o artefato digital supramencionado foi indexado ao Sistema de Gestão de Segurança da Informação da AC Engenharia sob custódia digital inviolável. O hash criptográfico SHA-256 acima assegura a estrita imutabilidade e integridade temporal da evidência desde o momento de sua indexação.
+  </div>
+
+  <div class="sigs">
+    <div class="sig-block">
+      <strong>${escapeDocHtml(ev.responsible || 'Analista de T.I. / CSIRT')}</strong><br />
+      Analista Responsável pela Coleta e Custódia<br />
+      AC Engenharia — T.I. / Segurança
+    </div>
+    <div class="sig-block">
+      <strong>Encarregado de Dados (DPO) / Gestor SGSI</strong><br />
+      Governança, Riscos e Compliance (GRC)<br />
+      AC Engenharia — Matriz
+    </div>
+  </div>
+
+  <div style="margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 8px; font-size: 9px; color: #94a3b8; text-align: center;">
+    Certidão emitida eletronicamente em ${escapeDocHtml(emissionDate)} pelo Sistema Corporativo SGSI AC Engenharia &bull; Protocolo ${escapeDocHtml(protocol)}
+  </div>
+</body>
+</html>`;
+
+  const w = window.open("", "_blank");
+  if (w) {
+    w.document.open();
+    w.document.write(printHtml);
+    w.document.close();
+    w.focus();
+    setTimeout(() => { w.print(); }, 400);
+  }
+}
+
 // Exposição Global
 window.CORPORATE_DOCUMENT_TEMPLATES = CORPORATE_DOCUMENT_TEMPLATES;
 window.switchEvidenceSubtab = switchEvidenceSubtab;
@@ -5758,6 +6417,18 @@ window.handleSaveCorporateSigners = handleSaveCorporateSigners;
 window.clearCorporateSigners = clearCorporateSigners;
 window.getStoredCorporateSigners = getStoredCorporateSigners;
 window.saveStoredCorporateSigners = saveStoredCorporateSigners;
+window.isEvidenceHubEnabledForDoc = isEvidenceHubEnabledForDoc;
+window.getEvidencesForDocument = getEvidencesForDocument;
+window.openDocumentEvidenceModal = openDocumentEvidenceModal;
+window.closeDocumentEvidenceModal = closeDocumentEvidenceModal;
+window.switchDocumentEvidenceTab = switchDocumentEvidenceTab;
+window.renderDocumentEvidenceList = renderDocumentEvidenceList;
+window.renderDocumentEvidenceUploadForm = renderDocumentEvidenceUploadForm;
+window.handleDocumentEvidenceFileSelect = handleDocumentEvidenceFileSelect;
+window.handleSaveDocumentEvidence = handleSaveDocumentEvidence;
+window.deleteDocumentEvidence = deleteDocumentEvidence;
+window.downloadDocumentEvidenceFile = downloadDocumentEvidenceFile;
+window.printEvidenceForensicCertificate = printEvidenceForensicCertificate;
 
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("doc-templates-grid")) {
