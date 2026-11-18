@@ -137,8 +137,7 @@ export async function checkAndInitializePostgres(): Promise<boolean> {
         // Ignora silenciosamente
       }
 
-      // Migração de papéis de usuários: garante que ti@acengenhariase.com.br seja o único Administrador Principal
-      // e que manoelmgsantos@acengenhariase.com.br seja um usuário normal (Engenheiro / Operações)
+      // Migração de papéis de usuários: garante que os gestores de T.I. e administradores tenham permissão SecOps
       try {
         await pool.query(`
           UPDATE app_users 
@@ -146,19 +145,19 @@ export async function checkAndInitializePostgres(): Promise<boolean> {
           WHERE LOWER(email) = 'ti@acengenhariase.com.br';
           
           UPDATE app_users 
-          SET role = 'gestor_obra' 
+          SET role = 'secops', active = TRUE 
           WHERE LOWER(email) = 'manoelmgsantos@acengenhariase.com.br';
 
           UPDATE grc_records 
           SET payload = jsonb_set(
             jsonb_set(
               jsonb_set(
-                jsonb_set(payload, '{isSuperAdmin}', 'false'::jsonb),
-                '{role}', '"gestor_obra"'::jsonb
+                payload,
+                '{role}', '"secops"'::jsonb
               ),
-              '{roleName}', '"Engenheiro Residente / Obras"'::jsonb
+              '{roleName}', '"Gestor de T.I. & SecOps"'::jsonb
             ),
-            '{id}', '"usr-manoel"'::jsonb
+            '{status}', '"Ativo"'::jsonb
           )
           WHERE collection = 'users' AND LOWER(payload->>'email') = 'manoelmgsantos@acengenhariase.com.br';
 

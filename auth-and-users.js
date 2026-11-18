@@ -83,16 +83,18 @@ const DEFAULT_AC_USERS = [
     id: "usr-manoel",
     name: "Manoel Martins",
     email: "manoelmgsantos@acengenhariase.com.br",
-    role: "gestor_obra",
-    roleName: "Engenheiro Residente / Obras",
-    department: "Diretoria de Operações & Obras",
+    role: "secops",
+    roleName: "Gestor de T.I. & SecOps",
+    department: "Tecnologia da Informação & SecOps",
     location: "Escritório Central (Matriz)",
     avatar: "MM",
-    color: "amber",
+    color: "blue",
     status: "Ativo",
-    isSuperAdmin: false,
+    isSuperAdmin: true,
     responsibilities: [
-      "Segurança de canteiro, biometria em catracas, termos de empreiteiras e evidências operacionais."
+      "Administração central de acessos e identidade corporativa (Google SSO / IAM)",
+      "Gestão de vulnerabilidades, SIEM Wazuh e resposta a incidentes (CSIRT)",
+      "Governança de conformidade ISO 27001 e homologação técnica de acessos"
     ]
   }
 ];
@@ -206,12 +208,10 @@ function getStoredUsers() {
             user.role = 'secops';
             user.roleName = 'Gestor de T.I. & SecOps';
           } else if (user.email && user.email.toLowerCase() === 'manoelmgsantos@acengenhariase.com.br') {
-            user.isSuperAdmin = false;
-            if (user.id === 'usr-admin') user.id = 'usr-manoel';
-            if (user.role === 'secops') {
-              user.role = 'gestor_obra';
-              user.roleName = 'Engenheiro Residente / Obras';
-            }
+            user.isSuperAdmin = true;
+            user.id = 'usr-manoel';
+            user.role = 'secops';
+            user.roleName = 'Gestor de T.I. & SecOps';
           }
           return user;
         });
@@ -260,12 +260,10 @@ function getStoredSessionUser() {
     if (raw) {
       const u = sanitizeClientUser(JSON.parse(raw));
       if (u.email && u.email.toLowerCase() === 'manoelmgsantos@acengenhariase.com.br') {
-        u.isSuperAdmin = false;
-        if (u.id === 'usr-admin') u.id = 'usr-manoel';
-        if (u.role === 'secops') {
-          u.role = 'gestor_obra';
-          u.roleName = 'Engenheiro Residente / Obras';
-        }
+        u.isSuperAdmin = true;
+        u.id = 'usr-manoel';
+        u.role = 'secops';
+        u.roleName = 'Gestor de T.I. & SecOps';
       } else if (u.email && u.email.toLowerCase() === 'ti@acengenhariase.com.br') {
         u.isSuperAdmin = true;
         u.id = 'usr-admin';
@@ -535,6 +533,10 @@ async function completeGoogleAuth(profile) {
   // Validação criptográfica obrigatória no Backend junto aos servidores do Google
   let authData = null;
   try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteId = urlParams.get('invite') || null;
+    const inviteEmail = urlParams.get('email') ? decodeURIComponent(urlParams.get('email')).trim().toLowerCase() : null;
+
     const authRes = await fetch("/api/auth/google", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -543,7 +545,9 @@ async function completeGoogleAuth(profile) {
         accessToken,
         clientId: GOOGLE_SSO_CONFIG.clientId,
         email: profile?.email || null,
-        name: profile?.name || null
+        name: profile?.name || null,
+        inviteId,
+        inviteEmail
       })
     });
 
@@ -759,12 +763,22 @@ async function handleSendUserInvite(e) {
 
   // Sincroniza com backend Express / PostgreSQL
   try {
-    await fetch("/api/users/invite", {
+    const token = sessionStorage.getItem("AC_AUTH_JWT_TOKEN_V1");
+    const invRes = await fetch("/api/users/invite", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "x-cybergrc-token": token } : {})
+      },
       body: JSON.stringify(inviteUser)
     });
-  } catch (_) {}
+    if (!invRes.ok) {
+      const err = await invRes.json().catch(() => ({}));
+      console.warn("Aviso ao registrar convite no servidor:", err);
+    }
+  } catch (err) {
+    console.warn("Erro de rede ao sincronizar convite:", err);
+  }
 
   closeInviteUserModal();
   renderAdminUsersTable();

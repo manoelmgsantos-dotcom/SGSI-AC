@@ -908,43 +908,68 @@ app.post('/api/auth/google', asyncRoute(async (request, response) => {
     throw new HttpError(403, `Acesso negado: domínio @${domain} não autorizado.`);
   }
 
+  const inviteId = request.body?.inviteId ? String(request.body.inviteId).trim() : null;
+  const inviteEmail = request.body?.inviteEmail ? String(request.body.inviteEmail).trim().toLowerCase() : null;
+
+  // Validação estrita do link de convite: o link só funciona para a pessoa convidada
+  if (inviteEmail && inviteEmail !== email.toLowerCase()) {
+    recordLoginFailure(request, email);
+    await appendAuditLog({
+      category: 'AUTENTICACAO_FALHA',
+      module: 'AUTH',
+      action: 'GOOGLE_SSO_CONVITE_EMAIL_DIVERGENTE',
+      severity: 'WARN',
+      actor: email,
+      target_module: 'Google Workspace SSO',
+      description: `Tentativa de login via link de convite com e-mail divergente: link emitido para [${inviteEmail}], login realizado por [${email}].`,
+      ip: clientIp,
+    });
+    throw new HttpError(
+      403,
+      `Este link de convite é exclusivo para o e-mail corporativo (${inviteEmail}). A conta autenticada no Google foi (${email}). Por favor, acesse com a conta corporativa correta.`
+    );
+  }
+
   let pgUp = isPostgresOnline();
   if (!pgUp) pgUp = await checkAndInitializePostgres();
 
   let user: Record<string, unknown> | null = null;
   let wasInviteAccepted = false;
+  let userRecordId = '';
 
-  // 1. O Administrador Principal sempre tem acesso concedido
+  // 1. O Administrador Principal e SecOps sempre têm acesso administrativo garantido
   const bootstrapAdminEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || 'ti@acengenhariase.com.br').toLowerCase().trim();
-  const isSuperAdmin = email === 'ti@acengenhariase.com.br' || email === bootstrapAdminEmail;
+  const isBootstrapMaster = email.toLowerCase() === 'ti@acengenhariase.com.br' || email.toLowerCase() === bootstrapAdminEmail;
+  const isManoelAdmin = email.toLowerCase() === 'manoelmgsantos@acengenhariase.com.br';
+  const isSuperAdmin = isBootstrapMaster || isManoelAdmin;
 
   if (pgUp) {
     try {
       const recRes = await pool.query(
-        "SELECT record_id, payload FROM grc_records WHERE collection = 'users' AND LOWER(payload->>'email') = $1",
-        [email]
+        `SELECT record_id, payload FROM grc_records 
+         WHERE collection = 'users' 
+           AND (
+             LOWER(payload->>'email') = $1 
+             OR ($2::text IS NOT NULL AND (record_id = $2 OR payload->>'id' = $2))
+           )
+         LIMIT 1`,
+        [email.toLowerCase(), inviteId]
       );
       if (recRes.rows.length > 0) {
+        userRecordId = recRes.rows[0].record_id;
         user = sanitizeUserRecord(recRes.rows[0].payload);
-        // Se estava com convite pendente, atualiza para Ativo!
-        if (user && user.status === 'Convite Pendente') {
-          user.status = 'Ativo';
-          user.acceptedInviteAt = new Date().toISOString();
-          if (name && (!user.name || user.name === email.split('@')[0])) user.name = name;
-          if (picture) user.picture = picture;
-          wasInviteAccepted = true;
-          await pool.query(
-            "UPDATE grc_records SET payload = $1, updated_at = NOW() WHERE collection = 'users' AND record_id = $2",
-            [JSON.stringify(user), recRes.rows[0].record_id]
-          );
-        }
       } else {
         const uRes = await pool.query(
           'SELECT id, email, role, active FROM app_users WHERE LOWER(email) = $1',
-          [email]
+          [email.toLowerCase()]
         );
         if (uRes.rows.length > 0) {
-          user = uRes.rows[0];
+          user = {
+            id: uRes.rows[0].id,
+            email: uRes.rows[0].email,
+            role: uRes.rows[0].role,
+            status: uRes.rows[0].active ? 'Ativo' : 'Inativo',
+          };
         }
       }
     } catch (err) {
@@ -956,92 +981,65 @@ app.post('/api/auth/google', asyncRoute(async (request, response) => {
     const diskData = await readLocalDiskDB();
     if (Array.isArray(diskData.users)) {
       const found = (diskData.users as Array<Record<string, unknown>>).find(
-        u => String(u.email).toLowerCase() === email
+        u => String(u.email).toLowerCase() === email.toLowerCase() || (inviteId && String(u.id) === inviteId)
       );
       if (found) {
         user = sanitizeUserRecord(found);
-        if (user && user.status === 'Convite Pendente') {
-          user.status = 'Ativo';
-          user.acceptedInviteAt = new Date().toISOString();
-          if (name && (!user.name || user.name === email.split('@')[0])) user.name = name;
-          if (picture) user.picture = picture;
-          wasInviteAccepted = true;
-          await writeLocalDiskDB(diskData);
-        }
+        userRecordId = String(found.id || `usr-${Date.now()}`);
       }
     }
   }
 
-  // Provisionamento Just-in-Time (JIT) para colaboradores com e-mail corporativo válido da AC Engenharia:
-  // Se a conta Google já foi autenticada pelo Google Workspace e pertence a um dos domínios oficiais, cria o acesso automaticamente
-  if (!user && !isSuperAdmin) {
-    const isManoel = email.toLowerCase() === 'manoelmgsantos@acengenhariase.com.br';
-    const roleKey = isManoel ? 'gestor_obra' : (ssoConfig.defaultRole || 'gestor_obra');
-    const roleNameMap: Record<string, string> = {
-      secops: 'Gestor de T.I. & SecOps',
-      dpo: 'Encarregado de Dados (DPO)',
-      diretoria: 'Diretoria Executiva',
-      gestor_obra: 'Engenheiro Residente / Obras',
-      colaborador_canteiro: 'Colaborador / Operações de Canteiro',
-      rh_sst: 'RH & SST (NR-18)',
-      suprimentos: 'Suprimentos & Terceirização',
-      comercial: 'Comercial & Vendas',
-      auditor_leitor: 'Auditor Interno / Leitor'
-    };
-
-    const cleanName = name || email.split('@')[0].replace(/\./g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
-    const initials = cleanName
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w: string) => w[0].toUpperCase())
-      .join('') || 'AC';
-
+  // Se for administrador acessando pela primeira vez
+  if (!user && isManoelAdmin) {
     user = {
-      id: isManoel ? 'usr-manoel' : `usr-jit-${Date.now().toString(36)}`,
-      name: cleanName,
+      id: 'usr-manoel',
+      name: name || 'Manoel Martins',
       email: email,
-      role: roleKey,
-      roleName: roleNameMap[roleKey] || 'Colaborador SGSI',
-      department: isManoel ? 'Diretoria de Operações & Obras' : 'Engenharia de Obras',
+      role: 'secops',
+      roleName: 'Gestor de T.I. & SecOps',
+      department: 'Tecnologia da Informação & SecOps',
       location: 'Escritório Central (Matriz)',
-      avatar: initials,
-      color: isManoel ? 'amber' : 'blue',
+      avatar: 'MM',
+      color: 'blue',
       status: 'Ativo',
-      picture: picture || null,
-      isSuperAdmin: false,
+      isSuperAdmin: true,
     };
+    userRecordId = 'usr-manoel';
+  } else if (!user && isBootstrapMaster) {
+    user = {
+      id: 'usr-admin',
+      name: name || 'Admin-SGSI',
+      email: email,
+      role: 'secops',
+      roleName: 'Gestor de T.I. & SecOps',
+      department: 'Diretoria de Tecnologia & Governança SGSI',
+      location: 'Escritório Central (Matriz)',
+      avatar: 'A',
+      color: 'blue',
+      status: 'Ativo',
+      isSuperAdmin: true,
+    };
+    userRecordId = 'usr-admin';
+  }
 
-    if (pgUp) {
-      try {
-        await pool.query(
-          `INSERT INTO grc_records (collection, record_id, payload, sort_order)
-           VALUES ('users', $1, $2, 1)
-           ON CONFLICT (collection, record_id) DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()`,
-          [user.id, JSON.stringify(user)]
-        );
-        await pool.query(
-          `INSERT INTO app_users (email, password_hash, role, active, created_at, updated_at)
-           VALUES ($1, 'GOOGLE_WORKSPACE_SSO', $2, TRUE, NOW(), NOW())
-           ON CONFLICT (email) DO UPDATE SET role = $2, active = TRUE, updated_at = NOW()`,
-          [email, roleKey]
-        );
-      } catch (autoErr) {
-        console.warn('Aviso ao auto-provisionar colaborador via Google SSO:', autoErr);
-      }
-    }
-
-    const diskData = await readLocalDiskDB();
-    if (!Array.isArray(diskData.users)) diskData.users = [];
-    const existingIdx = (diskData.users as Array<Record<string, unknown>>).findIndex(
-      u => String(u.email).toLowerCase() === email
+  // POLÍTICA ESTRITA DE CONVITE: Se não possui usuário cadastrado nem convite prévio -> BLOQUEIA!
+  if (!user) {
+    recordLoginFailure(request, email);
+    await appendAuditLog({
+      category: 'AUTENTICACAO_FALHA',
+      module: 'AUTH',
+      action: 'GOOGLE_SSO_CONVITE_INEXISTENTE',
+      severity: 'WARN',
+      actor: email,
+      target_module: 'Google Workspace SSO',
+      description: `Tentativa de login via Google Workspace recusada para ${email}: colaborador não possui convite prévio emitido pelo Administrador.`,
+      ip: clientIp,
+    });
+    throw new HttpError(
+      403,
+      `Acesso não autorizado: o e-mail corporativo (${email}) ainda não possui um convite cadastrado pelo Administrador no SGSI. Solicite seu convite de acesso para a equipe de T.I.`
     );
-    if (existingIdx !== -1) {
-      (diskData.users as Array<Record<string, unknown>>)[existingIdx] = user;
-    } else {
-      (diskData.users as Array<Record<string, unknown>>).push(user);
-    }
-    await writeLocalDiskDB(diskData).catch(() => {});
   }
 
   // Se usuário foi encontrado mas está explicitamente inativo ou bloqueado:
@@ -1063,30 +1061,66 @@ app.post('/api/auth/google', asyncRoute(async (request, response) => {
     );
   }
 
-  // Se for o SuperAdmin acessando pela primeira vez sem registro prévio
-  if (!user && isSuperAdmin) {
-    user = {
-      id: 'usr-admin',
-      name: name || 'Admin-SGSI',
-      email: email,
-      role: 'secops',
-      roleName: 'Gestor de T.I. & SecOps',
-      status: 'Ativo',
-      isSuperAdmin: true
+  // ATIVAÇÃO DO CONVITE: PRESERVA RIGOROSAMENTE O PERFIL (ROLE) DEFINIDO NO MOMENTO DO CONVITE
+  if (user && (user.status === 'Convite Pendente' || wasInviteAccepted || !user.status)) {
+    const roleNameMap: Record<string, string> = {
+      secops: 'Gestor de T.I. & SecOps',
+      dpo: 'DPO & Compliance LGPD',
+      diretoria: 'Diretoria Executiva / C-Level',
+      gestor_obra: 'Engenheiro Residente / Obras',
+      colaborador_canteiro: 'Colaborador / Operações de Canteiro',
+      rh_sst: 'RH & SST (NR-18)',
+      suprimentos: 'Suprimentos & Terceirização',
+      comercial: 'Comercial & Estandes de Vendas',
+      auditoria: 'Auditor Líder ISO 27001'
     };
+
+    // Mantém exatamente a role que o administrador definiu no convite (ex: 'secops' para T.I.)
+    const assignedRole = String(user.role || 'secops');
+    user.status = 'Ativo';
+    user.role = assignedRole;
+    user.roleName = user.roleName || roleNameMap[assignedRole] || 'Colaborador SGSI';
+    user.acceptedInviteAt = new Date().toISOString();
+    if (name && (!user.name || user.name === email.split('@')[0])) {
+      user.name = name;
+    }
+    if (picture) user.picture = picture;
+    wasInviteAccepted = true;
+
+    if (pgUp) {
+      try {
+        const targetRecId = userRecordId || String(user.id || `usr-${Date.now()}`);
+        await pool.query(
+          `INSERT INTO grc_records (collection, record_id, payload, sort_order)
+           VALUES ('users', $1, $2, 1)
+           ON CONFLICT (collection, record_id) DO UPDATE SET payload = EXCLUDED.payload, updated_at = NOW()`,
+          [targetRecId, JSON.stringify(user)]
+        );
+        await pool.query(
+          `INSERT INTO app_users (email, password_hash, role, active, created_at, updated_at)
+           VALUES ($1, 'GOOGLE_WORKSPACE_SSO', $2, TRUE, NOW(), NOW())
+           ON CONFLICT (email) DO UPDATE SET role = EXCLUDED.role, active = TRUE, updated_at = NOW()`,
+          [email.toLowerCase(), assignedRole]
+        );
+      } catch (err) {
+        console.warn('Aviso ao ativar convite no PostgreSQL:', err);
+      }
+    }
+
+    const diskData = await readLocalDiskDB();
+    if (!Array.isArray(diskData.users)) diskData.users = [];
+    const idx = (diskData.users as Array<Record<string, unknown>>).findIndex(
+      u => String(u.email).toLowerCase() === email.toLowerCase() || (userRecordId && String(u.id) === userRecordId)
+    );
+    if (idx !== -1) {
+      (diskData.users as Array<Record<string, unknown>>)[idx] = user;
+    } else {
+      (diskData.users as Array<Record<string, unknown>>).push(user);
+    }
+    await writeLocalDiskDB(diskData).catch(() => {});
   }
 
   clearLoginFailures(request, email);
-
-  // Garante que manoelmgsantos nunca receba perfil de superadmin em nenhuma circunstância
-  if (user && email.toLowerCase() === 'manoelmgsantos@acengenhariase.com.br') {
-    user.isSuperAdmin = false;
-    if (user.id === 'usr-admin') user.id = 'usr-manoel';
-    if (user.role === 'secops') {
-      user.role = 'gestor_obra';
-      user.roleName = 'Engenheiro Residente / Obras';
-    }
-  }
 
   await appendAuditLog({
     category: 'AUTENTICACAO_SUCESSO',
