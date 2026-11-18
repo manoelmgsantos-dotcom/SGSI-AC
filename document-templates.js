@@ -984,7 +984,7 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
     "fields": [
       {
         "key": "incidentNumber",
-        "label": "Nº do Protocolo do Incidente",
+        "label": "Nº do Protocolo do Alerta / Incidente",
         "placeholder": "Ex: INC-SEG-2026-0042"
       },
       {
@@ -999,12 +999,12 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
       },
       {
         "key": "targetSystem",
-        "label": "Sistema Alvo da Invasão",
+        "label": "Sistema Objeto do Acesso / Alerta",
         "placeholder": "Ex: ERP Sienge / CV CRM / Gmail / VPN Fortigate"
       },
       {
         "key": "affectedUser",
-        "label": "Nome Completo do Colaborador Afetado",
+        "label": "Nome Completo do Colaborador Titular",
         "placeholder": "Ex: João da Silva"
       },
       {
@@ -1024,23 +1024,23 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
       },
       {
         "key": "originIp",
-        "label": "IP de Origem e Geolocalização",
-        "placeholder": "Ex: 185.220.101.5 (Frankfurt / Alemanha - Tor Exit)"
+        "label": "IP de Origem e Geolocalização Identificada",
+        "placeholder": "Ex: 185.220.101.5 (Frankfurt / Tor) OU 179.180.x.x (Claro 4G/Aracaju)"
       },
       {
         "key": "attackerActions",
-        "label": "Resumo das Ações Executadas pelo Invasor",
-        "placeholder": "Ex: Invasor tentou alterar PIX no Sienge e criou regra de e-mail no Gmail"
+        "label": "Resumo das Ações na Sessão (Uso Normal ou Atividade Suspeita)",
+        "placeholder": "Ex: Acesso regular confirmado pelo usuário OU Invasor tentou alterar PIX no Sienge"
       },
       {
         "key": "exfiltrationStatus",
-        "label": "Diagnóstico de Exfiltração / Vazamento de Dados",
-        "placeholder": "Ex: Não houve exfiltração confirmada após análise de tráfego de rede"
+        "label": "Diagnóstico de Exfiltração / Integridade da Base",
+        "placeholder": "Ex: Tráfego rotineiro regular sem exfiltração OU Sob auditoria de tráfego"
       },
       {
         "key": "attackerTimeline",
-        "label": "Linha do Tempo dos Logs (Timeline Forense)",
-        "placeholder": "Ex: 14:20 Login suspeito -> 14:22 Acesso ao Contas a Pagar -> 14:25 Sessão derrubada pela TI"
+        "label": "Linha do Tempo dos Logs (Timeline Pericial)",
+        "placeholder": "Ex: 14:20 Alerta disparado -> 14:22 Entrevista com colaborador -> 14:25 Validação fática"
       }
     ]
   },
@@ -3901,7 +3901,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     normative: "ISO/IEC 27001:2022 A.5.24 a A.5.28 & Resolução CD/ANPD nº 15/2024",
     evidenceCategory: "Segurança & CSIRT",
     signersSummary: "Analista Investigador T.I. + Gestor SecOps + DPO (se notificado)",
-    summary: "Laudo pericial e forense de rastreamento de tentativas de invasão e login anômalo (Sienge, Construtor de Vendas, Gmail, Antivírus), contendo telemetria de IP, explicação didática de vetores de ataque, mapeamento minucioso das ações do invasor por sistema (Gmail, Sienge, CV CRM e VPN), constatação de exfiltração, entrevista técnica com o usuário, 7 vereditos periciais e protocolo ANPD.",
+    summary: "Laudo pericial e forense de investigação de alertas de login e acessos anômalos (Sienge, Construtor de Vendas, Gmail, Antivírus), destinado a apurar e distinguir tecnicamente entre uso legítimo/falso positivo e tentativa real de invasão, com telemetria de IP, auditoria de ações por sistema, entrevista fática, contenção e 7 vereditos periciais.",
     buildBody: (ctx, custom = {}) => {
       const incNum = custom.incidentNumber || "INC-SEG-202___-_________";
       const dtDetection = custom.detectionDateTime || (ctx.todayBr + " às " + (ctx.nowBr.split(" ")[1] || "___:___") + " h");
@@ -3912,15 +3912,15 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       const uLogin = custom.affectedLogin || "[ Login no Sistema / Rede ]";
       const uRole = custom.affectedRole || "[ Cargo / Setor do Colaborador ]";
       const ipOrigin = custom.originIp || "___.___.___.___ (Geolocalização / Provedor)";
-      const actSummary = custom.attackerActions || "Nenhuma ação hostil consumada além da tentativa de acesso.";
-      const exfilStatus = custom.exfiltrationStatus || "Não houve exfiltração de dados corporativos ou pessoais confirmada nos logs de telemetria.";
+      const actSummary = custom.attackerActions || "Atividades rotineiras em conformidade ou nenhuma alteração hostil identificada.";
+      const exfilStatus = custom.exfiltrationStatus || "Acesso regular / Não houve exfiltração de dados confirmada nos logs de telemetria.";
       const timelineLogs = custom.attackerTimeline || "[ Preencher cronologia de eventos segundo os logs do firewall/aplicação ]";
 
       return `
         <h2>1. Identificação do Alerta e Escopo Afetado</h2>
         <table class="data-table">
           <tr>
-            <td width="28%"><strong>Protocolo do Incidente:</strong></td>
+            <td width="28%"><strong>Protocolo do Alerta / Incidente:</strong></td>
             <td width="72%"><code>${escapeDocHtml(incNum)}</code> &nbsp;|&nbsp; <strong>Status:</strong> [ &nbsp; ] Em Análise &nbsp;&nbsp; [ &nbsp; ] Contido &nbsp;&nbsp; [ &nbsp; ] Concluído</td>
           </tr>
           <tr>
@@ -3941,17 +3941,17 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
             </td>
           </tr>
           <tr>
-            <td><strong>Sistema Alvo da Invasão:</strong></td>
+            <td><strong>Sistema Objeto do Alerta / Acesso:</strong></td>
             <td>
               <strong>${escapeDocHtml(sysTarget)}</strong><br/>
-              <em>(Aplicação ou serviço corporativo que o invasor tentou acessar ou violar):</em><br/>
+              <em>(Aplicação ou serviço corporativo que gerou a notificação ou tentativa de acesso sob investigação):</em><br/>
               [ &nbsp; ] ERP Sienge (Nuvem / Financeiro / Compras / Obras) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Construtor de Vendas (CV CRM)<br/>
               [ &nbsp; ] Gmail / Google Workspace (E-mails e Google Drive) &nbsp;&nbsp;&nbsp; [ &nbsp; ] VPN Fortigate / Conexão Remota<br/>
               [ &nbsp; ] Servidor de Arquivos da Engenharia (Matriz) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Active Directory / Login de Máquina
             </td>
           </tr>
           <tr>
-            <td><strong>Conta e Colaborador Afetados:</strong></td>
+            <td><strong>Conta e Colaborador Titular Sob Verificação:</strong></td>
             <td>
               <table style="width: 100%; border: 1px solid #cbd5e1; margin-top: 4px; font-size: 8.5pt;">
                 <tr>
@@ -3971,7 +3971,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           </tr>
         </table>
 
-        <h2>2. Análise Técnica Forense e Vetores de Tentativa (SecOps)</h2>
+        <h2>2. Análise Técnica Forense e Contexto do Alerta (SecOps)</h2>
         <table class="data-table">
           <tr>
             <td width="28%"><strong>IP de Origem e Telemetria:</strong></td>
@@ -3982,54 +3982,62 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
             <td>[ &nbsp; ] Windows 10/11 &nbsp;&nbsp; [ &nbsp; ] Android &nbsp;&nbsp; [ &nbsp; ] iPhone/iOS &nbsp;&nbsp; [ &nbsp; ] macOS / Linux &nbsp;&nbsp;|&nbsp; <strong>Dispositivo Cadastrado no MDM?</strong> [ &nbsp; ] Sim &nbsp; [ &nbsp; ] Não (BYOD)</td>
           </tr>
           <tr>
-            <td><strong>Padrão da Tentativa:<br/><small class="text-slate-500 font-normal">(Mecânica do Ataque)</small></strong></td>
+            <td><strong>Padrão do Evento / Contexto da Conexão:<br/><small class="text-slate-500 font-normal">(Mecânica do Evento / Hipóteses)</small></strong></td>
             <td>
-              <em>Indica como o invasor tentou burlar a segurança da conta:</em><br/>
-              [ &nbsp; ] <strong>Viagem Impossível (*Impossible Travel*):</strong> Logins de cidades/países distantes em intervalo fisicamente incompatível (ex: login em Aracaju e na Europa com 30 minutos de diferença).<br/>
+              <em>Indica a característica técnica da conexão analisada pela T.I., confrontada com a rotina do colaborador:</em><br/>
+              [ &nbsp; ] <strong>Acesso Convencional / Operação Normal do Usuário:</strong> Login a partir de dispositivo habitual ou rede conhecida da empresa/residência, sem sinais de anomalia técnica.<br/>
+              [ &nbsp; ] <strong>Falha de Digitação / Esquecimento de Senha:</strong> Tentativas sucessivas incorretas decorrentes de erro humano do próprio colaborador (ex: tecla Caps Lock ou troca recente de senha).<br/>
+              [ &nbsp; ] <strong>Viagem / Deslocamento a Serviço (*Impossible Travel*):</strong> Logins de cidades/estados distantes em intervalo curto (comumente gerados por uso de rede móvel 4G/5G com IP dinâmico ou trânsito real do usuário).<br/>
               [ &nbsp; ] <strong>Força Bruta (*Brute-force*):</strong> Múltiplas tentativas seguidas e automatizadas de senhas aleatórias até o bloqueio.<br/>
               [ &nbsp; ] <strong>Pulverização de Senha (*Password Spraying*):</strong> Teste de uma única senha comum em várias contas diferentes da empresa para evitar bloqueio consecutivo.<br/>
-              [ &nbsp; ] <strong>Tentativa com Senha Correta (Vazamento de Credencial):</strong> O invasor já possuía a senha exata da conta (adquirida em vazamento externo ou reúso de senha pessoal).<br/>
-              [ &nbsp; ] <strong>Fadiga de Notificação MFA (*Push Fatigue*):</strong> O atacante bombardeia o celular do colaborador com avisos de aprovação até que ele clique em "Aprovar" por distração.<br/>
+              [ &nbsp; ] <strong>Tentativa com Credencial Válida (Vazamento Externo):</strong> O acesso utilizou a senha correta da conta, porém a partir de origem desconhecida ou não usual.<br/>
+              [ &nbsp; ] <strong>Fadiga de Notificação MFA (*Push Fatigue*):</strong> Disparos sucessivos de solicitações de aprovação push no celular do colaborador para forçar um aceite por distração.<br/>
               [ &nbsp; ] <strong>Roubo de Sessão (*Session Hijacking / Cookie Replay*):</strong> Reutilização de token ou cookie de sessão ativa capturado por malware/infostealer no navegador.<br/>
-              [ &nbsp; ] <strong>Engenharia Social / *Phishing*:</strong> O colaborador foi induzido a digitar a credencial em site falso ou enviá-la a terceiros.
+              [ &nbsp; ] <strong>Engenharia Social / *Phishing*:</strong> O colaborador foi induzido a digitar a credencial em site falso ou informá-la a terceiros.
             </td>
           </tr>
           <tr>
             <td><strong>Status da Autenticação:</strong></td>
-            <td>[ &nbsp; ] <strong>Tentativa Frustrada</strong> (Bloqueado) &nbsp;&nbsp;&nbsp; [ &nbsp; ] <strong>Login Efetuado com Sucesso</strong> (Sessão Estabelecida)</td>
+            <td>[ &nbsp; ] <strong>Tentativa Bloqueada</strong> (Acesso não autorizado não foi consumado / falha de autenticação) &nbsp;&nbsp;&nbsp; [ &nbsp; ] <strong>Login Efetuado com Sucesso</strong> (Sessão estabelecida)</td>
           </tr>
           <tr>
             <td><strong>Validação do 2º Fator (MFA):</strong></td>
-            <td>[ &nbsp; ] MFA Bloqueou o Invasor &nbsp;&nbsp;&nbsp; [ &nbsp; ] MFA Aprovado Inadvertidamente pelo Usuário (Fadiga Push)<br/>
-                [ &nbsp; ] Código TOTP inserido &nbsp;&nbsp;&nbsp; [ &nbsp; ] Ausência de MFA na Conta (Não Conformidade PCA-002)</td>
+            <td>[ &nbsp; ] <strong>MFA Aprovado Regularmente pelo Próprio Colaborador</strong> (Acesso legítimo em duas etapas)<br/>
+                [ &nbsp; ] <strong>MFA Bloqueou Tentativa Externa Não Autorizada</strong> (Segurança perimetral atuou com sucesso)<br/>
+                [ &nbsp; ] <strong>MFA Aprovado Inadvertidamente</strong> (Fadiga Push / Erro involuntário do colaborador)<br/>
+                [ &nbsp; ] <strong>Código TOTP Inserido Regularmente</strong> &nbsp;&nbsp;&nbsp; [ &nbsp; ] <strong>Ausência de MFA na Conta</strong> (Não Conformidade PCA-002 / Requer ativação)</td>
           </tr>
           <tr>
-            <td><strong>Resumo das Ações pós-Login:</strong></td>
+            <td><strong>Resumo Preliminar da Sessão:</strong></td>
             <td>
-              <em>Consulte a <strong>Seção 3 (Rastreamento Forense de Ações)</strong> para o mapeamento minucioso por sistema (Gmail, Sienge, CV CRM e VPN).</em><br/>
-              [ &nbsp; ] Nenhuma ação hostil identificada antes da contenção (Ataque barrado no perímetro ou sessão derrubada imediatamente)<br/>
-              [ &nbsp; ] Ações hostis executadas e documentadas em detalhes na Seção 3 deste laudo pericial
+              <em>Consulte a <strong>Seção 3 (Rastreamento e Auditoria de Ações)</strong> para a apuração fática se houve operação legítima ou atividade hostil:</em><br/>
+              [ &nbsp; ] <strong>Uso Legítimo Comprovado:</strong> Navegação normal e rotineira do próprio colaborador (Sem indício de anomalia).<br/>
+              [ &nbsp; ] <strong>Tentativa Bloqueada na Borda:</strong> Nenhuma sessão foi estabelecida (Ataque contido antes do ingresso).<br/>
+              [ &nbsp; ] <strong>Sessão Sob Suspeita / Invasão Confirmada:</strong> Atividades anômalas mapeadas detalhadamente na Seção 3 deste laudo pericial.
             </td>
           </tr>
         </table>
 
-        <h2>3. Rastreamento Forense de Ações: O que o Invasor Fez ou Tentou Fazer?</h2>
-        <p>Mapeamento pericial detalhado das atividades, comandos, navegação e alterações tentadas ou consumadas pelo agente hostil durante a sessão ou na tentativa de invasão:</p>
+        <h2>3. Rastreamento e Auditoria de Ações na Sessão: Constatação Forense</h2>
+        <p>Auditoria minuciosa das ações executadas durante o acesso investigado. <strong>Se constatado acesso legítimo do próprio colaborador</strong>, assinale o uso regular; <strong>se confirmada invasão ou desvio</strong>, selecione detalhadamente as ações hostis tentadas ou executadas nos sistemas afetados:</p>
 
         <table class="data-table">
           <tr>
-            <td width="28%"><strong>Profundidade da Incursão / Estado da Sessão:</strong></td>
+            <td width="28%"><strong>Natureza do Acesso e Profundidade da Sessão:</strong></td>
             <td>
-              <em>Indica se o atacante apenas tentou a autenticação ou se chegou a circular por dentro do sistema:</em><br/>
-              [ &nbsp; ] <strong>Bloqueado no Perímetro (Sem Acesso Efetivo):</strong> Tentativa barrada na tela de login por MFA, bloqueio de IP ou senha incorreta. O invasor <strong>NÃO teve acesso</strong> a telas, arquivos ou dados internos.<br/>
-              [ &nbsp; ] <strong>Login Estabelecido com Encerramento Imediato:</strong> O invasor logou com sucesso, mas o alerta em tempo real disparou e a T.I. derrubou a sessão em minutos, antes que o invasor realizasse qualquer clique ou comando hostil.<br/>
-              [ &nbsp; ] <strong>Sessão Ativa com Movimentação / Ações Executadas:</strong> O invasor permaneceu conectado e realizou navegação, buscas, downloads ou alterações nos módulos (detalhadas nos blocos a seguir).
+              <em>Indica a realidade fática apurada sobre a sessão de trabalho investigada:</em><br/>
+              [ &nbsp; ] <strong>1. ACESSO LEGÍTIMO CONFIRMADO (Uso Rotineiro):</strong> O acesso foi realizado pelo próprio colaborador no exercício regular de suas atribuições. Nenhuma ação anômala, hostil ou não autorizada foi praticada.<br/>
+              [ &nbsp; ] <strong>2. TENTATIVA BARRADA NO PERÍMETRO (Sem Acesso Efetivo):</strong> A tentativa foi barrada antes do login (por MFA, firewall ou senha incorreta). Nenhum terceiro teve acesso a dados, relatórios ou módulos internos.<br/>
+              [ &nbsp; ] <strong>3. LOGIN SUSPEITO COM ENCERRAMENTO IMEDIATO PELA T.I.:</strong> Sessão autenticada externamente, porém a equipe de segurança identificou o alerta e derrubou a sessão em minutos, antes que houvesse qualquer comando hostil.<br/>
+              [ &nbsp; ] <strong>4. SESSÃO ATIVA COM ATIVIDADES HOSTIS OU DESVIO (Invasão Confirmada):</strong> Agente hostil permaneceu conectado e executou buscas, downloads ou tentativas de alteração (detalhar nos blocos abaixo).
             </td>
           </tr>
           <tr>
             <td><strong>Ações no Gmail / Google Workspace:<br/><small class="text-slate-500 font-normal">(E-mails e Google Drive)</small></strong></td>
             <td>
-              [ &nbsp; ] Nenhuma ação executada ou tentativa frustrada antes do login<br/>
+              [ &nbsp; ] <strong>USO REGULAR / OPERAÇÃO NORMAL:</strong> Leitura e envio habitual de e-mails de trabalho pelo colaborador (Sem anomalias)<br/>
+              [ &nbsp; ] <strong>NÃO APLICÁVEL:</strong> O alerta investigado não envolveu o Google Workspace<br/>
+              <em>Atividades Hostis Identificadas (Marcar somente se comprovada invasão ou desvio na conta):</em><br/>
               [ &nbsp; ] Criação de regras ocultas de encaminhamento automático de e-mails para endereço externo do atacante<br/>
               [ &nbsp; ] Criação de regras de filtro para exclusão automática de e-mails de segurança, bancos ou fornecedores<br/>
               [ &nbsp; ] Leitura de mensagens confidenciais ou busca por termos críticos (ex: 'senha', 'banco', 'PIX', 'contrato')<br/>
@@ -4041,7 +4049,9 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           <tr>
             <td><strong>Ações no ERP Sienge:<br/><small class="text-slate-500 font-normal">(Financeiro, Compras e Obras)</small></strong></td>
             <td>
-              [ &nbsp; ] Nenhuma ação executada ou tentativa frustrada antes do login<br/>
+              [ &nbsp; ] <strong>USO REGULAR / OPERAÇÃO NORMAL:</strong> Consultas e lançamentos normais inerentes à função do colaborador no ERP<br/>
+              [ &nbsp; ] <strong>NÃO APLICÁVEL:</strong> O alerta investigado não envolveu o ERP Sienge<br/>
+              <em>Atividades Hostis Identificadas (Marcar somente se comprovada invasão ou desvio na conta):</em><br/>
               [ &nbsp; ] Tentativa de alteração de chave PIX ou conta corrente de fornecedores cadastrados no Contas a Pagar<br/>
               [ &nbsp; ] Tentativa de autorização, agendamento de pagamentos ou geração de borderô financeiro fraudulento<br/>
               [ &nbsp; ] Alteração indevida de dados de medições de obras, ordens de compra ou cotações de insumos<br/>
@@ -4053,7 +4063,9 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           <tr>
             <td><strong>Ações no Construtor de Vendas (CV CRM):<br/><small class="text-slate-500 font-normal">(Vendas e Clientes)</small></strong></td>
             <td>
-              [ &nbsp; ] Nenhuma ação executada ou tentativa frustrada antes do login<br/>
+              [ &nbsp; ] <strong>USO REGULAR / OPERAÇÃO NORMAL:</strong> Atendimento regular a compradores e atualização rotineira de propostas<br/>
+              [ &nbsp; ] <strong>NÃO APLICÁVEL:</strong> O alerta investigado não envolveu o Construtor de Vendas<br/>
+              <em>Atividades Hostis Identificadas (Marcar somente se comprovada invasão ou desvio na conta):</em><br/>
               [ &nbsp; ] Tentativa de exportação / download em lote da base de leads e clientes (dados pessoais e CPF)<br/>
               [ &nbsp; ] Disparo em massa de mensagens ou emissão fraudulenta de boletos de parcelas a compradores<br/>
               [ &nbsp; ] Alteração de propostas comerciais, descontos de unidades ou comissões de corretores<br/>
@@ -4063,7 +4075,9 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           <tr>
             <td><strong>Ações em Rede Interna / VPN / Servidores:<br/><small class="text-slate-500 font-normal">(Infraestrutura & Domínio)</small></strong></td>
             <td>
-              [ &nbsp; ] Nenhuma ação executada ou tentativa frustrada antes do login<br/>
+              [ &nbsp; ] <strong>USO REGULAR / OPERAÇÃO NORMAL:</strong> Acesso remoto homologado de trabalho pelo próprio colaborador<br/>
+              [ &nbsp; ] <strong>NÃO APLICÁVEL:</strong> O alerta investigado não envolveu a VPN ou infraestrutura interna<br/>
+              <em>Atividades Hostis Identificadas (Marcar somente se comprovada invasão ou desvio na conta):</em><br/>
               [ &nbsp; ] Tentativa de movimentação lateral (Lateral Movement) buscando outras máquinas ou servidores na VPN<br/>
               [ &nbsp; ] Varredura de portas (Port Scan) ou descoberta de estações de trabalho e serviços internos<br/>
               [ &nbsp; ] Acesso ou download de arquivos em pastas de rede compartilhadas da Engenharia / Diretoria<br/>
@@ -4074,24 +4088,24 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           <tr>
             <td><strong>Constatação de Exfiltração (Vazamento de Dados):</strong></td>
             <td>
-              <strong>Status Pericial:</strong> [ &nbsp; ] <strong>NÃO HOUVE EXFILTRAÇÃO</strong> &nbsp;&nbsp;&nbsp; [ &nbsp; ] <strong>SOB ANÁLISE FORENSE</strong> &nbsp;&nbsp;&nbsp; [ &nbsp; ] <strong>EXFILTRAÇÃO CONFIRMADA</strong><br/>
+              <strong>Status Pericial:</strong> [ &nbsp; ] <strong>NÃO HOUVE EXFILTRAÇÃO / TRÁFEGO REGULAR</strong> &nbsp;&nbsp;&nbsp; [ &nbsp; ] <strong>SOB ANÁLISE FORENSE</strong> &nbsp;&nbsp;&nbsp; [ &nbsp; ] <strong>EXFILTRAÇÃO CONFIRMADA</strong><br/>
               <strong>Diagnóstico Técnico:</strong> ${escapeDocHtml(exfilStatus)}
             </td>
           </tr>
           <tr>
-            <td><strong>Constatação de Alteração / Dano aos Dados:</strong></td>
+            <td><strong>Constatação de Alteração / Integridade de Dados:</strong></td>
             <td>
-              [ &nbsp; ] <strong>Integridade Preservada:</strong> Nenhum registro foi alterado, criado ou excluído.<br/>
-              [ &nbsp; ] <strong>Tentativa de Fraude Barrada:</strong> O invasor tentou alterar dados (ex: PIX), mas foi contido pelas travas do sistema.<br/>
-              [ &nbsp; ] <strong>Alteração Consumada:</strong> Houve alteração efetiva de dados (necessária reversão imediata pela T.I.).<br/>
+              [ &nbsp; ] <strong>Integridade Preservada (Uso Normal ou Tentativa Barrada):</strong> Nenhum registro corporativo foi alterado, corrompido ou excluído.<br/>
+              [ &nbsp; ] <strong>Tentativa de Adulteração Barrada:</strong> O invasor tentou alterar dados (ex: PIX), mas foi contido pelas travas do sistema.<br/>
+              [ &nbsp; ] <strong>Alteração Hostil Consumada:</strong> Houve alteração efetiva de dados (necessária reversão imediata pela T.I.).<br/>
               <strong>Resumo das Ações Identificadas:</strong> ${escapeDocHtml(actSummary)}
             </td>
           </tr>
           <tr>
-            <td><strong>Linha do Tempo dos Logs:<br/><small class="text-slate-500 font-normal">(Timeline Forense)</small></strong></td>
+            <td><strong>Linha do Tempo dos Logs:<br/><small class="text-slate-500 font-normal">(Timeline Pericial)</small></strong></td>
             <td>
               <code>${escapeDocHtml(timelineLogs)}</code><br/>
-              <small class="text-slate-500"><em>(Registrar os carimbos de data/hora extraídos dos logs do Firewall Fortigate, Sienge, CV CRM ou Google Workspace Admin Console).</em></small>
+              <small class="text-slate-500"><em>(Registrar os carimbos de data/hora extraídos dos logs do Firewall Fortigate, Sienge, CV CRM ou Google Workspace Admin Console para evidenciar a cronologia real do acesso).</em></small>
             </td>
           </tr>
         </table>
@@ -4150,21 +4164,25 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           </tbody>
         </table>
 
-        <h2>5. Avaliação de Impacto e Medidas de Contenção Imediata</h2>
+        <h2>5. Avaliação de Impacto e Medidas de Contenção Adotadas</h2>
         <div class="callout callout-warning">
           <strong>Nível de Acesso da Conta Afetada:</strong><br/>
           [ &nbsp; ] Operacional de Canteiro &nbsp;&nbsp;&nbsp; [ &nbsp; ] Administrativo / Financeiro Sienge &nbsp;&nbsp;&nbsp; [ &nbsp; ] Comercial CV CRM (Dados de Clientes)<br/>
           [ &nbsp; ] RH / SST (Dados Pessoais Sensíveis / Biometria NR-18) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Administrador de TI / Acesso Privilegiado
         </div>
 
-        <p><strong>Ações Técnicas Imediatas Executadas pela T.I. / SecOps:</strong></p>
+        <p><strong>Ações Técnicas Adotadas pela T.I. / SecOps:</strong></p>
         <table class="data-table">
           <tr>
-            <td>[ &nbsp; ] <strong>Reset Compulsório de Senha</strong> (Complexidade elevada)</td>
+            <td>[ &nbsp; ] <strong>Nenhuma Ação Punitiva/Restritiva</strong> (Acesso legítimo comprovado)</td>
+            <td>[ &nbsp; ] <strong>Orientação de Boas Práticas ao Usuário</strong> (Wi-Fi, senhas e MFA)</td>
+          </tr>
+          <tr>
+            <td>[ &nbsp; ] <strong>Reset Preventivo de Senha</strong> (Complexidade elevada)</td>
             <td>[ &nbsp; ] <strong>Revogação Global de Sessões</strong> (*Revoke Refresh Tokens*)</td>
           </tr>
           <tr>
-            <td>[ &nbsp; ] <strong>Reconfiguração e Expurgo de MFA</strong> prévio</td>
+            <td>[ &nbsp; ] <strong>Reconfiguração e Ativação de MFA</strong> prévio</td>
             <td>[ &nbsp; ] <strong>Isolamento Lógico de Endpoint</strong> via EDR</td>
           </tr>
           <tr>
