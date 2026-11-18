@@ -372,21 +372,36 @@ async function handleCreateEvidence(e) {
 
   let fileName = "comprovante-tecnico-sgsi.pdf";
   let fileSize = "1.2 MB";
-  let sha256 = "d5a8b79234f9a012948b201948b201948c201948b201948b201948b201948b33";
+  let sha256 = "";
 
   if (fileInput && fileInput.files && fileInput.files[0]) {
     const f = fileInput.files[0];
     fileName = f.name;
     fileSize = `${(f.size / (1024 * 1024)).toFixed(1)} MB`;
 
-    // Cálculo real de hash SHA-256 se SubtleCrypto estiver disponível
     try {
       const buffer = await f.arrayBuffer();
-      const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      sha256 = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+      if (typeof window.computeUniversalSHA256 === "function") {
+        sha256 = await window.computeUniversalSHA256(buffer);
+      } else if (window.crypto && window.crypto.subtle) {
+        const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+        sha256 = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+      } else if (typeof window.sha256PureSync === "function") {
+        sha256 = window.sha256PureSync(buffer);
+      }
     } catch (err) {
-      console.warn("Falha no cálculo do hash do arquivo, utilizando hash determinístico:", err);
+      console.warn("Falha no cálculo do hash do arquivo:", err);
+    }
+  }
+
+  if (!sha256) {
+    const metaPayload = `${control}|${location}|${responsible}|${title}|${date}|${description}`;
+    if (typeof window.computeUniversalSHA256 === "function") {
+      sha256 = await window.computeUniversalSHA256(metaPayload);
+    } else if (typeof window.sha256PureSync === "function") {
+      sha256 = window.sha256PureSync(metaPayload);
+    } else {
+      sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
     }
   }
 
