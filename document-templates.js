@@ -962,6 +962,68 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
     ],
     "fields": []
   },
+  "MOD-SEG-08-A": {
+    "title": "Registro de Verificação de Acesso Atípico (Triagem - Fase 1)",
+    "signers": [
+      {
+        "role": "Analista de T.I. / Responsável pela Triagem",
+        "docLabel": "Matrícula / Registro Técnico",
+        "placeholder": "Ex: Analista de Suporte / T.I."
+      },
+      {
+        "role": "Colaborador(a) Titular Entrevistado(a)",
+        "docLabel": "CPF / Matrícula Funcional",
+        "placeholder": "Ex: Nome Completo do Colaborador"
+      }
+    ],
+    "fields": [
+      {
+        "key": "triageProtocol",
+        "label": "Nº do Protocolo de Triagem",
+        "placeholder": "Ex: TRI-SEG-2026-0158"
+      },
+      {
+        "key": "checkDateTime",
+        "label": "Data e Hora da Verificação",
+        "placeholder": "Ex: 18/11/2026 às 15:20"
+      },
+      {
+        "key": "alertOriginSystem",
+        "label": "Sistema que Gerou o Alerta",
+        "placeholder": "Ex: ERP Sienge / Construtor de Vendas (CV CRM) / Google Workspace / AD"
+      },
+      {
+        "key": "userName",
+        "label": "Nome Completo do Colaborador",
+        "placeholder": "Ex: João da Silva"
+      },
+      {
+        "key": "userEmail",
+        "label": "E-mail Corporativo",
+        "placeholder": "Ex: joao.silva@acengenhariase.com.br"
+      },
+      {
+        "key": "userLogin",
+        "label": "Login / Usuário no Sistema",
+        "placeholder": "Ex: jsilva"
+      },
+      {
+        "key": "userDepartment",
+        "label": "Cargo / Setor / Lotação",
+        "placeholder": "Ex: Engenheiro Residente / Obras"
+      },
+      {
+        "key": "analyzedIp",
+        "label": "IP Analisado e Geolocalização",
+        "placeholder": "Ex: 179.180.x.x (Claro 4G - Aracaju/SE)"
+      },
+      {
+        "key": "triageNotes",
+        "label": "Observações e Justificativa do Colaborador",
+        "placeholder": "Ex: Colaborador confirmou conexão rotineira via 4G do celular em trânsito"
+      }
+    ]
+  },
   "MOD-SEC-08": {
     "title": "Relatório Técnico de Investigação de Login Suspeito e Tentativa de Invasão",
     "signers": [
@@ -3895,6 +3957,184 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           { role: "Custodiante Criptográfico — T.I. & SecOps", name: ctx.secopsName },
           { role: "Homologação Pericial — DPO / Auditoria AC Engenharia", name: ctx.dpoName }
         ], false, "MOD-AUD-04")}
+      `;
+    }
+  },
+  {
+    code: "MOD-SEG-08-A",
+    module: "secops",
+    docType: "Auditoria & Triagem de Acesso",
+    requiresSignature: true,
+    title: "Registro de Verificação de Acesso Atípico (Triagem - Fase 1)",
+    normative: "ISO/IEC 27001:2022 A.5.24 & LGPD Art. 46 (Auditoria Preventiva de Rotina)",
+    evidenceCategory: "Auditoria & Triagem de Acesso",
+    signersSummary: "Analista de T.I. / Suporte + Colaborador Titular Entrevistado",
+    summary: "Formulário de triagem primária e auditoria operacional de rotina para verificação de alertas de login atípicos (Sienge, CV CRM, Google Workspace, Active Directory, Firewall). Focado na presunção de legitimidade e descarte rápido de falsos positivos (viagens, redes móveis 4G/5G, trocas de aparelho) antes de qualquer escalonamento técnico.",
+    buildBody: (ctx, custom = {}) => {
+      const protocol = custom.triageProtocol || "TRI-SEG-2026-_________";
+      const dtCheck = custom.checkDateTime || (ctx.todayBr + " às " + (ctx.nowBr.split(" ")[1] || "___:___") + " h");
+      const originSystem = custom.alertOriginSystem || "ERP Sienge / Construtor de Vendas (CV CRM) / Google Workspace / Active Directory / Firewall";
+      const uName = custom.userName || "__________________________________________________";
+      const uEmail = custom.userEmail || "_________________________________@acengenhariase.com.br";
+      const uLogin = custom.userLogin || "_________________________";
+      const uDept = custom.userDepartment || "__________________________________________________";
+      const ipAnalyzed = custom.analyzedIp || "___.___.___.___ (Geolocalização / Provedor)";
+      const notes = custom.triageNotes || "";
+
+      return `
+        <h2>1. Identificação do Alerta e Escopo da Verificação</h2>
+        <table class="data-table">
+          <tr>
+            <td width="28%"><strong>Nº Protocolo de Triagem:</strong></td>
+            <td width="72%"><code>${escapeDocHtml(protocol)}</code> &nbsp;|&nbsp; <strong>Status:</strong> [ &nbsp; ] Em Triagem &nbsp;&nbsp; [ &nbsp; ] Falso Positivo &nbsp;&nbsp; [ &nbsp; ] Escalonado</td>
+          </tr>
+          <tr>
+            <td><strong>Data e Hora da Verificação:</strong></td>
+            <td><strong>${escapeDocHtml(dtCheck)}</strong> &nbsp;<em>(Horário Oficial de Brasília)</em></td>
+          </tr>
+          <tr>
+            <td><strong>Sistema Gerador do Alerta:</strong></td>
+            <td>
+              <strong>${escapeDocHtml(originSystem)}</strong><br/>
+              <em>Origens Comuns de Notificação na AC Engenharia:</em><br/>
+              [ &nbsp; ] <strong>ERP Sienge</strong> (Notificação de login fora de horário ou IP não cadastrado)<br/>
+              [ &nbsp; ] <strong>Construtor de Vendas (CV CRM)</strong> (Alerta de autenticação por novo dispositivo/navegador)<br/>
+              [ &nbsp; ] <strong>Gmail / Google Workspace</strong> (Alerta preventivo de novo local ou dispositivo móvel)<br/>
+              [ &nbsp; ] <strong>Active Directory / Domínio AC</strong> (Tentativa de conexão de rede ou bloqueio de estação)<br/>
+              [ &nbsp; ] <strong>Firewall Perimetral / VPN Corporativa</strong> (Autenticação externa ou transição de operadora)<br/>
+              [ &nbsp; ] <strong>Outro:</strong> ____________________________________________________________________
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Colaborador Titular da Conta:</strong></td>
+            <td>
+              <table style="width: 100%; border: 1px solid #cbd5e1; margin-top: 4px; font-size: 8.5pt;">
+                <tr>
+                  <td width="50%"><strong>Nome Completo:</strong> ${escapeDocHtml(uName)}</td>
+                  <td width="50%"><strong>E-mail Institucional:</strong> <code>${escapeDocHtml(uEmail)}</code></td>
+                </tr>
+                <tr>
+                  <td><strong>Login no Sistema:</strong> <code>${escapeDocHtml(uLogin)}</code></td>
+                  <td><strong>Cargo / Setor / Lotação:</strong> ${escapeDocHtml(uDept)}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <h2>2. Triagem Fática (Entrevista Rápida com o Usuário)</h2>
+        <p style="font-size: 8.5pt; color: #475569; margin-bottom: 8px;">
+          <em>Nota de Diretriz: Esta etapa constitui procedimento operacional padrão de conformidade e governança. O objetivo é validar rotinas de trabalho regulares e descartar inconsistências de forma rápida e segura, presumindo a legitimidade das atividades do colaborador até verificação em contrário.</em>
+        </p>
+        <table class="data-table">
+          <tr>
+            <th width="50%">Item / Questionamento de Triagem</th>
+            <th width="50%">Resposta Registrada do Colaborador</th>
+          </tr>
+          <tr>
+            <td>
+              <strong>1. Reconhecimento de Acesso:</strong><br/>
+              Você reconhece o acesso ou tentativa de conexão realizada no sistema <code>${escapeDocHtml(originSystem)}</code> na data e horário informados?
+            </td>
+            <td>
+              [ &nbsp; ] <strong>SIM</strong>, reconheço integralmente o acesso como legítimo e pessoal.<br/>
+              [ &nbsp; ] <strong>NÃO</strong>, não tentei acessar o sistema nem reconheço a atividade.<br/>
+              [ &nbsp; ] <strong>NÃO ME RECORDO</strong> com exatidão (requer conferência de agenda/tarefas).
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong>2. Rede e Localidade de Conexão:</strong><br/>
+              No momento indicado, você estava utilizando rede de dados móveis (4G/5G), VPN particular ou acessando de outra cidade, hotel ou canteiro de obras?
+            </td>
+            <td>
+              [ &nbsp; ] <strong>SIM</strong>, estava conectado via dados móveis (4G/5G) de operadora celular.<br/>
+              [ &nbsp; ] <strong>SIM</strong>, estava em viagem, hotel, canteiro externo ou residência.<br/>
+              [ &nbsp; ] <strong>NÃO</strong>, estava na rede física/Wi-Fi oficial da sede da AC Engenharia.<br/>
+              [ &nbsp; ] <strong>NÃO</strong>, não estava conectado a nenhuma rede no momento apontado.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong>3. Dispositivo e Equipamento:</strong><br/>
+              Você trocou de aparelho celular, computador pessoal ou reinstalou navegador/aplicativos recentemente?
+            </td>
+            <td>
+              [ &nbsp; ] <strong>SIM</strong>, comecei a usar novo smartphone / notebook corporativo ou pessoal.<br/>
+              [ &nbsp; ] <strong>SIM</strong>, limpei dados de navegação, atualizei sistema ou reinstalei navegador.<br/>
+              [ &nbsp; ] <strong>NÃO</strong>, utilizo os mesmos aparelhos e configurações habituais.
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <strong>Observações / Justificativa Apresentada pelo Colaborador:</strong><br/>
+              <div style="min-height: 48px; border: 1px dashed #cbd5e1; padding: 6px; margin-top: 4px; background: #f8fafc; font-family: monospace; font-size: 8.5pt;">
+                ${escapeDocHtml(notes) || "O colaborador prestou esclarecimentos confirmando a conformidade de suas rotinas habituais de trabalho ou justificativa operacional."}
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <h2>3. Verificação Técnica Básica (Preenchido pela T.I.)</h2>
+        <table class="data-table">
+          <tr>
+            <td width="30%"><strong>Endereço IP e Geolocalização:</strong></td>
+            <td width="70%">
+              <code>${escapeDocHtml(ipAnalyzed)}</code><br/>
+              <em>Identificação Técnica da Conexão:</em><br/>
+              [ &nbsp; ] Rede Móvel Celular (IP dinâmico de operadora 4G/5G - Claro, Vivo, TIM)<br/>
+              [ &nbsp; ] Conexão de Banda Larga Residencial / Hotel / Coworking homologado<br/>
+              [ &nbsp; ] Link Dedicado da Matriz / Filial AC Engenharia<br/>
+              [ &nbsp; ] Faixa de IP Geograficamente Atípica / Data Center / Provedor Desconhecido
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Mecanismo de Segundo Fator (MFA):</strong></td>
+            <td>
+              [ &nbsp; ] <strong>Aprovado pelo próprio colaborador</strong> (Notificação Push / Código TOTP validado no celular)<br/>
+              [ &nbsp; ] <strong>Não Solicitado</strong> (Sessão previamente confiável ou sistema sem exigência de MFA no momento)<br/>
+              [ &nbsp; ] <strong>Solicitação Rejeitada / Não Reconhecida</strong> pelo usuário
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Padrão de Dispositivo e Navegador:</strong></td>
+            <td>
+              [ &nbsp; ] <strong>Compatível:</strong> Navegador e sistema operacional idênticos ao perfil de uso regular<br/>
+              [ &nbsp; ] <strong>Novo Dispositivo Homologado:</strong> Registrado e validado junto ao suporte de T.I.<br/>
+              [ &nbsp; ] <strong>Divergente:</strong> Assinatura de navegador (User-Agent) e dispositivo desconhecidos
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Comportamento Registrado nos Logs:</strong></td>
+            <td>
+              [ &nbsp; ] <strong>Sucesso de Autenticação:</strong> Acesso regular com credenciais válidas do usuário<br/>
+              [ &nbsp; ] <strong>Falha Isolada por Digitação:</strong> 1 a 2 erros de senha sanados em seguida pelo colaborador<br/>
+              [ &nbsp; ] <strong>Transição de Conectividade:</strong> Alerta gerado por alternância de rede Wi-Fi para rede móvel<br/>
+              [ &nbsp; ] <strong>Chamada Sistêmica Automatizada:</strong> Rotina de sincronização de calendário, e-mail ou ERP
+            </td>
+          </tr>
+        </table>
+
+        <h2>4. Conclusão da Triagem (Veredito Final)</h2>
+        <table class="data-table">
+          <tr>
+            <td>
+              <p><strong>[ &nbsp; ] FALSO POSITIVO CONFIRMADO (Uso Legítimo):</strong><br/>
+              O acesso foi plenamente reconhecido pelo usuário e justificado por circunstâncias operacionais normais (viagem, rede móvel 4G/5G, trânsito entre obras ou novo aparelho homologado). A telemetria técnica confirma compatibilidade com o padrão do usuário. Nenhuma ação corretiva adicional necessária. <strong>Chamado arquivado com sucesso na Fase 1.</strong></p>
+
+              <p><strong>[ &nbsp; ] FALSO POSITIVO TÉCNICO (Rotina de Integração / Automação):</strong><br/>
+              O alerta foi gerado por processo automatizado de software, sincronização programada de API entre sistemas (ex: ERP Sienge e CV CRM), script interno ou rotina de manutenção. Nenhuma intervenção de conta necessária. <strong>Chamado encerrado na Fase 1.</strong></p>
+
+              <p style="margin-bottom: 0;"><strong>[ &nbsp; ] SUSPEITA NÃO RECONHECIDA (Escalonamento Necessário):</strong><br/>
+              O colaborador <u>não reconhece</u> o acesso e foram constatadas divergências técnicas ou geográficas relevantes. Conforme a Política de Segurança da AC Engenharia, foram adotadas as seguintes medidas imediatas de salvaguarda: redefinição preventiva de credenciais e encerramento de todas as sessões ativas. O evento é formalmente escalonado para <strong>Fase 2 (Investigação Aprofundada e Contenção - MOD-SEC-08 / MOD-SEG-08-B)</strong> sob condução da equipe de Segurança da Informação.</p>
+            </td>
+          </tr>
+        </table>
+
+        ${buildSignatureGridHTML([
+          { role: "Analista de T.I. / Responsável pela Triagem", name: custom.secopsName || "Analista de T.I. AC Engenharia" },
+          { role: "Colaborador(a) Titular Entrevistado(a)", name: custom.userName || "Colaborador Titular da Conta" }
+        ], false, "MOD-SEG-08-A")}
       `;
     }
   },
