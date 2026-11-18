@@ -988,19 +988,44 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
         "placeholder": "Ex: INC-SEG-2026-0042"
       },
       {
-        "key": "affectedUser",
-        "label": "Nome / Login do Usuário Afetado",
-        "placeholder": "Ex: joao.silva@acengenhariase.com.br"
+        "key": "detectionDateTime",
+        "label": "Data e Hora da Detecção do Alerta",
+        "placeholder": "Ex: 18/11/2026 às 14:35"
+      },
+      {
+        "key": "alertOrigin",
+        "label": "Origem Primária do Alerta",
+        "placeholder": "Ex: Sienge / Construtor de Vendas / Gmail / Antivírus"
       },
       {
         "key": "targetSystem",
         "label": "Sistema Alvo da Invasão",
-        "placeholder": "Ex: ERP Sienge / Google Workspace / CV CRM"
+        "placeholder": "Ex: ERP Sienge / CV CRM / Gmail / VPN Fortigate"
+      },
+      {
+        "key": "affectedUser",
+        "label": "Nome Completo do Colaborador Afetado",
+        "placeholder": "Ex: João da Silva"
+      },
+      {
+        "key": "affectedEmail",
+        "label": "E-mail Corporativo do Usuário",
+        "placeholder": "Ex: joao.silva@acengenhariase.com.br"
+      },
+      {
+        "key": "affectedLogin",
+        "label": "Login / Usuário Específico no Sistema",
+        "placeholder": "Ex: jsilva (Sienge) / eng.joao (Rede)"
+      },
+      {
+        "key": "affectedRole",
+        "label": "Cargo / Função e Setor",
+        "placeholder": "Ex: Engenheiro Residente / Canteiro Obra Jardins"
       },
       {
         "key": "originIp",
-        "label": "IP de Origem e Localização Detectada",
-        "placeholder": "Ex: 185.220.101.5 (Frankfurt / Tor Exit)"
+        "label": "IP de Origem e Geolocalização",
+        "placeholder": "Ex: 185.220.101.5 (Frankfurt / Alemanha - Tor Exit)"
       }
     ]
   },
@@ -3861,53 +3886,95 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     normative: "ISO/IEC 27001:2022 A.5.24 a A.5.28 & Resolução CD/ANPD nº 15/2024",
     evidenceCategory: "Segurança & CSIRT",
     signersSummary: "Analista Investigador T.I. + Gestor SecOps + DPO (se notificado)",
-    summary: "Laudo pericial e forense de rastreamento de tentativas de invasão e login anômalo (Active Directory, Sienge, CV CRM, Google Workspace), contendo telemetria de IP, validação de MFA, entrevista com o usuário e protocolo de resposta a incidentes da ANPD.",
+    summary: "Laudo pericial e forense de rastreamento de tentativas de invasão e login anômalo (Sienge, Construtor de Vendas, Gmail, Antivírus), contendo telemetria de IP, explicação didática de vetores de ataque, entrevista técnica com o usuário, 7 vereditos periciais e protocolo ANPD.",
     buildBody: (ctx, custom = {}) => {
       const incNum = custom.incidentNumber || "INC-SEG-202___-_________";
-      const userTarget = custom.affectedUser || "[ Nome / E-mail do Colaborador Afetado ]";
-      const sysTarget = custom.targetSystem || "Google Workspace / ERP Sienge / CV CRM";
-      const ipOrigin = custom.originIp || "___.___.___.___ (Geolocalização a Auditar)";
+      const dtDetection = custom.detectionDateTime || (ctx.todayBr + " às " + (ctx.nowBr.split(" ")[1] || "___:___") + " h");
+      const alertOrig = custom.alertOrigin || "Alerta Automatizado de Segurança (Sienge / CV CRM / Gmail / Antivírus)";
+      const sysTarget = custom.targetSystem || "ERP Sienge / Construtor de Vendas (CV CRM) / Google Workspace";
+      const uName = custom.affectedUser || "[ Nome Completo do Colaborador ]";
+      const uEmail = custom.affectedEmail || "usuario@acengenhariase.com.br";
+      const uLogin = custom.affectedLogin || "[ Login no Sistema / Rede ]";
+      const uRole = custom.affectedRole || "[ Cargo / Setor do Colaborador ]";
+      const ipOrigin = custom.originIp || "___.___.___.___ (Geolocalização / Provedor)";
 
       return `
-        <h2>1. Identificação do Alerta e Vetor de Detecção</h2>
+        <h2>1. Identificação do Alerta e Escopo Afetado</h2>
         <table class="data-table">
           <tr>
-            <td width="30%"><strong>Protocolo do Incidente:</strong></td>
-            <td><code>${escapeDocHtml(incNum)}</code></td>
+            <td width="28%"><strong>Protocolo do Incidente:</strong></td>
+            <td width="72%"><code>${escapeDocHtml(incNum)}</code> &nbsp;|&nbsp; <strong>Status:</strong> [ &nbsp; ] Em Análise &nbsp;&nbsp; [ &nbsp; ] Contido &nbsp;&nbsp; [ &nbsp; ] Concluído</td>
           </tr>
           <tr>
             <td><strong>Data e Hora da Detecção:</strong></td>
-            <td>Data: ${escapeDocHtml(ctx.todayBr)} às ${escapeDocHtml(ctx.nowBr.split(" ")[1] || "___:___")} h (Horário de Brasília)</td>
+            <td><strong>${escapeDocHtml(dtDetection)}</strong> &nbsp;<em>(Horário Oficial de Brasília)</em></td>
           </tr>
           <tr>
             <td><strong>Origem Primária do Alerta:</strong></td>
-            <td>[ &nbsp; ] SIEM / Log Centralizado &nbsp;&nbsp;&nbsp; [ &nbsp; ] Google Workspace Alert Center &nbsp;&nbsp;&nbsp; [ &nbsp; ] EDR / Antivírus Corporativo<br/>
-                [ &nbsp; ] Notificação Espontânea do Usuário &nbsp;&nbsp;&nbsp; [ &nbsp; ] Alerta de Firewall/VPN Fortigate &nbsp;&nbsp;&nbsp; [ &nbsp; ] Auditoria Automática</td>
+            <td>
+              <strong>${escapeDocHtml(alertOrig)}</strong><br/>
+              <em>Canais Oficiais de Detecção na AC Engenharia:</em><br/>
+              [ &nbsp; ] <strong>ERP Sienge</strong> (Múltiplas tentativas incorretas / login fora de horário no ERP)<br/>
+              [ &nbsp; ] <strong>Construtor de Vendas (CV CRM)</strong> (Alerta de acesso anômalo no portal comercial)<br/>
+              [ &nbsp; ] <strong>Gmail / Google Workspace</strong> (Alerta de login em novo dispositivo / suspensão preventiva)<br/>
+              [ &nbsp; ] <strong>Antivírus / EDR Corporativo</strong> (Detecção de malware/infostealer no computador do usuário)<br/>
+              [ &nbsp; ] <strong>Firewall / VPN Fortigate</strong> (Bloqueio perimetral de IP hostil / tentativa de tunelamento)<br/>
+              [ &nbsp; ] <strong>Notificação Espontânea do Usuário</strong> (Colaborador informou atividade estranha à T.I.)
+            </td>
           </tr>
           <tr>
-            <td><strong>Conta e Login Afetados:</strong></td>
-            <td><strong>${escapeDocHtml(userTarget)}</strong> &nbsp;|&nbsp; <strong>Lotação:</strong> ${escapeDocHtml(ctx.activeUnit)}</td>
+            <td><strong>Sistema Alvo da Invasão:</strong></td>
+            <td>
+              <strong>${escapeDocHtml(sysTarget)}</strong><br/>
+              <em>(Aplicação ou serviço corporativo que o invasor tentou acessar ou violar):</em><br/>
+              [ &nbsp; ] ERP Sienge (Nuvem / Financeiro / Compras / Obras) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Construtor de Vendas (CV CRM)<br/>
+              [ &nbsp; ] Gmail / Google Workspace (E-mails e Google Drive) &nbsp;&nbsp;&nbsp; [ &nbsp; ] VPN Fortigate / Conexão Remota<br/>
+              [ &nbsp; ] Servidor de Arquivos da Engenharia (Matriz) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Active Directory / Login de Máquina
+            </td>
           </tr>
           <tr>
-            <td><strong>Sistema / Ativo Alvo:</strong></td>
-            <td><strong>${escapeDocHtml(sysTarget)}</strong></td>
+            <td><strong>Conta e Colaborador Afetados:</strong></td>
+            <td>
+              <table style="width: 100%; border: 1px solid #cbd5e1; margin-top: 4px; font-size: 8.5pt;">
+                <tr>
+                  <td width="50%"><strong>Nome Completo:</strong> ${escapeDocHtml(uName)}</td>
+                  <td width="50%"><strong>E-mail Institucional:</strong> <code>${escapeDocHtml(uEmail)}</code></td>
+                </tr>
+                <tr>
+                  <td><strong>Login no Sistema Alvo:</strong> <code>${escapeDocHtml(uLogin)}</code></td>
+                  <td><strong>Cargo / Função e Setor:</strong> ${escapeDocHtml(uRole)}</td>
+                </tr>
+                <tr>
+                  <td><strong>Tipo de Vínculo:</strong> [ &nbsp; ] CLT &nbsp; [ &nbsp; ] Terceirizado &nbsp; [ &nbsp; ] Corretor Autônomo &nbsp; [ &nbsp; ] Estágio &nbsp; [ &nbsp; ] Diretoria</td>
+                  <td><strong>Lotação:</strong> ${escapeDocHtml(ctx.activeUnit)}</td>
+                </tr>
+              </table>
+            </td>
           </tr>
         </table>
 
-        <h2>2. Análise Técnica Forense Preliminar (SecOps)</h2>
+        <h2>2. Análise Técnica Forense e Vetores de Tentativa (SecOps)</h2>
         <table class="data-table">
           <tr>
-            <td width="30%"><strong>IP de Origem e Telemetria:</strong></td>
-            <td><code>${escapeDocHtml(ipOrigin)}</code> &nbsp;|&nbsp; <strong>Detecção de Proxy/Tor/VPN:</strong> [ &nbsp; ] Sim &nbsp; [ &nbsp; ] Não</td>
+            <td width="28%"><strong>IP de Origem e Telemetria:</strong></td>
+            <td><code>${escapeDocHtml(ipOrigin)}</code> &nbsp;|&nbsp; <strong>Uso de Proxy / VPN / Tor:</strong> [ &nbsp; ] Sim &nbsp; [ &nbsp; ] Não</td>
           </tr>
           <tr>
             <td><strong>Dispositivo / User-Agent:</strong></td>
-            <td>[ &nbsp; ] Windows 10/11 &nbsp;&nbsp; [ &nbsp; ] Android / iOS &nbsp;&nbsp; [ &nbsp; ] macOS / Linux &nbsp;&nbsp;|&nbsp; <strong>Homologado no MDM?</strong> [ &nbsp; ] Sim &nbsp; [ &nbsp; ] Não (BYOD)</td>
+            <td>[ &nbsp; ] Windows 10/11 &nbsp;&nbsp; [ &nbsp; ] Android &nbsp;&nbsp; [ &nbsp; ] iPhone/iOS &nbsp;&nbsp; [ &nbsp; ] macOS / Linux &nbsp;&nbsp;|&nbsp; <strong>Dispositivo Cadastrado no MDM?</strong> [ &nbsp; ] Sim &nbsp; [ &nbsp; ] Não (BYOD)</td>
           </tr>
           <tr>
-            <td><strong>Padrão da Tentativa:</strong></td>
-            <td>[ &nbsp; ] Viagem Impossível (*Impossible Travel*) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Força Bruta (*Brute-force*)<br/>
-                [ &nbsp; ] Pulverização de Senha (*Password Spraying*) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Roubo de Sessão / Token Replay</td>
+            <td><strong>Padrão da Tentativa:<br/><small class="text-slate-500 font-normal">(Mecânica do Ataque)</small></strong></td>
+            <td>
+              <em>Indica como o invasor tentou burlar a segurança da conta:</em><br/>
+              [ &nbsp; ] <strong>Viagem Impossível (*Impossible Travel*):</strong> Logins de cidades/países distantes em intervalo fisicamente incompatível (ex: login em Aracaju e na Europa com 30 minutos de diferença).<br/>
+              [ &nbsp; ] <strong>Força Bruta (*Brute-force*):</strong> Múltiplas tentativas seguidas e automatizadas de senhas aleatórias até o bloqueio.<br/>
+              [ &nbsp; ] <strong>Pulverização de Senha (*Password Spraying*):</strong> Teste de uma única senha comum em várias contas diferentes da empresa para evitar bloqueio consecutivo.<br/>
+              [ &nbsp; ] <strong>Tentativa com Senha Correta (Vazamento de Credencial):</strong> O invasor já possuía a senha exata da conta (adquirida em vazamento externo ou reúso de senha pessoal).<br/>
+              [ &nbsp; ] <strong>Fadiga de Notificação MFA (*Push Fatigue*):</strong> O atacante bombardeia o celular do colaborador com avisos de aprovação até que ele clique em "Aprovar" por distração.<br/>
+              [ &nbsp; ] <strong>Roubo de Sessão (*Session Hijacking / Cookie Replay*):</strong> Reutilização de token ou cookie de sessão ativa capturado por malware/infostealer no navegador.<br/>
+              [ &nbsp; ] <strong>Engenharia Social / *Phishing*:</strong> O colaborador foi induzido a digitar a credencial em site falso ou enviá-la a terceiros.
+            </td>
           </tr>
           <tr>
             <td><strong>Status da Autenticação:</strong></td>
@@ -3915,12 +3982,12 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           </tr>
           <tr>
             <td><strong>Validação do 2º Fator (MFA):</strong></td>
-            <td>[ &nbsp; ] MFA Bloqueou o Acesso &nbsp;&nbsp;&nbsp; [ &nbsp; ] MFA Aprovado por Fadiga de Notificação (*Push Fatigue*)<br/>
+            <td>[ &nbsp; ] MFA Bloqueou o Invasor &nbsp;&nbsp;&nbsp; [ &nbsp; ] MFA Aprovado Inadvertidamente pelo Usuário (Fadiga Push)<br/>
                 [ &nbsp; ] Código TOTP inserido &nbsp;&nbsp;&nbsp; [ &nbsp; ] Ausência de MFA na Conta (Não Conformidade PCA-002)</td>
           </tr>
           <tr>
             <td><strong>Trilha de Ações pós-Login:</strong></td>
-            <td>[ &nbsp; ] Criação de regras de encaminhamento oculto no Gmail &nbsp;&nbsp;&nbsp; [ &nbsp; ] Download anômalo de arquivos/relatórios<br/>
+            <td>[ &nbsp; ] Criação de regras de encaminhamento de e-mail no Gmail &nbsp;&nbsp;&nbsp; [ &nbsp; ] Download anômalo de arquivos/relatórios<br/>
                 [ &nbsp; ] Tentativa de alteração bancária/PIX no Sienge &nbsp;&nbsp;&nbsp; [ &nbsp; ] Nenhuma ação hostil identificada antes da contenção</td>
           </tr>
         </table>
@@ -4007,22 +4074,26 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
         </table>
         <p><strong>Término da Contenção:</strong> ___/___/202___ às ___:___ h &nbsp;|&nbsp; <strong>Tempo Total de Resposta (TTR):</strong> [ &nbsp; ] &lt; 30 min &nbsp;&nbsp; [ &nbsp; ] 30 min a 2h &nbsp;&nbsp; [ &nbsp; ] &gt; 2h</p>
 
-        <h2>5. Conclusão Pericial, Governança e Enquadramento LGPD</h2>
+        <h2>5. Conclusão Pericial, Veredito e Enquadramento LGPD</h2>
         <table class="data-table">
           <tr>
-            <td width="30%"><strong>Veredito Técnico:</strong></td>
+            <td width="28%"><strong>Veredito Técnico Pericial:</strong></td>
             <td>
-              [ &nbsp; ] <strong>FALSO POSITIVO:</strong> Acesso legítimo comprovado (usuário em viagem / VPN particular).<br/>
-              [ &nbsp; ] <strong>TENTATIVA FRUSTRADA:</strong> Atacante bloqueado pelo perímetro/MFA sem acesso a dados.<br/>
-              [ &nbsp; ] <strong>INCIDENTE CONFIRMADO SEM EXFILTRAÇÃO:</strong> Conta violada e contida antes do vazamento.<br/>
-              [ &nbsp; ] <strong>INCIDENTE CRÍTICO DE SEGURANÇA:</strong> Comprometimento de dados pessoais de titulares.
+              <em>Selecione o enquadramento conclusivo resultante da investigação forense:</em><br/>
+              [ &nbsp; ] <strong>1. FALSO POSITIVO COMPROVADO (Uso Legítimo):</strong> Acesso reconhecido pelo próprio usuário (viagem, rede móvel 4G/5G com IP dinâmico ou conexão legítima fora do escritório). Sem risco.<br/>
+              [ &nbsp; ] <strong>2. FALSO POSITIVO TÉCNICO (Rotina de Sistema):</strong> Alerta disparado por script interno, rotina automatizada de backup ou conector de API entre plataformas (ex: integração Sienge/CV).<br/>
+              [ &nbsp; ] <strong>3. TENTATIVA EXTERNA FRUSTRADA:</strong> Ataque bloqueado de imediato pelo perímetro de segurança/WAF antes que o invasor tivesse qualquer acesso à conta.<br/>
+              [ &nbsp; ] <strong>4. CREDENCIAL COMPROMETIDA, MAS BARRADA PELO MFA:</strong> O atacante acertou a senha, mas foi impedido pelo 2º Fator de Autenticação. Conta segura após reset de senha.<br/>
+              [ &nbsp; ] <strong>5. ACESSO INDEVIDO CONFIRMADO COM CONTENÇÃO IMEDIATA:</strong> Invasor ingressou no sistema, porém a T.I. identificou o alerta e derrubou a sessão antes de qualquer vazamento de dados.<br/>
+              [ &nbsp; ] <strong>6. INFECÇÃO LOCAL NO DISPOSITIVO (Malware / Keylogger):</strong> Máquina do usuário comprometida por vírus espião capturador de senhas. Endpoint isolado para sanitização.<br/>
+              [ &nbsp; ] <strong>7. INCIDENTE CRÍTICO DE SEGURANÇA (Vazamento de Dados / LGPD):</strong> Comprometimento confirmado com acesso ou exfiltração de dados pessoais ou financeiros (Acionamento Obrigatório do DPO e Notificação à ANPD em 3 dias).
             </td>
           </tr>
           <tr>
             <td><strong>Acionamento do DPO:</strong></td>
             <td>
-              [ &nbsp; ] <strong>NÃO REQUER ACIONAMENTO DO DPO</strong> (Falso positivo ou tentativa frustrada sem risco residual).<br/>
-              [ &nbsp; ] <strong>REQUER ACIONAMENTO IMEDIATO DO ENCARREGADO DE DADOS (DPO):</strong> Instaurar procedimento de crise conforme Resolução CD/ANPD nº 15/2024 para avaliação de notificação formal à ANPD no prazo de 3 (três) dias úteis.
+              [ &nbsp; ] <strong>NÃO REQUER ACIONAMENTO DO DPO</strong> (Falso positivo ou tentativa frustrada sem risco residual aos titulares de dados).<br/>
+              [ &nbsp; ] <strong>REQUER ACIONAMENTO IMEDIATO DO ENCARREGADO DE DADOS (DPO):</strong> Instaurar procedimento de crise conforme Resolução CD/ANPD nº 15/2024 para avaliação de notificação formal à ANPD no prazo legal de 3 (três) dias úteis.
             </td>
           </tr>
           <tr>
