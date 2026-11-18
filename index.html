@@ -5064,14 +5064,14 @@ openssl ts -reply -in response.tsr -text</pre>
 
           <div class="card-white p-4 rounded-xl border border-slate-200/90 shadow-2xs space-y-1">
             <div class="flex items-center justify-between text-slate-500 text-[11px] font-bold uppercase tracking-wider">
-              <span>Pessoas Investigadas</span>
-              <i data-lucide="users" class="w-4 h-4 text-indigo-600"></i>
+              <span id="doc-evid-stat-entity-title">Pessoas Investigadas</span>
+              <i id="doc-evid-stat-entity-icon" data-lucide="users" class="w-4 h-4 text-indigo-600"></i>
             </div>
             <div class="flex items-baseline justify-between pt-1">
               <span id="doc-evid-stat-investigated" class="text-2xl font-black font-mono text-indigo-900">0</span>
-              <span class="text-[10px] text-indigo-700 font-bold px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200">Titulares</span>
+              <span id="doc-evid-stat-entity-badge" class="text-[10px] text-indigo-700 font-bold px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200">Titulares</span>
             </div>
-            <span class="text-[11px] text-slate-500 block truncate">Contas / colaboradores com verificação</span>
+            <span id="doc-evid-stat-entity-desc" class="text-[11px] text-slate-500 block truncate">Contas / colaboradores com verificação</span>
           </div>
 
           <div class="card-white p-4 rounded-xl border border-slate-200/90 shadow-2xs space-y-1">
@@ -5081,7 +5081,7 @@ openssl ts -reply -in response.tsr -text</pre>
             </div>
             <div class="flex items-baseline justify-between pt-1">
               <span id="doc-evid-stat-categories" class="text-2xl font-black font-mono text-slate-900">0</span>
-              <span class="text-[10px] text-amber-700 font-bold px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200">MFA / Logs / IP</span>
+              <span id="doc-evid-stat-categories-badge" class="text-[10px] text-amber-700 font-bold px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200">MFA / Logs / IP</span>
             </div>
             <span class="text-[11px] text-slate-500 block truncate">Tipos de telemetria cadastrados</span>
           </div>
@@ -5112,20 +5112,41 @@ openssl ts -reply -in response.tsr -text</pre>
             </button>
           </div>
 
-          <!-- FILTROS DINÂMICOS -->
+          <!-- FILTROS DINÂMICOS, ORDENAÇÃO E MODOS DE VISUALIZAÇÃO (ALTA DENSIDADE / CARDS) -->
           <div id="doc-evid-filters-toolbar" class="flex items-center gap-2 flex-wrap">
-            <div class="relative flex-1 sm:w-72">
+            <div class="relative flex-1 sm:w-60">
               <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400"></i>
-              <input type="text" id="doc-evid-filter-search" oninput="applyDocumentEvidenceFilters()" placeholder="Buscar por pessoa investigada, título, hash..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#004b93]" />
+              <input type="text" id="doc-evid-filter-search" oninput="applyDocumentEvidenceFilters()" placeholder="Buscar por termo, pessoa, hash..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#004b93]" />
             </div>
+
             <select id="doc-evid-filter-category" onchange="applyDocumentEvidenceFilters()" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-[#004b93]">
               <option value="todas">Todas as Categorias</option>
-              <option value="Logs de Autenticação & MFA">Logs Autenticação / MFA</option>
-              <option value="Entrevista Fática">Entrevista Fática</option>
-              <option value="Telemetria de Rede">Telemetria IP / Firewall</option>
-              <option value="Export de Alerta">Alertas (Sienge/Google/CV)</option>
-              <option value="Formulário">Formulários Assinados</option>
             </select>
+
+            <select id="doc-evid-sort-order" onchange="setDocumentEvidenceSort(this.value)" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-[#004b93]" title="Ordenar registros">
+              <option value="recentes">Mais Recentes</option>
+              <option value="antigos">Mais Antigos</option>
+              <option value="nome">Ordem Alfabética (A-Z)</option>
+              <option value="id">Identificador Forense</option>
+            </select>
+
+            <!-- TOGGLE DE MODO DE VISUALIZAÇÃO: TABELA FORENSE VS CARDS -->
+            <div class="flex items-center rounded-lg border border-slate-200 bg-slate-100 p-0.5" title="Alternar layout para receber grande volume de documentos sem poluição">
+              <button type="button" id="btn-doc-view-cards" onclick="setDocumentEvidenceViewMode('cards')" class="px-2.5 py-1 rounded text-xs font-semibold bg-white text-slate-800 shadow-2xs flex items-center gap-1 cursor-pointer transition-all" title="Modo Cards Detalhados">
+                <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-slate-600"></i>
+                <span class="hidden sm:inline">Cards</span>
+              </button>
+              <button type="button" id="btn-doc-view-table" onclick="setDocumentEvidenceViewMode('table')" class="px-2.5 py-1 rounded text-xs font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1 cursor-pointer transition-all" title="Modo Tabela Forense Compacta (Ideal para Alto Volume)">
+                <i data-lucide="table" class="w-3.5 h-3.5 text-slate-600"></i>
+                <span class="hidden sm:inline">Tabela</span>
+              </button>
+            </div>
+
+            <!-- EXPORTAR MANIFESTO FORENSE EM CSV -->
+            <button type="button" onclick="exportDocumentEvidenceManifest()" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs" title="Exportar manifesto com cadeia de custódia e hashes SHA-256 (CSV)">
+              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span class="hidden sm:inline">Manifesto CSV</span>
+            </button>
           </div>
         </div>
 
