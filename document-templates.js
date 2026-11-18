@@ -1027,12 +1027,12 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
       {
         "key": "certType",
         "label": "Tipo e Titularidade do Certificado",
-        "placeholder": "Ex: e-CNPJ A3 Token USB (Série 987654321)"
+        "placeholder": "Ex: e-CNPJ A3 Token USB / e-CNPJ A1 Arquivo"
       },
       {
-        "key": "certSerialNumber",
-        "label": "Nº de Série Criptográfico do Certificado",
-        "placeholder": "Ex: 1A:2B:3C:4D:5E:6F:70:81"
+        "key": "tokenAssetId",
+        "label": "Patrimônio do Token ou Máquina (Opcional)",
+        "placeholder": "Ex: Token USB nº 042 / Máquina TI-FIN-08"
       },
       {
         "key": "certValidity",
@@ -1042,7 +1042,7 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
       {
         "key": "certScope",
         "label": "Escopo / Alçadas Autorizadas",
-        "placeholder": "Ex: Emissão de NF-e no Sienge e Conectividade Social ICP"
+        "placeholder": "Ex: SPED (ECD, ECF, EFD), Emissão de NF-e Sienge e Conectividade Social"
       }
     ]
   }
@@ -4049,13 +4049,13 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     title: "Termo de Responsabilidade e Custódia de Certificado Digital (ICP-Brasil e-CNPJ / e-CPF)",
     normative: "Medida Provisória nº 2.200-2/2001, Lei nº 14.063/2020 & Art. 462 da CLT",
     evidenceCategory: "Privacidade & Contratos",
-    signersSummary: "Colaborador Custodiante + Gestor Imediato + Gestor de T.I. & SecOps + Testemunhas",
-    summary: "Instrumento jurídico-corporativo de custódia e responsabilidade legal para uso de certificados digitais ICP-Brasil (e-CNPJ ou e-CPF, modelos A1 em arquivo e A3 em token físico/smartcard) da AC Engenharia, com cláusula de ressarcimento por extravio (CLT Art. 462), sigilo de PIN/PUK e protocolo de devolução no desligamento.",
+    signersSummary: "Colaborador Custodiante + Gestor Imediato + Gestor de T.I. & SecOps",
+    summary: "Instrumento jurídico-corporativo de custódia e responsabilidade legal para uso de certificados digitais ICP-Brasil (e-CNPJ ou e-CPF, modelos A1 em arquivo e A3 em token físico/smartcard) da AC Engenharia, com instalação exclusiva pela T.I., escopo fiscal/SPED (ECD, ECF, EFD), cláusula de ressarcimento por extravio (CLT Art. 462) e protocolo de devolução.",
     buildBody: (ctx, custom = {}) => {
       const cType = custom.certType || "Certificado Digital e-CNPJ / e-CPF ICP-Brasil";
-      const cSerial = custom.certSerialNumber || "________________________________________________";
+      const tokenAsset = custom.tokenAssetId || "Token Corporativo / Estação Homologada T.I.";
       const cValidity = custom.certValidity || "____ / ____ / 202___";
-      const cScope = custom.certScope || "Emissão de NF-e no Sienge, Conectividade Social ICP/FGTS e e-CAC";
+      const cScope = custom.certScope || "Transmissão SPED (ECD, ECF, EFD), Emissão de NF-e no Sienge e Conectividade Social ICP";
 
       return `
         <h2>1. Qualificação das Partes e do Ativo Criptográfico</h2>
@@ -4073,22 +4073,23 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
             <td><strong>Especificação do Certificado:</strong></td>
             <td><strong>${escapeDocHtml(cType)}</strong><br/>
                 Titularidade: [ &nbsp; ] AC Engenharia Ltda (e-CNPJ) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Procurador / Representante Legal (e-CPF)<br/>
-                Formato: [ &nbsp; ] Arquivo A1 (Instalado na máquina patrimônio nº _________) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Token Físico USB A3 &nbsp;&nbsp;&nbsp; [ &nbsp; ] Nuvem</td>
+                Formato: [ &nbsp; ] Arquivo A1 (Instalação exclusiva T.I.) &nbsp;&nbsp;&nbsp; [ &nbsp; ] Token USB Físico A3 &nbsp;&nbsp;&nbsp; [ &nbsp; ] Nuvem Corporativa</td>
           </tr>
           <tr>
-            <td><strong>Número de Série Criptográfico:</strong></td>
-            <td><code>${escapeDocHtml(cSerial)}</code> &nbsp;|&nbsp; <strong>Validade:</strong> <strong>${escapeDocHtml(cValidity)}</strong></td>
+            <td><strong>Identificação do Token / Máquina:</strong></td>
+            <td><strong>${escapeDocHtml(tokenAsset)}</strong> &nbsp;|&nbsp; <strong>Validade do Certificado:</strong> <strong>${escapeDocHtml(cValidity)}</strong></td>
           </tr>
         </table>
 
         <h2>2. Finalidade Estrita e Alçadas de Uso Autorizadas</h2>
         <p>A custódia do certificado digital é outorgada em caráter <strong>precário, estritamente funcional, pessoal e intransferível</strong> para as seguintes atividades:</p>
         <div class="callout callout-info">
-          <strong>Escopo Autorizado:</strong> ${escapeDocHtml(cScope)}<br/>
-          [ &nbsp; ] Emissão e transmissão de Notas Fiscais Eletrônicas (NF-e/NFS-e) no ERP Sienge<br/>
-          [ &nbsp; ] Conectividade Social ICP / FGTS (Caixa Econômica Federal) para canteiros NR-18<br/>
-          [ &nbsp; ] Centro Virtual de Atendimento da Receita Federal (e-CAC) e eSocial<br/>
-          [ &nbsp; ] Assinatura Eletrônica Qualificada de Contratos Imobiliários e Fornecedores
+          <strong>Escopo Autorizado Homologado:</strong> ${escapeDocHtml(cScope)}<br/>
+          [ &nbsp; ] <strong>Transmissão de Declarações e Escriturações à Receita Federal (SPED):</strong> Envio de obrigações contábeis e fiscais pelos programas oficiais: <strong>ECD</strong> (Escrituração Contábil Digital), <strong>ECF</strong> (Escrituração Contábil Fiscal) e <strong>EFD</strong> (EFD-Reinf, EFD-Contribuições e EFD ICMS/IPI).<br/>
+          [ &nbsp; ] <strong>Emissão e Transmissão de Notas Fiscais Eletrônicas (NF-e/NFS-e):</strong> Faturamento e medições no ERP Sienge.<br/>
+          [ &nbsp; ] <strong>Conectividade Social ICP / FGTS (Caixa Econômica Federal):</strong> Movimentação de operários e canteiros NR-18.<br/>
+          [ &nbsp; ] <strong>Centro Virtual de Atendimento da Receita Federal (e-CAC) e eSocial:</strong> Gestão previdenciária e fiscal.<br/>
+          [ &nbsp; ] <strong>Assinatura Eletrônica Qualificada de Contratos:</strong> Contratos imobiliários (CV CRM) e de empreiteiras.
         </div>
 
         <h2>3. Declarações e Obrigações Legais do Custodiante (Ciência Obrigatória)</h2>
@@ -4100,27 +4101,31 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           </tr>
           <tr>
             <td>[ &nbsp; ]</td>
-            <td><strong>CLÁUSULA 2ª — SIGILO INVIOLÁVEL DE SENHAS (PIN / PUK):</strong> Comprometo-me a manter senhas (PIN/PUK) sob sigilo rigoroso e pessoal, sendo vedado compartilhá-las com colegas de equipe, subordinados ou gestores.</td>
+            <td><strong>CLÁUSULA 2ª — INSTALAÇÃO E CONFIGURAÇÃO TÉCNICA EXCLUSIVA PELA EQUIPE DE T.I.:</strong> A instalação, importação, parametrização, configuração de drivers e renovação do certificado digital (em formato de arquivo A1 ou token criptográfico A3) é de <strong>competência e responsabilidade exclusiva da equipe de T.I. & SecOps da AC Engenharia</strong>. É terminantemente proibido ao Colaborador tentar instalar o certificado por conta própria, transferi-lo para computadores não autorizados ou manipular as chaves sem acompanhamento técnico da T.I.</td>
           </tr>
           <tr>
             <td>[ &nbsp; ]</td>
-            <td><strong>CLÁUSULA 3ª — PROIBIÇÃO DE CÓPIA E EXPORTAÇÃO (CERTIFICADO A1):</strong> Tratando-se de arquivo A1, comprometo-me a instalá-lo somente na máquina autorizada pela T.I., sendo terminantemente vedado copiá-lo para pendrives, e-mails pessoais ou nuvens públicas (Google Drive, Dropbox).</td>
+            <td><strong>CLÁUSULA 3ª — PROIBIÇÃO DE CÓPIA, EXPORTAÇÃO E EXTRAÇÃO:</strong> Tratando-se de certificado formato A1, o arquivo é importado pela T.I. como não exportável na estação de trabalho autorizada, sendo terminantemente vedado copiar a chave privada para pendrives, mídias externas, e-mails pessoais ou nuvens particulares (Google Drive pessoal, Dropbox, WhatsApp, etc.).</td>
           </tr>
           <tr>
             <td>[ &nbsp; ]</td>
-            <td><strong>CLÁUSULA 4ª — GUARDA FÍSICA E CUIDADOS COM O TOKEN USB (A3):</strong> Tratando-se de token A3, comprometo-me a desconectá-lo da máquina ao me afastar da mesa de trabalho e guardá-lo em local trancado ao término do expediente, nunca deixando o dispositivo plugado sem vigilância.</td>
+            <td><strong>CLÁUSULA 4ª — SIGILO INVIOLÁVEL DE SENHAS (PIN / PUK):</strong> Comprometo-me a manter senhas (PIN/PUK) sob sigilo rigoroso e pessoal, sendo vedado compartilhá-las com colegas de equipe, estagiários, terceiros ou gestores.</td>
           </tr>
           <tr>
             <td>[ &nbsp; ]</td>
-            <td><strong>CLÁUSULA 5ª — PROIBIÇÃO ABSOLUTA DE USO PARTICULAR:</strong> É estritamente vedado utilizar o certificado digital corporativo para fins privados do colaborador (ex: declaração de IRPF pessoal, procurações particulares ou atos estranhos ao contrato de trabalho).</td>
+            <td><strong>CLÁUSULA 5ª — GUARDA FÍSICA E CUIDADOS COM O TOKEN USB (A3):</strong> Tratando-se de token A3, comprometo-me a desconectá-lo da máquina ao me afastar da mesa de trabalho e guardá-lo em local trancado ao término do expediente, nunca deixando o dispositivo plugado sem vigilância.</td>
           </tr>
           <tr>
             <td>[ &nbsp; ]</td>
-            <td><strong>CLÁUSULA 6ª — COMUNICAÇÃO IMEDIATA EM CASO DE EXTRAVIO (REVOGAÇÃO):</strong> Em caso de perda, furto, quebra do token ou suspeita de vazamento de senha, comprometo-me a notificar a T.I. em até 1 (uma) hora para imediata revogação junto à Autoridade Certificadora.</td>
+            <td><strong>CLÁUSULA 6ª — PROIBIÇÃO ABSOLUTA DE USO PARTICULAR:</strong> É estritamente vedado utilizar o certificado digital corporativo para fins privados do colaborador (ex: declaração de IRPF pessoal, procurações particulares ou atos estranhos ao contrato de trabalho).</td>
           </tr>
           <tr>
             <td>[ &nbsp; ]</td>
-            <td><strong>CLÁUSULA 7ª — AUDITORIA E RASTREABILIDADE (ISO 27001):</strong> Todas as assinaturas e operações realizadas são monitoradas e auditadas em trilha forense imutável com carimbo temporal.</td>
+            <td><strong>CLÁUSULA 7ª — COMUNICAÇÃO IMEDIATA EM CASO DE EXTRAVIO (REVOGAÇÃO):</strong> Em caso de perda, furto, quebra do token ou suspeita de vazamento de senha, comprometo-me a notificar a T.I. em até 1 (uma) hora para imediata revogação junto à Autoridade Certificadora.</td>
+          </tr>
+          <tr>
+            <td>[ &nbsp; ]</td>
+            <td><strong>CLÁUSULA 8ª — AUDITORIA E RASTREABILIDADE (ISO 27001):</strong> Todas as assinaturas e operações realizadas são monitoradas e auditadas em trilha forense imutável com carimbo temporal.</td>
           </tr>
         </table>
 
@@ -4152,7 +4157,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           { role: "Colaborador(a) Custodiante Declarador", name: "" },
           { role: "Gestor Imediato da Área Solicitante", name: "" },
           { role: "Gestor Executivo de T.I. & SecOps — AC Engenharia", name: ctx.secopsName }
-        ], true, "MOD-GOV-10")}
+        ], false, "MOD-GOV-10")}
       `;
     }
   }
