@@ -719,21 +719,21 @@
       <div id="workspace-persona-banner" class="hidden">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 w-full max-w-[1680px] mx-auto">
           <div class="flex items-center gap-3 min-w-0">
-            <div id="persona-badge-avatar" class="w-6 h-6 rounded-md bg-[#0f2942] text-white font-bold text-[11px] flex items-center justify-center shrink-0">
-              MV
+            <div id="persona-badge-avatar" class="w-6 h-6 rounded-md bg-[#004b93] text-white font-bold text-[11px] flex items-center justify-center shrink-0">
+              AD
             </div>
             <div class="min-w-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-              <span id="persona-user-name" class="font-bold text-slate-900">Eng. Marcos Vinícius</span>
+              <span id="persona-user-name" class="font-bold text-slate-900">Usuário do Sistema</span>
               <span class="text-slate-300">•</span>
               <span id="persona-role-badge" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                Gestor de Obra
+                SecOps / T.I.
               </span>
               <span id="persona-location-badge" class="text-[11px] text-slate-500 hidden sm:inline">
-                Obra Horizon & Alphaville
+                Escritório Central (Matriz)
               </span>
               <span class="text-slate-300 hidden xl:inline">|</span>
               <span id="persona-mission-text" class="text-[11px] text-slate-500 truncate max-w-xl hidden xl:inline">
-                Segurança física de canteiro, controle biométrico NR-18 e evidências operacionais.
+                Gestão de segurança da informação, conformidade LGPD e governança corporativa.
               </span>
               <div id="role-restriction-banner" class="hidden">
                 <span id="role-restriction-text"></span>
@@ -842,6 +842,7 @@
         <div id="dash-section-kpis" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
           
           <!-- KPI 1: Conformidade LGPD -->
+          <!-- KPI 1: Conformidade LGPD & Controles SoA -->
           <div id="dash-kpi-card-1" class="kpi-card-lux p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:border-blue-400 transition-all space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500" id="dash-kpi-title-1">Conformidade LGPD</span>
@@ -850,13 +851,13 @@
               </div>
             </div>
             <div class="flex items-baseline justify-between pt-0.5">
-              <span class="text-2xl font-black font-mono text-[#004b93] tabular-nums" id="kpi-lgpd-val">84.2%</span>
-              <span class="text-[10px] text-emerald-700 font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200" id="dash-kpi-badge-1">+3.8% mês</span>
+              <span class="text-2xl font-black font-mono text-[#004b93] tabular-nums" id="kpi-lgpd-val">0%</span>
+              <span class="text-[10px] text-slate-600 font-bold font-mono px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200" id="dash-kpi-badge-1">0 Atendidos</span>
             </div>
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-              <div id="dash-kpi-bar-1" class="bg-[#004b93] h-full rounded-full transition-all" style="width: 84.2%"></div>
+              <div id="dash-kpi-bar-1" class="bg-[#004b93] h-full rounded-full transition-all" style="width: 0%"></div>
             </div>
-            <span class="text-[11px] text-slate-500 block truncate" id="dash-kpi-desc-1">35 de 42 requisitos auditados</span>
+            <span class="text-[11px] text-slate-500 block truncate" id="dash-kpi-desc-1">Nenhum controle SoA auditado ainda</span>
           </div>
 
           <!-- KPI 2: Riscos Residuais Críticos -->
@@ -868,13 +869,13 @@
               </div>
             </div>
             <div class="flex items-baseline justify-between pt-0.5">
-              <span class="text-2xl font-black font-mono text-rose-600 tabular-nums" id="kpi-critical-risks">1</span>
-              <span class="text-[10px] text-rose-700 font-bold font-mono px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200" id="kpi-inherent-crit-compare">vs 4 Inerentes</span>
+              <span class="text-2xl font-black font-mono text-slate-900 tabular-nums" id="kpi-critical-risks">0</span>
+              <span class="text-[10px] text-slate-600 font-bold font-mono px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200" id="kpi-inherent-crit-compare">0 Inerentes</span>
             </div>
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-              <div id="dash-kpi-bar-2" class="bg-rose-500 h-full rounded-full transition-all" style="width: 25%"></div>
+              <div id="dash-kpi-bar-2" class="bg-rose-500 h-full rounded-full transition-all" style="width: 0%"></div>
             </div>
-            <span class="text-[11px] text-slate-500 block truncate" id="kpi-director-signoff-summary">1 homologado pela diretoria</span>
+            <span class="text-[11px] text-slate-500 block truncate" id="kpi-director-signoff-summary">Nenhum risco cadastrado ainda</span>
           </div>
 
           <!-- KPI 3: BitLocker GLPI -->
@@ -886,16 +887,16 @@
               </div>
             </div>
             <div class="flex items-baseline justify-between pt-0.5">
-              <span class="text-2xl font-black font-mono text-slate-900 tabular-nums" id="kpi-bitlocker-val">94.1%</span>
-              <span class="text-[10px] text-sky-700 font-bold font-mono px-2 py-0.5 rounded-full bg-sky-50 border border-sky-200" id="dash-kpi-badge-3">144/153 Ativos</span>
+              <span class="text-2xl font-black font-mono text-slate-900 tabular-nums" id="kpi-bitlocker-val">0%</span>
+              <span class="text-[10px] text-slate-600 font-bold font-mono px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200" id="dash-kpi-badge-3">0 Ativos</span>
             </div>
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-              <div id="dash-kpi-bar-3" class="bg-sky-500 h-full rounded-full transition-all" style="width: 94.1%"></div>
+              <div id="dash-kpi-bar-3" class="bg-sky-500 h-full rounded-full transition-all" style="width: 0%"></div>
             </div>
-            <span class="text-[11px] text-slate-500 block truncate" id="dash-kpi-desc-3">Laptops de engenheiros e fiscais</span>
+            <span class="text-[11px] text-slate-500 block truncate" id="dash-kpi-desc-3">Nenhum laptop cadastrado no inventário</span>
           </div>
 
-          <!-- KPI 4: 802.1X MikroTik / AD -->
+          <!-- KPI 4: VPN Canteiros & 802.1X -->
           <div id="dash-kpi-card-4" class="kpi-card-lux p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:border-indigo-400 transition-all space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500" id="dash-kpi-title-4">VPN Canteiros & 802.1X</span>
@@ -904,13 +905,13 @@
               </div>
             </div>
             <div class="flex items-baseline justify-between pt-0.5">
-              <span class="text-2xl font-black font-mono text-slate-900 tabular-nums" id="kpi-8021x-val">98.0%</span>
-              <span class="text-[10px] text-indigo-700 font-bold font-mono px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200" id="dash-kpi-badge-4">EAP-TLS</span>
+              <span class="text-2xl font-black font-mono text-slate-900 tabular-nums" id="kpi-8021x-val">0%</span>
+              <span class="text-[10px] text-slate-600 font-bold font-mono px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200" id="dash-kpi-badge-4">Sem VPN</span>
             </div>
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-              <div id="dash-kpi-bar-4" class="bg-indigo-600 h-full rounded-full transition-all" style="width: 98%"></div>
+              <div id="dash-kpi-bar-4" class="bg-indigo-600 h-full rounded-full transition-all" style="width: 0%"></div>
             </div>
-            <span class="text-[11px] text-slate-500 block truncate" id="dash-kpi-desc-4">150/153 validados no RADIUS / VPN</span>
+            <span class="text-[11px] text-slate-500 block truncate" id="dash-kpi-desc-4">Nenhum canteiro conectado à VPN</span>
           </div>
 
           <!-- KPI 5: Alertas SIEM Wazuh -->
@@ -922,13 +923,13 @@
               </div>
             </div>
             <div class="flex items-baseline justify-between pt-0.5">
-              <span class="text-2xl font-black font-mono text-amber-600 tabular-nums" id="kpi-wazuh-alerts">4</span>
-              <span class="text-[10px] text-amber-800 font-bold font-mono px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200" id="dash-kpi-badge-5">1 Crítico</span>
+              <span class="text-2xl font-black font-mono text-slate-900 tabular-nums" id="kpi-wazuh-alerts">0</span>
+              <span class="text-[10px] text-emerald-700 font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200" id="dash-kpi-badge-5">Normal</span>
             </div>
             <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-              <div id="dash-kpi-bar-5" class="bg-amber-500 h-full rounded-full transition-all" style="width: 45%"></div>
+              <div id="dash-kpi-bar-5" class="bg-amber-500 h-full rounded-full transition-all" style="width: 0%"></div>
             </div>
-            <span class="text-[11px] text-slate-500 block truncate" id="dash-kpi-desc-5">Fila CSIRT de triagem operacional</span>
+            <span class="text-[11px] text-slate-500 block truncate" id="dash-kpi-desc-5">Nenhum alerta de segurança pendente</span>
           </div>
 
         </div>
@@ -1003,23 +1004,23 @@
               <div class="grid grid-cols-4 gap-2 pt-1 text-center">
                 <div class="p-2.5 rounded-xl bg-rose-50 border border-rose-200">
                   <div class="text-[10px] font-bold text-rose-800">Crítico</div>
-                  <div class="text-base font-black text-rose-600 font-mono">1</div>
-                  <div class="text-[9px] text-slate-500">vs 4 Inerentes</div>
+                  <div class="text-base font-black text-rose-600 font-mono" id="dash-risk-count-crit">0</div>
+                  <div class="text-[9px] text-slate-500" id="dash-risk-sub-crit">0 Inerentes</div>
                 </div>
                 <div class="p-2.5 rounded-xl bg-orange-50 border border-orange-200">
                   <div class="text-[10px] font-bold text-orange-800">Alto</div>
-                  <div class="text-base font-black text-orange-600 font-mono">3</div>
-                  <div class="text-[9px] text-slate-500">Em mitigação</div>
+                  <div class="text-base font-black text-orange-600 font-mono" id="dash-risk-count-high">0</div>
+                  <div class="text-[9px] text-slate-500" id="dash-risk-sub-high">Em mitigação</div>
                 </div>
                 <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
                   <div class="text-[10px] font-bold text-amber-800">Médio</div>
-                  <div class="text-base font-black text-amber-600 font-mono">4</div>
-                  <div class="text-[9px] text-slate-500">Monitorados</div>
+                  <div class="text-base font-black text-amber-600 font-mono" id="dash-risk-count-med">0</div>
+                  <div class="text-[9px] text-slate-500" id="dash-risk-sub-med">Monitorados</div>
                 </div>
                 <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
                   <div class="text-[10px] font-bold text-emerald-800">Baixo</div>
-                  <div class="text-base font-black text-emerald-600 font-mono">6</div>
-                  <div class="text-[9px] text-slate-500">Aceitáveis</div>
+                  <div class="text-base font-black text-emerald-600 font-mono" id="dash-risk-count-low">0</div>
+                  <div class="text-[9px] text-slate-500" id="dash-risk-sub-low">Aceitáveis</div>
                 </div>
               </div>
 
@@ -1027,10 +1028,10 @@
               <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-600 space-y-1.5">
                 <div class="font-bold text-slate-800 flex items-center justify-between">
                   <span>Controles Vitais de Canteiro:</span>
-                  <span class="text-emerald-700 font-mono font-bold">5 de 6 Ativos</span>
+                  <span class="text-emerald-700 font-mono font-bold" id="dash-vital-controls-status">0 Ativos</span>
                 </div>
-                <div class="text-[10px] text-slate-500 leading-relaxed">
-                  Firewall IPsec (MikroTik), VLANs separadas para catracas, BitLocker em laptops de campo e EDR Wazuh no servidor BIM.
+                <div class="text-[10px] text-slate-500 leading-relaxed" id="dash-vital-controls-desc">
+                  Monitore túneis VPN IPsec (MikroTik), VLANs de catracas, BitLocker em laptops de campo e agentes EDR.
                 </div>
               </div>
             </div>
@@ -1071,7 +1072,7 @@
                 <div class="text-xs font-mono font-bold text-[#004b93]" id="roadmap-progress-text">Carregando tarefas...</div>
               </div>
               <div class="w-28 sm:w-36 bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200">
-                <div id="roadmap-progress-bar" class="bg-[#004b93] h-full rounded-full transition-all duration-500" style="width: 50%"></div>
+                <div id="roadmap-progress-bar" class="bg-[#004b93] h-full rounded-full transition-all duration-500" style="width: 0%"></div>
               </div>
               <button onclick="openModal('modal-new-task')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#004b93] hover:bg-[#003d78] text-white transition-colors flex items-center gap-1.5 shrink-0 shadow-2xs cursor-pointer">
                 <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -1088,11 +1089,11 @@
           <div class="mt-4 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 border-b border-slate-100">
             <button onclick="setRoadmapPhaseTab(1)" id="btn-phase-tab-1" class="px-3.5 py-2 font-bold rounded-lg bg-[#004b93] text-white shadow-2xs text-xs whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
               <span>Fase 1: Infraestrutura & Identidade</span>
-              <span id="phase-badge-count-1" class="px-1.5 py-0.2 rounded-full text-[10px] bg-white/20 text-white font-mono">3/4</span>
+              <span id="phase-badge-count-1" class="px-1.5 py-0.2 rounded-full text-[10px] bg-white/20 text-white font-mono">0/4</span>
             </button>
             <button onclick="setRoadmapPhaseTab(2)" id="btn-phase-tab-2" class="px-3.5 py-2 font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
               <span>Fase 2: Estruturação LGPD</span>
-              <span id="phase-badge-count-2" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700 font-mono">2/4</span>
+              <span id="phase-badge-count-2" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700 font-mono">0/4</span>
             </button>
             <button onclick="setRoadmapPhaseTab(3)" id="btn-phase-tab-3" class="px-3.5 py-2 font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs whitespace-nowrap flex items-center gap-1.5 cursor-pointer">
               <span>Fase 3: Documentação & Governança</span>
@@ -1220,16 +1221,16 @@
                     </div>
                     <h3 class="text-sm font-bold text-slate-900">Controles Técnicos Principais</h3>
                   </div>
-                  <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">5 de 6 Ativos</span>
+                  <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-50 text-slate-700 border border-slate-200" id="dash-checklist-status-badge">Pronto para Auditoria</span>
                 </div>
 
                 <div class="mt-3 divide-y divide-slate-100">
                   <div class="py-2.5 flex items-center justify-between">
                     <div>
                       <div class="text-xs font-semibold text-slate-800">Firewall VPN Canteiros (MikroTik)</div>
-                      <div class="text-[11px] text-slate-500">Túneis IPsec com inspeção nos canteiros Horizon e Metropolitan</div>
+                      <div class="text-[11px] text-slate-500">Túneis IPsec com inspeção nos canteiros interligados à matriz</div>
                     </div>
-                    <span class="text-[11px] font-mono text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Operacional</span>
+                    <span class="text-[11px] font-mono text-slate-600 font-semibold bg-slate-50 px-2 py-0.5 rounded border border-slate-200">Em Monitoramento</span>
                   </div>
 
                   <div class="py-2.5 flex items-center justify-between">
@@ -1237,31 +1238,31 @@
                       <div class="text-xs font-semibold text-slate-800">Segmentação de VLANs & Catracas</div>
                       <div class="text-[11px] text-slate-500">VLAN 10 (Engenharia), 20 (ERP Sienge), 99 (Catracas Biométricas e CFTV)</div>
                     </div>
-                    <span class="text-[11px] font-mono text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Conforme</span>
+                    <span class="text-[11px] font-mono text-slate-600 font-semibold bg-slate-50 px-2 py-0.5 rounded border border-slate-200">Em Monitoramento</span>
                   </div>
 
                   <div class="py-2.5 flex items-center justify-between">
                     <div>
                       <div class="text-xs font-semibold text-slate-800">Criptografia em Laptops de Campo</div>
-                      <div class="text-[11px] text-slate-500">1 notebook na Obra Metropolitan pendente de chave no GLPI</div>
+                      <div class="text-[11px] text-slate-500">BitLocker gerenciado e custódia de chaves de recuperação no inventário</div>
                     </div>
-                    <span class="text-[11px] font-mono text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Atenção</span>
+                    <span class="text-[11px] font-mono text-slate-600 font-semibold bg-slate-50 px-2 py-0.5 rounded border border-slate-200">Em Monitoramento</span>
                   </div>
 
                   <div class="py-2.5 flex items-center justify-between">
                     <div>
                       <div class="text-xs font-semibold text-slate-800">EDR Wazuh no Vault BIM & Sienge</div>
-                      <div class="text-[11px] text-slate-500">Detecção ativa contra ransomware em arquivos .dwg e .rvt</div>
+                      <div class="text-[11px] text-slate-500">Detecção ativa contra ransomware em arquivos .dwg, .rvt e bancos de dados</div>
                     </div>
-                    <span class="text-[11px] font-mono text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Operacional</span>
+                    <span class="text-[11px] font-mono text-slate-600 font-semibold bg-slate-50 px-2 py-0.5 rounded border border-slate-200">Em Monitoramento</span>
                   </div>
 
                   <div class="py-2.5 flex items-center justify-between">
                     <div>
                       <div class="text-xs font-semibold text-slate-800">Backup Imutável do ERP Sienge</div>
-                      <div class="text-[11px] text-slate-500">Medições de obra e folha com restore testado em nuvem AWS</div>
+                      <div class="text-[11px] text-slate-500">Rotinas automatizadas de retenção e proteção contra sequestro digital</div>
                     </div>
-                    <span class="text-[11px] font-mono text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Conforme</span>
+                    <span class="text-[11px] font-mono text-slate-600 font-semibold bg-slate-50 px-2 py-0.5 rounded border border-slate-200">Em Monitoramento</span>
                   </div>
                 </div>
               </div>
@@ -1477,8 +1478,8 @@
                 </div>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black font-mono text-slate-900" id="soa-kpi-total">93</span>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-[#004b93] border border-blue-200">Anexo A:2022</span>
+                <span class="text-2xl font-black font-mono text-slate-900" id="soa-kpi-total">11</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-[#004b93] border border-blue-200">ISO 27001</span>
               </div>
               <span class="text-[11px] text-slate-500 block truncate">Estruturados em 4 temas normativos</span>
             </div>
@@ -1491,8 +1492,8 @@
                 </div>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black font-mono text-emerald-700" id="soa-kpi-pct">84%</span>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200" id="soa-kpi-ratio">8/11 Ativos</span>
+                <span class="text-2xl font-black font-mono text-emerald-700" id="soa-kpi-pct">0%</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-50 text-slate-700 border border-slate-200" id="soa-kpi-ratio">0/11 Ativos</span>
               </div>
               <span class="text-[11px] text-slate-500 block truncate">Controles implementados e auditados</span>
             </div>
@@ -1505,8 +1506,8 @@
                 </div>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black font-mono text-amber-600" id="soa-kpi-progress">3</span>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Mitigando</span>
+                <span class="text-2xl font-black font-mono text-slate-900" id="soa-kpi-progress">0</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Em Mitigação</span>
               </div>
               <span class="text-[11px] text-slate-500 block truncate">Vinculadas ao cronograma de obras</span>
             </div>
@@ -1519,8 +1520,8 @@
                 </div>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black font-mono text-indigo-700">100%</span>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">Pronto</span>
+                <span class="text-2xl font-black font-mono text-indigo-700" id="soa-kpi-audit-pct">0%</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-50 text-slate-700 border border-slate-200">Em Auditoria</span>
               </div>
               <span class="text-[11px] text-slate-500 block truncate">Evidências e dossiês rastreáveis</span>
             </div>
@@ -1697,9 +1698,9 @@
                 <span>Pílulas Disparadas</span>
                 <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
               </div>
-              <div class="mt-2 text-2xl font-bold font-mono text-emerald-700" id="campaign-kpi-done">4 / 52 (8%)</div>
+              <div class="mt-2 text-2xl font-bold font-mono text-emerald-700" id="campaign-kpi-done">0 / 52 (0%)</div>
               <div class="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
-                <div id="campaign-kpi-bar" class="bg-emerald-600 h-full rounded-full transition-all duration-500" style="width: 8%"></div>
+                <div id="campaign-kpi-bar" class="bg-emerald-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
               </div>
             </div>
 
@@ -1708,8 +1709,8 @@
                 <span>Tema da Semana Atual</span>
                 <i data-lucide="flame" class="w-4 h-4 text-amber-500"></i>
               </div>
-              <div class="mt-2 text-xs font-bold text-slate-900 truncate" id="campaign-kpi-current">Semana 4: Golpe do Boleto</div>
-              <span class="text-[11px] text-amber-700 font-mono mt-1 block">Foco: Sienge & Financeiro</span>
+              <div class="mt-2 text-xs font-bold text-slate-900 truncate" id="campaign-kpi-current">Semana 1: O Pilar da LGPD e as Sanções da ANPD</div>
+              <span class="text-[11px] text-amber-700 font-mono mt-1 block">Foco: Fundações e Riscos Modernos</span>
             </div>
 
             <div class="card-white rounded-lg p-4 border border-slate-200 shadow-2xs">
@@ -1852,10 +1853,10 @@
                 </div>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black font-mono text-rose-600" id="risk-stat-card-crit">1</span>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200" id="risk-stat-crit-comp">vs 4 Inerentes</span>
+                <span class="text-2xl font-black font-mono text-slate-900" id="risk-stat-card-crit">0</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-50 text-slate-700 border border-slate-200" id="risk-stat-crit-comp">0 Inerentes</span>
               </div>
-              <span class="text-[11px] text-slate-500 block truncate" id="risk-stat-crit-desc">1 pendente de aceite da diretoria</span>
+              <span class="text-[11px] text-slate-500 block truncate" id="risk-stat-crit-desc">Nenhum risco cadastrado ainda</span>
             </div>
 
             <div class="kpi-card-lux p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-1.5">
@@ -1866,7 +1867,7 @@
                 </div>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black font-mono text-orange-600" id="risk-stat-card-high">3</span>
+                <span class="text-2xl font-black font-mono text-slate-900" id="risk-stat-card-high">0</span>
                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200">Em Mitigação</span>
               </div>
               <span class="text-[11px] text-slate-500 block truncate">Mitigados por controles SoA (EDR / BitLocker)</span>
@@ -1880,7 +1881,7 @@
                 </div>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black font-mono text-amber-600" id="risk-stat-card-med">4</span>
+                <span class="text-2xl font-black font-mono text-slate-900" id="risk-stat-card-med">0</span>
                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Monitorados</span>
               </div>
               <span class="text-[11px] text-slate-500 block truncate">Monitoramento preventivo em canteiros</span>
@@ -1894,7 +1895,7 @@
                 </div>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black font-mono text-emerald-600" id="risk-stat-card-low">6</span>
+                <span class="text-2xl font-black font-mono text-slate-900" id="risk-stat-card-low">0</span>
                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Aceitáveis</span>
               </div>
               <span class="text-[11px] text-slate-500 block truncate">Risco residual controlado e aceito</span>
@@ -1910,10 +1911,6 @@
               </span>
               <div class="flex items-center gap-1.5 flex-wrap" id="risk-obra-filter-btns">
                 <button onclick="setRiskObraFilter('all')" id="btn-risk-obra-all" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#004b93] text-white shadow-2xs transition-colors cursor-pointer">Todas as Obras</button>
-                <button onclick="setRiskObraFilter('Sede Corporativa')" id="btn-risk-obra-sede" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer">Sede Corporativa</button>
-                <button onclick="setRiskObraFilter('Obra Horizon')" id="btn-risk-obra-horizon" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer">Obra Horizon</button>
-                <button onclick="setRiskObraFilter('Obra Metropolitan')" id="btn-risk-obra-metro" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer">Obra Metropolitan</button>
-                <button onclick="setRiskObraFilter('Canteiro Alphaville')" id="btn-risk-obra-alpha" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer">Canteiro Alphaville</button>
               </div>
             </div>
             <span class="text-[11px] font-mono text-slate-500 hidden sm:inline">Mitigações SoA rastreadas por canteiro</span>
@@ -2424,7 +2421,7 @@
                 </div>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black font-mono text-[#004b93]" id="lgpd-kpi-ropa-count">6</span>
+                <span class="text-2xl font-black font-mono text-slate-900" id="lgpd-kpi-ropa-count">0</span>
                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-[#004b93] border border-blue-200">Art. 37</span>
               </div>
               <span class="text-[11px] text-slate-500 block truncate">Operações de dados mapeadas</span>
@@ -2438,8 +2435,8 @@
                 </div>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black font-mono text-emerald-600">100%</span>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Conforme</span>
+                <span class="text-2xl font-black font-mono text-slate-900" id="lgpd-kpi-legal-pct">0%</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-50 text-slate-700 border border-slate-200">Em Mapeamento</span>
               </div>
               <span class="text-[11px] text-slate-500 block truncate">Art. 7º e Art. 11 (Biometria) válidos</span>
             </div>
@@ -2452,8 +2449,8 @@
                 </div>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black font-mono text-purple-600">4.2 Dias</span>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">&le; 15 Dias</span>
+                <span class="text-2xl font-black font-mono text-slate-900" id="lgpd-kpi-dsar-count">0 Dias</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-50 text-slate-700 border border-slate-200">&le; 15 Dias</span>
               </div>
               <span class="text-[11px] text-slate-500 block truncate">Tempo médio de resposta a titulares</span>
             </div>
@@ -2466,8 +2463,8 @@
                 </div>
               </div>
               <div class="flex items-baseline justify-between">
-                <span class="text-2xl font-black font-mono text-indigo-600">12</span>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">Aditivos</span>
+                <span class="text-2xl font-black font-mono text-slate-900" id="lgpd-kpi-thirdparty-count">0</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-50 text-slate-700 border border-slate-200">Aditivos</span>
               </div>
               <span class="text-[11px] text-slate-500 block truncate">Contratos com cláusulas NR-18 & DPA</span>
             </div>
@@ -2959,26 +2956,26 @@
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="card-white rounded-lg p-4 border border-slate-200">
               <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total de Evidências</div>
-              <div class="text-2xl font-bold text-slate-900 mt-1 font-mono" id="evidence-kpi-total">6</div>
+              <div class="text-2xl font-bold text-slate-900 mt-1 font-mono" id="evidence-kpi-total">0</div>
               <span class="text-[10px] text-slate-500 mt-1 block">Artefatos homologados ou em triagem</span>
             </div>
             <div class="card-white rounded-lg p-4 border border-slate-200">
               <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Homologadas pelo DPO</div>
-              <div class="text-2xl font-bold text-emerald-600 mt-1 font-mono" id="evidence-kpi-approved">5</div>
-              <span class="text-[10px] text-emerald-700 mt-1 block flex items-center gap-1">
+              <div class="text-2xl font-bold text-slate-900 mt-1 font-mono" id="evidence-kpi-approved">0</div>
+              <span class="text-[10px] text-slate-500 mt-1 block flex items-center gap-1">
                 <i data-lucide="check" class="w-3 h-3"></i> Válidas para auditoria externa
               </span>
             </div>
             <div class="card-white rounded-lg p-4 border border-slate-200">
               <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Pendentes de Homologação</div>
-              <div class="text-2xl font-bold text-amber-600 mt-1 font-mono" id="evidence-kpi-pending">1</div>
-              <span class="text-[10px] text-amber-700 mt-1 block">Aguardando parecer técnico</span>
+              <div class="text-2xl font-bold text-slate-900 mt-1 font-mono" id="evidence-kpi-pending">0</div>
+              <span class="text-[10px] text-slate-500 mt-1 block">Aguardando parecer técnico</span>
             </div>
             <div class="card-white rounded-lg p-4 border border-slate-200">
               <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Taxa de Homologação</div>
-              <div class="text-2xl font-bold text-[#004b93] mt-1 font-mono" id="evidence-kpi-rate">83%</div>
+              <div class="text-2xl font-bold text-[#004b93] mt-1 font-mono" id="evidence-kpi-rate">0%</div>
               <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-2">
-                <div class="bg-[#004b93] h-full rounded-full" style="width: 83%"></div>
+                <div class="bg-[#004b93] h-full rounded-full" style="width: 0%"></div>
               </div>
             </div>
           </div>
@@ -3225,8 +3222,8 @@
               </div>
             </div>
             <div class="flex items-baseline justify-between">
-              <span class="text-2xl font-black font-mono text-emerald-600" id="obras-kpi-canteiros">3 Canteiros</span>
-              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Ativos</span>
+              <span class="text-2xl font-black font-mono text-emerald-600" id="obras-kpi-canteiros">0 Canteiros</span>
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-50 text-slate-700 border border-slate-200">Ativos</span>
             </div>
             <span class="text-[11px] text-slate-500 block truncate">Obras de campo interligadas via VPN</span>
           </div>
@@ -3239,8 +3236,8 @@
               </div>
             </div>
             <div class="flex items-baseline justify-between">
-              <span class="text-2xl font-black font-mono text-orange-600" id="obras-kpi-final">1 Canteiro</span>
-              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200">Expurgo</span>
+              <span class="text-2xl font-black font-mono text-slate-900" id="obras-kpi-final">0 Canteiros</span>
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-50 text-slate-700 border border-slate-200">Expurgo</span>
             </div>
             <span class="text-[11px] text-slate-500 block truncate">Expurgo biométrico facial (Art. 11 LGPD)</span>
           </div>
@@ -3253,8 +3250,8 @@
               </div>
             </div>
             <div class="flex items-baseline justify-between">
-              <span class="text-2xl font-black font-mono text-purple-600" id="obras-kpi-bio">4/4 Unidades</span>
-              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">100% Cifrado</span>
+              <span class="text-2xl font-black font-mono text-slate-900" id="obras-kpi-bio">0/0 Unidades</span>
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-50 text-slate-700 border border-slate-200">Segurança Ativa</span>
             </div>
             <span class="text-[11px] text-slate-500 block truncate">Túneis IPSec, VLANs e Biometria</span>
           </div>
@@ -3557,22 +3554,22 @@
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="card-white rounded-lg p-4 border border-slate-200">
             <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total de Usuários</div>
-            <div class="text-2xl font-bold text-slate-900 mt-1 font-mono" id="users-kpi-total">6</div>
+            <div class="text-2xl font-bold text-slate-900 mt-1 font-mono" id="users-kpi-total">0</div>
             <span class="text-[10px] text-slate-500 mt-1 block">Contas ativas com credenciais</span>
           </div>
           <div class="card-white rounded-lg p-4 border border-slate-200">
             <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">SecOps / T.I. & Infra</div>
-            <div class="text-2xl font-bold text-blue-600 mt-1 font-mono" id="users-kpi-secops">1</div>
+            <div class="text-2xl font-bold text-blue-600 mt-1 font-mono" id="users-kpi-secops">0</div>
             <span class="text-[10px] text-blue-700 mt-1 block">Operação Wazuh e firewalls</span>
           </div>
           <div class="card-white rounded-lg p-4 border border-slate-200">
             <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">DPO & Privacidade</div>
-            <div class="text-2xl font-bold text-emerald-600 mt-1 font-mono" id="users-kpi-dpo">1</div>
+            <div class="text-2xl font-bold text-emerald-600 mt-1 font-mono" id="users-kpi-dpo">0</div>
             <span class="text-[10px] text-emerald-700 mt-1 block">Encarregado oficial LGPD</span>
           </div>
           <div class="card-white rounded-lg p-4 border border-slate-200">
             <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Engenharia de Obras</div>
-            <div class="text-2xl font-bold text-amber-600 mt-1 font-mono" id="users-kpi-obras">1</div>
+            <div class="text-2xl font-bold text-amber-600 mt-1 font-mono" id="users-kpi-obras">0</div>
             <span class="text-[10px] text-amber-700 mt-1 block">Gestores residentes de canteiro</span>
           </div>
         </div>
@@ -3879,10 +3876,10 @@
               <span>Conectores Homologados</span>
               <i data-lucide="network" class="w-4 h-4 text-blue-600"></i>
             </div>
-            <div class="text-2xl font-bold text-slate-900 font-mono">7 / 7</div>
-            <div class="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>100% Operacionais (Produção)</span>
+            <div class="text-2xl font-bold text-slate-900 font-mono" id="integrations-kpi-count">0 / 7</div>
+            <div class="text-[11px] text-slate-500 flex items-center gap-1 font-medium" id="integrations-kpi-status-container">
+              <span class="w-2 h-2 rounded-full bg-slate-400" id="integrations-kpi-dot"></span>
+              <span id="integrations-kpi-status-text">Aguardando Configuração</span>
             </div>
           </div>
 
@@ -3891,7 +3888,7 @@
               <span>Latência Média</span>
               <i data-lucide="activity" class="w-4 h-4 text-emerald-600"></i>
             </div>
-            <div class="text-2xl font-bold text-emerald-700 font-mono">~ 21ms</div>
+            <div class="text-2xl font-bold text-slate-900 font-mono" id="integrations-kpi-latency">--</div>
             <div class="text-[11px] text-slate-500">Tempo de resposta em milissegundos</div>
           </div>
 
@@ -9348,21 +9345,29 @@ openssl ts -reply -in response.tsr -text</pre>
 
       async function renderDashboardModule() {
         if (typeof renderRoadmapUI === 'function') renderRoadmapUI();
+        if (typeof renderDynamicPersonaDashboardKPIs === 'function') renderDynamicPersonaDashboardKPIs();
         const risks = await ApiService.getRisks();
         
-        // Contadores reais de riscos
-        const critResidualCount = risks.filter(r => r.residualScore >= 15).length || 1;
-        const critInherentCount = risks.filter(r => r.inherentScore >= 15).length || 4;
-        const pendingApprovalCount = risks.filter(r => r.residualScore >= 10 && !r.directorApproval?.approved).length;
+        // Contadores reais de riscos (100% dinâmico sem mockups)
+        const critResidualCount = risks.filter(r => (r.residualScore || 0) >= 15).length;
+        const critInherentCount = risks.filter(r => (r.inherentScore || 0) >= 15).length;
+        const pendingApprovalCount = risks.filter(r => (r.residualScore || 0) >= 10 && !r.directorApproval?.approved).length;
+        const approvedCount = risks.filter(r => r.directorApproval?.approved).length;
 
         const elCrit = document.getElementById("kpi-critical-risks");
         if (elCrit) elCrit.textContent = critResidualCount;
         const elInh = document.getElementById("kpi-inherent-crit-compare");
-        if (elInh) elInh.textContent = `vs ${critInherentCount} Inerentes`;
+        if (elInh) elInh.textContent = critInherentCount > 0 ? `vs ${critInherentCount} Inerentes` : "0 Inerentes";
         const elDesc = document.getElementById("kpi-director-signoff-summary");
-        if (elDesc) elDesc.textContent = pendingApprovalCount > 0 
-          ? `${pendingApprovalCount} pendente de aceite da diretoria` 
-          : "1 homologado formalmente pela diretoria";
+        if (elDesc) {
+          if (risks.length === 0) {
+            elDesc.textContent = "Nenhum risco cadastrado ainda";
+          } else if (pendingApprovalCount > 0) {
+            elDesc.textContent = `${pendingApprovalCount} pendente(s) de aceite da diretoria`;
+          } else {
+            elDesc.textContent = `${approvedCount} homologado(s) pela diretoria`;
+          }
+        }
 
         // Render Heatmap 5x5: Alterna entre Inerente e Residual
         const grid = document.getElementById("heatmap-grid");

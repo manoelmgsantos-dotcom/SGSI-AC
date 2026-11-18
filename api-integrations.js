@@ -216,6 +216,25 @@ function renderConnectorsCards() {
     });
   });
 
+  // Atualiza os KPIs de Integrações de forma 100% dinâmica
+  const connList = Object.values(connectors || {});
+  const totalConns = connList.length;
+  const activeConns = connList.filter(c => String(c.status || "").toLowerCase().includes("ativo") || String(c.status || "").toLowerCase().includes("online")).length;
+  const kpiCount = document.getElementById("integrations-kpi-count");
+  if (kpiCount) kpiCount.textContent = `${activeConns} / ${totalConns}`;
+  const kpiDot = document.getElementById("integrations-kpi-dot");
+  const kpiStatusText = document.getElementById("integrations-kpi-status-text");
+  if (kpiStatusText) {
+    if (activeConns > 0) {
+      const pct = Math.round((activeConns / totalConns) * 100);
+      kpiStatusText.textContent = `${pct}% Operacionais (${activeConns}/${totalConns})`;
+      if (kpiDot) kpiDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+    } else {
+      kpiStatusText.textContent = "Aguardando Configuração";
+      if (kpiDot) kpiDot.className = "w-2 h-2 rounded-full bg-slate-400";
+    }
+  }
+
   if (window.lucide && typeof window.lucide.createIcons === 'function') {
     window.lucide.createIcons();
   }

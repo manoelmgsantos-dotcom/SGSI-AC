@@ -523,75 +523,116 @@ function renderDynamicPersonaDashboardKPIs() {
   const connectorsList = Object.values(connectorsObj || {});
   const activeConnectors = connectorsList.filter(c => String(c.status || "").toLowerCase().includes("ativo"));
 
+  const totalSoA = soaControls.length;
   const implementedSoA = soaControls.filter(c => c.applicable && c.status === "Implementado").length;
-  const applicableSoA = soaControls.filter(c => c.applicable).length || 1;
-  const soaPct = Math.round((implementedSoA / applicableSoA) * 100);
+  const applicableSoA = soaControls.filter(c => c.applicable).length || (totalSoA > 0 ? totalSoA : 1);
+  const lgpdPct = totalSoA > 0 ? Math.round((implementedSoA / applicableSoA) * 100) : 0;
 
-  // Valores Executivos Consolidados para o Painel Global (ISO 27001 / ISO 27005 / LGPD)
-  const critResidualCount = risks.filter(r => (r.residualScore || 0) >= 15).length || 1;
-  const critInherentCount = risks.filter(r => (r.inherentScore || 0) >= 15).length || 4;
+  // Valores Executivos 100% Reais e Dinâmicos (Sem dados simulados / mockups)
+  const totalRisks = risks.length;
+  const critResidualCount = risks.filter(r => (r.residualScore || 0) >= 15).length;
+  const critInherentCount = risks.filter(r => (r.inherentScore || 0) >= 15).length;
+  const approvedCount = risks.filter(r => r.directorApproval?.approved).length;
   const pendingApprovalCount = risks.filter(r => (r.residualScore || 0) >= 10 && !r.directorApproval?.approved).length;
-  const totalAssetsCount = assets.length > 0 ? assets.length : 153;
-  const bitlockerRate = assets.length > 0
-    ? Math.round((assets.filter(a => String(a.bitlocker || "").includes("Ativo")).length / assets.length) * 100)
-    : 94.1;
-  const openAlerts = wazuhAlerts.filter(a => a.status !== "Resolvido");
+
+  const totalAssetsCount = assets.length;
+  const bitlockerActive = assets.filter(a => String(a.bitlocker || "").toLowerCase().includes("ativo")).length;
+  const bitlockerRate = totalAssetsCount > 0 ? Math.round((bitlockerActive / totalAssetsCount) * 100) : 0;
+
+  const openAlerts = wazuhAlerts.filter(a => a.status !== "Resolvido" && a.status !== "Fechado");
+  const critAlerts = openAlerts.filter(a => String(a.severity || "").toUpperCase().includes("CRÍTICA") || String(a.severity || "").toUpperCase().includes("ALTA")).length;
+  const alertsCount = openAlerts.length;
+
   const quarantinedHosts = assets.filter(a => String(a.vlan) === "99");
 
-  // CARD 1: Conformidade LGPD & Governança
-  if (c1.title) c1.title.textContent = "Conformidade LGPD";
-  if (c1.val) c1.val.textContent = "84.2%";
-  if (c1.badge) {
-    c1.badge.textContent = "+3.8% mês";
-    c1.badge.className = "text-[10px] text-emerald-700 font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200";
-  }
-  if (c1.bar) c1.bar.style.width = "84.2%";
-  if (c1.desc) c1.desc.textContent = "35 de 42 requisitos auditados";
+  const obrasList = (typeof getStoredObras === "function") ? getStoredObras() : (Array.isArray(db.obras) ? db.obras : []);
+  const canteirosOnly = obrasList.filter(o => !o.isHeadquarters && o.hierarchy !== "principal");
+  const totalCanteiros = canteirosOnly.length > 0 ? canteirosOnly.length : obrasList.length;
+  const vpnActiveCount = canteirosOnly.length > 0 
+    ? canteirosOnly.filter(o => o.vpnTunnelActive !== false).length 
+    : obrasList.filter(o => o.vpnTunnelActive !== false).length;
+  const vpnRate = totalCanteiros > 0 ? Math.round((vpnActiveCount / totalCanteiros) * 100) : 0;
 
-  // CARD 2: Riscos de Engenharia (ISO 27005)
+  // CARD 1: Conformidade LGPD & Governança (Real)
+  if (c1.title) c1.title.textContent = "Conformidade LGPD";
+  if (c1.val) c1.val.textContent = `${lgpdPct}%`;
+  if (c1.badge) {
+    c1.badge.textContent = implementedSoA > 0 ? `${implementedSoA} atendidos` : "0 Atendidos";
+    c1.badge.className = implementedSoA > 0 
+      ? "text-[10px] text-emerald-700 font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200"
+      : "text-[10px] text-slate-600 font-bold font-mono px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200";
+  }
+  if (c1.bar) c1.bar.style.width = `${lgpdPct}%`;
+  if (c1.desc) c1.desc.textContent = totalSoA > 0 ? `${implementedSoA} de ${applicableSoA} controles implementados` : "Nenhum controle SoA auditado ainda";
+
+  // CARD 2: Riscos de Engenharia (ISO 27005 - Real)
   if (c2.title) c2.title.textContent = "Riscos de Engenharia";
   if (c2.val) c2.val.textContent = `${critResidualCount}`;
   if (c2.badge) {
-    c2.badge.textContent = `vs ${critInherentCount} Inerentes`;
-    c2.badge.className = "text-[10px] text-rose-700 font-bold font-mono px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200";
+    c2.badge.textContent = totalRisks > 0 ? `vs ${critInherentCount} Inerentes` : "0 Cadastrados";
+    c2.badge.className = critResidualCount > 0 
+      ? "text-[10px] text-rose-700 font-bold font-mono px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200"
+      : "text-[10px] text-slate-600 font-bold font-mono px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200";
   }
-  if (c2.bar) c2.bar.style.width = "25%";
+  const riskBarWidth = totalRisks > 0 ? Math.min(100, Math.round((critResidualCount / totalRisks) * 100)) : 0;
+  if (c2.bar) c2.bar.style.width = `${riskBarWidth}%`;
   if (c2.desc) {
-    c2.desc.textContent = pendingApprovalCount > 0 
-      ? `${pendingApprovalCount} risco(s) aguardando aceite da diretoria`
-      : "1 homologado formalmente pela diretoria";
+    c2.desc.textContent = totalRisks === 0
+      ? "Nenhum risco cadastrado ainda"
+      : (pendingApprovalCount > 0 ? `${pendingApprovalCount} aguardando aceite da diretoria` : `${approvedCount} homologado(s) pela diretoria`);
   }
 
-  // CARD 3: BitLocker GLPI
+  // CARD 3: BitLocker GLPI (Real)
   if (c3.title) c3.title.textContent = "BitLocker em Laptops";
   if (c3.val) c3.val.textContent = `${bitlockerRate}%`;
   if (c3.badge) {
-    c3.badge.textContent = "144/153 Ativos";
-    c3.badge.className = "text-[10px] text-sky-700 font-bold font-mono px-2 py-0.5 rounded-full bg-sky-50 border border-sky-200";
+    c3.badge.textContent = totalAssetsCount > 0 ? `${bitlockerActive}/${totalAssetsCount} Ativos` : "0 Ativos";
+    c3.badge.className = totalAssetsCount > 0 && bitlockerRate >= 80 
+      ? "text-[10px] text-sky-700 font-bold font-mono px-2 py-0.5 rounded-full bg-sky-50 border border-sky-200" 
+      : "text-[10px] text-slate-600 font-bold font-mono px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200";
   }
   if (c3.bar) c3.bar.style.width = `${bitlockerRate}%`;
-  if (c3.desc) c3.desc.textContent = "Laptops de engenheiros e fiscais de obra";
+  if (c3.desc) c3.desc.textContent = totalAssetsCount > 0 ? `${bitlockerActive} de ${totalAssetsCount} laptops criptografados` : "Nenhum laptop cadastrado no inventário";
 
-  // CARD 4: VPN Canteiros & 802.1X
+  // CARD 4: VPN Canteiros & 802.1X (Real)
   if (c4.title) c4.title.textContent = "VPN Canteiros & 802.1X";
-  if (c4.val) c4.val.textContent = quarantinedHosts.length > 0 ? `${quarantinedHosts.length} Quarentena` : "98.0%";
+  if (c4.val) c4.val.textContent = quarantinedHosts.length > 0 ? `${quarantinedHosts.length} Quarentena` : (totalCanteiros > 0 ? `${vpnRate}%` : "0%");
   if (c4.badge) {
-    c4.badge.textContent = quarantinedHosts.length > 0 ? "Isolado CoA" : "EAP-TLS";
-    c4.badge.className = "text-[10px] text-indigo-700 font-bold font-mono px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200";
+    c4.badge.textContent = quarantinedHosts.length > 0 ? "Isolado CoA" : (totalCanteiros > 0 && vpnActiveCount > 0 ? "VPN Ativa" : "Sem VPN");
+    c4.badge.className = quarantinedHosts.length > 0 
+      ? "text-[10px] text-rose-700 font-bold font-mono px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200"
+      : (totalCanteiros > 0 && vpnActiveCount > 0 ? "text-[10px] text-indigo-700 font-bold font-mono px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200" : "text-[10px] text-slate-600 font-bold font-mono px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200");
   }
-  if (c4.bar) c4.bar.style.width = "98%";
-  if (c4.desc) c4.desc.textContent = "150/153 validados no RADIUS / VPN";
+  if (c4.bar) c4.bar.style.width = `${vpnRate}%`;
+  if (c4.desc) c4.desc.textContent = totalCanteiros > 0 ? `${vpnActiveCount}/${totalCanteiros} canteiros com VPN ativa` : "Nenhum canteiro conectado à VPN";
 
-  // CARD 5: Alertas SIEM Wazuh
+  // CARD 5: Alertas SIEM Wazuh (Real)
   if (c5.title) c5.title.textContent = "Alertas SIEM Wazuh";
-  const alertsCount = openAlerts.length > 0 ? openAlerts.length : 4;
   if (c5.val) c5.val.textContent = `${alertsCount}`;
   if (c5.badge) {
-    c5.badge.textContent = "1 Crítico";
-    c5.badge.className = "text-[10px] text-amber-800 font-bold font-mono px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200";
+    c5.badge.textContent = alertsCount > 0 ? `${critAlerts} Crítico(s)` : "Normal";
+    c5.badge.className = critAlerts > 0 
+      ? "text-[10px] text-rose-700 font-bold font-mono px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200"
+      : (alertsCount > 0 ? "text-[10px] text-amber-800 font-bold font-mono px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200" : "text-[10px] text-emerald-700 font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200");
   }
-  if (c5.bar) c5.bar.style.width = "45%";
-  if (c5.desc) c5.desc.textContent = "Fila CSIRT de triagem operacional ativa";
+  const alertBarWidth = alertsCount > 0 ? Math.min(100, alertsCount * 20) : 0;
+  if (c5.bar) c5.bar.style.width = `${alertBarWidth}%`;
+  if (c5.desc) c5.desc.textContent = alertsCount > 0 ? `${alertsCount} alerta(s) na fila CSIRT` : "Nenhum alerta de segurança pendente";
+
+  // Atualiza também os contadores de distribuição de riscos do cockpit caso existam no DOM
+  const elCritCount = document.getElementById("dash-risk-count-crit");
+  if (elCritCount) elCritCount.textContent = critResidualCount;
+  const elHighCount = document.getElementById("dash-risk-count-high");
+  if (elHighCount) elHighCount.textContent = risks.filter(r => (r.residualScore || 0) >= 10 && (r.residualScore || 0) < 15).length;
+  const elMedCount = document.getElementById("dash-risk-count-med");
+  if (elMedCount) elMedCount.textContent = risks.filter(r => (r.residualScore || 0) >= 5 && (r.residualScore || 0) < 10).length;
+  const elLowCount = document.getElementById("dash-risk-count-low");
+  if (elLowCount) elLowCount.textContent = risks.filter(r => (r.residualScore || 0) > 0 && (r.residualScore || 0) < 5).length;
+
+  const elVitalControls = document.getElementById("dash-vital-controls-status");
+  if (elVitalControls) {
+    elVitalControls.textContent = totalCanteiros > 0 ? `${vpnActiveCount} de ${totalCanteiros} Ativos` : "0 Ativos";
+  }
 }
 
 // ============================================================================

@@ -15,8 +15,8 @@ const ROADMAP_TASKS = [
     desc: "Aplicar o princípio do menor privilégio, garantindo que usuários comuns não tenham direitos administrativos e limitando a superfície de ataque lateral.",
     cost: "Zero / GPO",
     effort: "Médio",
-    status: "Concluído",
-    completed: true,
+    status: "Pendente",
+    completed: false,
     howTo: "Configuração de GPOs no Active Directory para gerenciar estritamente os grupos de administradores locais. Criação de contas táticas segregadas para a equipe de TI e manutenção de contas locais isoladas apenas para uso como fallback em manutenções físicas.",
     obs: "Evidência: Relatório do AD mostrando grupos de segurança atualizados e GPOs ativas bloqueando contas e heranças não autorizadas nos endpoints. [Modelos: MOD-USR-01 e MOD-USR-03]",
     linkModule: "users",
@@ -31,8 +31,8 @@ const ROADMAP_TASKS = [
     desc: "Isolar totalmente dispositivos não gerenciados do tráfego corporativo e dos servidores internos.",
     cost: "Zero / Firewall",
     effort: "Médio",
-    status: "Concluído",
-    completed: true,
+    status: "Pendente",
+    completed: false,
     howTo: "Configuração de interfaces dedicadas no roteador de borda/firewall (como o MikroTik) com pools de DHCP independentes e regras de drop restritivas que impedem o roteamento entre o range de IPs de visitantes e as sub-redes corporativas.",
     obs: "Evidência: Tabela de regras de firewall exportada demonstrando as políticas de negação e logs de bloqueio de tráfego inter-redes. [Modelos: MOD-SEC-01 e MOD-OBR-01]",
     linkModule: "secops",
@@ -47,8 +47,8 @@ const ROADMAP_TASKS = [
     desc: "Detectar, bloquear e registrar comportamentos anômalos, malwares e tentativas de intrusão em tempo real.",
     cost: "Licença EDR",
     effort: "Médio",
-    status: "Concluído",
-    completed: true,
+    status: "Pendente",
+    completed: false,
     howTo: "Implantação de EDR (como Bitdefender) em todas as estações e servidores, com integração de logs a um SIEM/XDR (como Wazuh) para centralização e correlação de eventos de segurança.",
     obs: "Evidência: Dashboards demonstrando a integridade dos agentes, ausência de falhas de comunicação e retenção do histórico de alertas centralizados. [Modelo: MOD-SEC-04]",
     linkModule: "secops",
@@ -81,8 +81,8 @@ const ROADMAP_TASKS = [
     desc: "Mitigar o risco associado a falhas humanas, engenharia social e uso inadvertido de tecnologias não homologadas.",
     cost: "Zero / Campanha",
     effort: "Baixo",
-    status: "Concluído",
-    completed: true,
+    status: "Pendente",
+    completed: false,
     howTo: "Execução de trilha de capacitação periódica (campanha anual de 52 semanas) abordando criação de senhas seguras, identificação de phishing, riscos no uso de IAs públicas e manuseio de fraudes financeiras (ex: golpes de boletos).",
     obs: "Evidência: Cronograma documentado das campanhas executadas, listas de presença/confirmação de leitura e material de apoio arquivado. [Modelo: MOD-GOV-04]",
     linkModule: "raci",
@@ -97,8 +97,8 @@ const ROADMAP_TASKS = [
     desc: "Mapear o ciclo de vida da informação (coleta, uso, armazenamento e descarte) dentro dos processos de negócio.",
     cost: "Tempo Técnico",
     effort: "Médio",
-    status: "Concluído",
-    completed: true,
+    status: "Pendente",
+    completed: false,
     howTo: "Rastreamento técnico de como os dados pessoais e financeiros trafegam, com foco especial nas plataformas críticas de gestão (como ERP Sienge, ferramentas de CRM e portais de recrutamento).",
     obs: "Evidência: Diagramas de fluxo de dados (DFD) formalizados, identificando os sistemas de origem e destino das informações críticas. [Modelo: MOD-LGP-01]",
     linkModule: "integrations",
@@ -348,22 +348,22 @@ const ANPD_CAMPAIGNS_DATA = [
 
 function getStoredRoadmapTasks() {
   try {
-    const saved = localStorage.getItem("AC_ENGENHARIA_ROADMAP_V3");
+    const saved = localStorage.getItem("AC_ENGENHARIA_ROADMAP_V4");
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length === ROADMAP_TASKS.length) {
+      if (Array.isArray(parsed) && parsed.length >= ROADMAP_TASKS.length) {
         return parsed;
       }
     }
   } catch (e) {
     console.warn("Falha ao ler roadmap tasks", e);
   }
-  localStorage.setItem("AC_ENGENHARIA_ROADMAP_V3", JSON.stringify(ROADMAP_TASKS));
+  localStorage.setItem("AC_ENGENHARIA_ROADMAP_V4", JSON.stringify(ROADMAP_TASKS));
   return JSON.parse(JSON.stringify(ROADMAP_TASKS));
 }
 
 function saveStoredRoadmapTasks(tasks) {
-  localStorage.setItem("AC_ENGENHARIA_ROADMAP_V3", JSON.stringify(tasks));
+  localStorage.setItem("AC_ENGENHARIA_ROADMAP_V4", JSON.stringify(tasks));
 }
 
 function toggleRoadmapTask(taskId) {
