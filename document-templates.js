@@ -400,6 +400,141 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
       }
     ]
   },
+  "MOD-OBR-06": {
+    "title": "Laudo Técnico de Homologação, Teste de Funcionamento e Vistoria de Equipamentos (TVs, Projetores e Periféricos de Canteiro)",
+    "signers": [
+      {
+        "role": "Técnico(a) de T.I. / Elétrica (Responsável pelo Teste)",
+        "docLabel": "CPF / Registro Técnico",
+        "placeholder": "Ex: Manoel M. G. Santos"
+      },
+      {
+        "role": "Recebedor na Obra / Almoxarife / Fiscal",
+        "docLabel": "CPF / Matrícula Obra",
+        "placeholder": "Ex: João Silva (Almoxarifado)"
+      },
+      {
+        "role": "Engenheiro(a) Residente / Gestor de Obra",
+        "docLabel": "CREA-SE",
+        "placeholder": "Ex: Eng. Ricardo Lima"
+      }
+    ],
+    "fields": [
+      {
+        "key": "obra",
+        "label": "Obra / Canteiro de Destino *",
+        "placeholder": "Ex: Residencial Jardins da Costa / Central",
+        "fullWidth": false
+      },
+      {
+        "key": "nf_compra",
+        "label": "Nota Fiscal / Pedido de Compra / Fornecedor",
+        "placeholder": "Ex: NF-e 048.912 - Magazine Luiza / Kalunga",
+        "fullWidth": false
+      },
+      {
+        "key": "equipamento_tipo",
+        "label": "Tipo do Aparelho Testado *",
+        "type": "select",
+        "options": [
+          "Smart TV LED / Painel de Reuniões",
+          "Projetor Multimídia / Datashow",
+          "Monitor de Vídeo / CFTV",
+          "Caixa de Som / Sistema de Áudio para DDS",
+          "Aparelho de Videoconferência / Webcam",
+          "Outro Equipamento Eletroeletrônico"
+        ],
+        "fullWidth": false
+      },
+      {
+        "key": "marca",
+        "label": "Marca / Fabricante *",
+        "placeholder": "Ex: Samsung, LG, Epson, Philco, AOC, BenQ, TCL",
+        "fullWidth": false
+      },
+      {
+        "key": "modelo",
+        "label": "Modelo / Polegadas / Resolução *",
+        "placeholder": "Ex: Smart TV 55 pol. UHD 4K / Projetor 3800 Lumens WXGA",
+        "fullWidth": false
+      },
+      {
+        "key": "serie",
+        "label": "Número de Série (S/N) *",
+        "placeholder": "Ex: 9ZJ43L7A000124K",
+        "fullWidth": false
+      },
+      {
+        "key": "patrimonio",
+        "label": "Plaqueta de Patrimônio / Tag GLPI",
+        "placeholder": "Ex: PAT-AC-0842",
+        "fullWidth": false
+      },
+      {
+        "key": "tensao",
+        "label": "Tensão Elétrica (Voltagem)",
+        "type": "select",
+        "options": [
+          "Bivolt Automático (100V ~ 240V)",
+          "220V Monofásico",
+          "110V / 127V Monofásico"
+        ],
+        "fullWidth": false
+      },
+      {
+        "key": "itens_inclusos",
+        "label": "Acessórios e Cabos Inclusos",
+        "placeholder": "Ex: Controle remoto c/ pilhas, Cabo HDMI 2.0, Cabo de força NBR 14136, Suporte VESA, Manual",
+        "fullWidth": true
+      },
+      {
+        "key": "lote_aparelhos",
+        "label": "Detalhamento de Lote (se houver múltiplos aparelhos testados juntos)",
+        "type": "textarea",
+        "placeholder": "Ex:\nItem 1: Smart TV 55 Samsung | S/N: 9ZJ43L7A000124K | Pat: PAT-AC-0842 | [OK] Aprovado\nItem 2: Smart TV 55 Samsung | S/N: 9ZJ43L7A000125L | Pat: PAT-AC-0843 | [OK] Aprovado\nItem 3: Projetor Epson PowerLite | S/N: E84201948 | Pat: PAT-AC-0844 | [OK] Aprovado",
+        "fullWidth": true
+      },
+      {
+        "key": "parecer_status",
+        "label": "Resultado da Homologação Técnica *",
+        "type": "select",
+        "options": [
+          "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra",
+          "APROVADO COM RESSALVAS — Funcionamento validado com pequenas observações",
+          "REPROVADO — Aparelho com defeito / vício oculto (Acionar Garantia ou Devolução)"
+        ],
+        "fullWidth": true
+      },
+      {
+        "key": "obs_tecnicas",
+        "label": "Observações Técnicas e Recomendações de Instalação na Obra",
+        "type": "textarea",
+        "placeholder": "Ex: Imagem nítida sem dead pixels; portas HDMI 1 e 2 testadas com notebook; áudio estéreo sem chiados; Wi-Fi conectado na rede interna; recomendado usar filtro de linha no container da obra.",
+        "fullWidth": true
+      },
+      {
+        "key": "foto_ligado",
+        "label": "Foto 1: Aparelho Ligado / Teste de Tela ou Projeção Ativa",
+        "type": "photo",
+        "hint": "Carregue a foto do aparelho em funcionamento (exibindo tela nítida, cores e imagem ativa).",
+        "fullWidth": true
+      },
+      {
+        "key": "foto_etiqueta",
+        "label": "Foto 2: Etiqueta de Identificação e Número de Série (S/N / Anatel)",
+        "type": "photo",
+        "hint": "Carregue a foto aproximada da etiqueta traseira com dados de marca, modelo, tensão e número de série.",
+        "fullWidth": true
+      },
+      {
+        "key": "foto_acessorios",
+        "label": "Foto 3: Acessórios, Cabos, Controle Remoto e Embalagem",
+        "type": "photo",
+        "hint": "Carregue a foto do controle remoto, cabos de conexão e componentes entregues junto com o aparelho.",
+        "fullWidth": true
+      }
+    ]
+  },
   "MOD-USR-01": {
     "title": "Termo de Responsabilidade, Confidencialidade (NDA) e Uso Aceitável de Ativos de TI",
     "signers": [
@@ -2310,6 +2445,247 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
         { role: "Gestor de T.I. & SecOps (Recebimento e Sanitização)", name: ctx.secopsName }
       ], false, "MOD-OBR-05")}
     `
+  },
+  {
+    code: "MOD-OBR-06",
+    module: "obras",
+    docType: "Laudo / Vistoria Fotográfica",
+    requiresSignature: true,
+    title: "Laudo Técnico de Homologação, Teste de Funcionamento e Vistoria de Equipamentos (TVs, Projetores e Periféricos de Canteiro)",
+    normative: "ABNT NBR ISO/IEC 27001:2022 A.7.10, A.8.1, NR-10 & NR-18 (Segurança em Obras)",
+    evidenceCategory: "Canteiros de Obras & Infraestrutura",
+    signersSummary: "Técnico(a) de T.I. / Elétrica + Almoxarife / Recebedor na Obra + Engenheiro(a) Residente",
+    summary: "Laudo pericial e operacional de recebimento, teste em bancada, validação de funcionamento (boot, tela, HDMI, áudio, Wi-Fi) e registro fotográfico de TVs, projetores, monitores e periféricos adquiridos para obras e canteiros.",
+    buildBody: (ctx, custom = {}) => {
+      const obraDestino = custom.obra || ctx.activeUnit;
+      const nfCompra = custom.nf_compra || "__________________________________________________";
+      const tipoAparelho = custom.equipamento_tipo || "Smart TV / Projetor Multimídia / Monitor";
+      const marca = custom.marca || "___________________________";
+      const modelo = custom.modelo || "___________________________";
+      const serie = custom.serie || "_________________________________";
+      const patrimonio = custom.patrimonio || "PAT-AC-_______";
+      const tensao = custom.tensao || "Bivolt Automático (100V ~ 240V)";
+      const itensInclusos = custom.itens_inclusos || "Controle remoto c/ pilhas, cabo de força tripolar NBR 14136, cabo HDMI 2.0, suporte de fixação";
+      const loteAparelhos = (custom.lote_aparelhos || "").trim();
+      const parecerStatus = custom.parecer_status || "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra";
+      const obsTecnicas = custom.obs_tecnicas || "Aparelho testado a frio e mantido ligado por 30 minutos em bancada. Painel de imagem e áudio sem distorções, portas de comunicação testadas com sinal ativo de notebook. Liberado para instalação física no canteiro.";
+      const dataVistoria = custom.docDate || ctx.todayBr;
+
+      // Fotos do documento (prioriza as fotos customizadas; fallback para evidências anexadas se disponíveis)
+      const docEvidences = (typeof getEvidencesForDocument === "function") ? getEvidencesForDocument("MOD-OBR-06") : [];
+      const imageEvidences = docEvidences.filter(e => e.fileDataUrl && e.fileDataUrl.startsWith("data:image"));
+
+      const fotoLigado = custom.foto_ligado || (imageEvidences[0] ? imageEvidences[0].fileDataUrl : "");
+      const fotoEtiqueta = custom.foto_etiqueta || (imageEvidences[1] ? imageEvidences[1].fileDataUrl : "");
+      const fotoAcessorios = custom.foto_acessorios || (imageEvidences[2] ? imageEvidences[2].fileDataUrl : "");
+
+      const isAprovado = parecerStatus.includes("APROVADO") && !parecerStatus.includes("RESSALVAS");
+      const isRessalvas = parecerStatus.includes("RESSALVAS");
+      const isReprovado = parecerStatus.includes("REPROVADO");
+
+      return `
+        <h2>1. Identificação do Empreendimento e Dados da Aquisição</h2>
+        <table class="data-table">
+          <tr>
+            <td width="55%"><strong>Obra / Canteiro de Destino:</strong> ${escapeDocHtml(obraDestino)}</td>
+            <td width="45%"><strong>Data do Teste / Vistoria:</strong> ${escapeDocHtml(dataVistoria)}</td>
+          </tr>
+          <tr>
+            <td><strong>Nota Fiscal / Pedido / Fornecedor:</strong> ${escapeDocHtml(nfCompra)}</td>
+            <td><strong>Local de Homologação:</strong> Bancada de Testes de T.I. / Central AC Engenharia</td>
+          </tr>
+        </table>
+
+        <h2>2. Especificações e Identificação do(s) Aparelho(s) Testado(s)</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th width="28%">Parâmetro Técnico</th>
+              <th width="72%">Especificação Registrada no Laudo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Tipo de Equipamento:</strong></td>
+              <td><strong style="color: #004b93; font-size: 9.5pt;">${escapeDocHtml(tipoAparelho)}</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Marca / Fabricante:</strong></td>
+              <td><strong>${escapeDocHtml(marca)}</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Modelo / Dimensões:</strong></td>
+              <td>${escapeDocHtml(modelo)}</td>
+            </tr>
+            <tr>
+              <td><strong>Número de Série (S/N):</strong></td>
+              <td><code style="font-size: 9.5pt; font-weight: 700; color: #0f2942;">${escapeDocHtml(serie)}</code></td>
+            </tr>
+            <tr>
+              <td><strong>Plaqueta de Patrimônio / Tag GLPI:</strong></td>
+              <td><code style="font-size: 9.5pt; font-weight: 700; color: #004b93;">${escapeDocHtml(patrimonio)}</code></td>
+            </tr>
+            <tr>
+              <td><strong>Tensão Elétrica (Voltagem):</strong></td>
+              <td>${escapeDocHtml(tensao)}</td>
+            </tr>
+            <tr>
+              <td><strong>Acessórios e Cabos Inclusos:</strong></td>
+              <td>${escapeDocHtml(itensInclusos)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        ${loteAparelhos ? `
+        <div style="margin-top: 10px; margin-bottom: 12px;">
+          <strong style="font-size: 8.5pt; color: #0b1a30; display: block; margin-bottom: 4px;">Detalhamento do Lote de Aparelhos Testados:</strong>
+          <pre style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px 12px; font-size: 8pt; color: #334155; font-family: monospace; white-space: pre-wrap; margin: 0;">${escapeDocHtml(loteAparelhos)}</pre>
+        </div>
+        ` : ''}
+
+        <h2>3. Roteiro de Inspeção e Checklist de Testes Operacionais em Bancada</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th width="6%" style="text-align: center;">Item</th>
+              <th width="42%">Rotina de Teste / Verificação Operacional</th>
+              <th width="18%">Resultado</th>
+              <th width="34%">Critério Técnico de Aceite</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="text-align: center;">01</td>
+              <td><strong>Inspeção Física do Gabinete</strong></td>
+              <td style="color: #059669; font-weight: 700;">[ ✓ ] CONFORME</td>
+              <td>Sem trincas, quebras, parafusos soltos ou avarias de frete</td>
+            </tr>
+            <tr>
+              <td style="text-align: center;">02</td>
+              <td><strong>Inicialização e Boot a Frio</strong></td>
+              <td style="color: #059669; font-weight: 700;">[ ✓ ] CONFORME</td>
+              <td>Ligamento regular, logotipo inicial sem travamento ou loops</td>
+            </tr>
+            <tr>
+              <td style="text-align: center;">03</td>
+              <td><strong>Teste de Display / Tela / Projeção</strong></td>
+              <td style="color: #059669; font-weight: 700;">[ ✓ ] CONFORME</td>
+              <td>Brilho uniforme, foco regulado, ausência de dead pixels ou manchas</td>
+            </tr>
+            <tr>
+              <td style="text-align: center;">04</td>
+              <td><strong>Entradas de Vídeo (HDMI 1 / HDMI 2 / VGA)</strong></td>
+              <td style="color: #059669; font-weight: 700;">[ ✓ ] CONFORME</td>
+              <td>Reconhecimento imediato de sinal de notebook e resoluções padrão</td>
+            </tr>
+            <tr>
+              <td style="text-align: center;">05</td>
+              <td><strong>Conectividade (Wi-Fi / RJ-45 / USB Mídia)</strong></td>
+              <td style="color: #059669; font-weight: 700;">[ ✓ ] CONFORME</td>
+              <td>Leitura de pen-drive, pareamento de rede e firmware atualizado</td>
+            </tr>
+            <tr>
+              <td style="text-align: center;">06</td>
+              <td><strong>Áudio e Controle Remoto</strong></td>
+              <td style="color: #059669; font-weight: 700;">[ ✓ ] CONFORME</td>
+              <td>Som nítido sem chiado; teclas do controle remoto 100% responsivas</td>
+            </tr>
+            <tr>
+              <td style="text-align: center;">07</td>
+              <td><strong>Segurança Elétrica e Aterramento</strong></td>
+              <td style="color: #059669; font-weight: 700;">[ ✓ ] CONFORME</td>
+              <td>Plugue tripolar NBR 14136, sem fuga de corrente ou aquecimento</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>4. Registro Fotográfico de Evidências do Teste e Vistoria</h2>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 10px 0 16px 0; page-break-inside: avoid;">
+          <!-- Foto 1 -->
+          <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; background: #ffffff; text-align: center;">
+            <div style="font-size: 7.5pt; font-weight: 700; color: #0b1a30; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
+              Foto 1: Aparelho Ligado / Tela Ativa
+            </div>
+            <div style="min-height: 140px; height: 140px; background: #0f172a; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              ${fotoLigado ? `
+                <img src="${fotoLigado}" style="max-height: 140px; max-width: 100%; object-fit: contain;" alt="Foto do aparelho ligado" />
+              ` : `
+                <div style="color: #94a3b8; font-size: 8pt; padding: 12px; font-style: italic;">
+                  [ Foto do aparelho ligado e operando em bancada ]
+                </div>
+              `}
+            </div>
+            <div style="font-size: 7pt; color: #64748b; margin-top: 4px; line-height: 1.2;">
+              Teste de exibição de imagem e cores em funcionamento ativo.
+            </div>
+          </div>
+
+          <!-- Foto 2 -->
+          <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; background: #ffffff; text-align: center;">
+            <div style="font-size: 7.5pt; font-weight: 700; color: #0b1a30; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
+              Foto 2: Etiqueta &amp; Nº de Série (S/N)
+            </div>
+            <div style="min-height: 140px; height: 140px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              ${fotoEtiqueta ? `
+                <img src="${fotoEtiqueta}" style="max-height: 140px; max-width: 100%; object-fit: contain;" alt="Foto da etiqueta e serial" />
+              ` : `
+                <div style="color: #94a3b8; font-size: 8pt; padding: 12px; font-style: italic;">
+                  [ Foto da etiqueta traseira com Nº de Série / Anatel ]
+                </div>
+              `}
+            </div>
+            <div style="font-size: 7pt; color: #64748b; margin-top: 4px; line-height: 1.2;">
+              Identificação do fabricante, modelo, voltagem e número de série.
+            </div>
+          </div>
+
+          <!-- Foto 3 -->
+          <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; background: #ffffff; text-align: center;">
+            <div style="font-size: 7.5pt; font-weight: 700; color: #0b1a30; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
+              Foto 3: Controle, Cabos &amp; Acessórios
+            </div>
+            <div style="min-height: 140px; height: 140px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              ${fotoAcessorios ? `
+                <img src="${fotoAcessorios}" style="max-height: 140px; max-width: 100%; object-fit: contain;" alt="Foto dos acessórios e controle" />
+              ` : `
+                <div style="color: #94a3b8; font-size: 8pt; padding: 12px; font-style: italic;">
+                  [ Foto dos acessórios, cabos, suporte e controle remoto ]
+                </div>
+              `}
+            </div>
+            <div style="font-size: 7pt; color: #64748b; margin-top: 4px; line-height: 1.2;">
+              Conferência dos itens que acompanham o aparelho até o canteiro.
+            </div>
+          </div>
+        </div>
+
+        <h2>5. Parecer Técnico da Homologação &amp; Diretrizes de Instalação</h2>
+        <div class="callout" style="margin-bottom: 10px; border-left-color: ${isReprovado ? '#dc2626' : isRessalvas ? '#d97706' : '#059669'};">
+          <strong style="font-size: 9pt; color: ${isReprovado ? '#b91c1c' : isRessalvas ? '#b45309' : '#047857'};">
+            ${escapeDocHtml(parecerStatus)}
+          </strong>
+          <p style="margin-top: 5px; font-size: 8.5pt;">
+            <strong>Parecer do Avaliador Técnico:</strong> ${escapeDocHtml(obsTecnicas)}
+          </p>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; font-size: 8pt; color: #475569; margin-bottom: 12px;">
+          <strong>Recomendações Obrigatórias para a Equipe de Obra:</strong>
+          <ul style="margin: 4px 0 0 16px; padding: 0; line-height: 1.4;">
+            <li>Fixar em suporte VESA adequado em parede firme ou estrutura metálica protegida do container;</li>
+            <li>Conectar preferencialmente em filtro de linha / nobreak com proteção contra surtos elétricos;</li>
+            <li>Não expor o aparelho a goteiras, poeira de brita/concreto ou umidade excessiva de obra;</li>
+            <li>Em caso de avaria ou falha no canteiro, acionar imediatamente o setor de T.I. com o número de patrimônio <strong>${escapeDocHtml(patrimonio)}</strong>.</li>
+          </ul>
+        </div>
+
+        ${buildSignatureGridHTML([
+          { role: "Técnico(a) de T.I. / Elétrica (Responsável pelo Teste)", name: ctx.secopsName },
+          { role: "Recebedor na Obra / Almoxarife / Fiscal", name: "" },
+          { role: "Engenheiro(a) Residente / Gestor de Obra", name: "" }
+        ], false, "MOD-OBR-06")}
+      `;
+    }
   },
 
   // --------------------------------------------------------------------------
@@ -5280,6 +5656,68 @@ function attachPreviewedAsEvidence() {
   if (code) attachSignedTemplateAsEvidence(code);
 }
 
+function handleDocCustomPhotoUpload(event, key) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const rawDataUrl = e.target.result;
+    const img = new Image();
+    img.onload = function() {
+      const maxDim = 1200;
+      let width = img.width;
+      let height = img.height;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.82);
+
+      const inputEl = document.getElementById(`doc-custom-field-${key}`);
+      if (inputEl) inputEl.value = compressedDataUrl;
+
+      const previewBox = document.getElementById(`preview-box-${key}`);
+      if (previewBox) {
+        previewBox.innerHTML = `<img src="${compressedDataUrl}" class="w-full h-full object-cover" />`;
+      }
+      const removeBtn = document.getElementById(`btn-remove-photo-${key}`);
+      if (removeBtn) removeBtn.classList.remove("hidden");
+
+      if (window.showToast) window.showToast("Foto do aparelho carregada com sucesso!", "success");
+    };
+    img.src = rawDataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleRemoveDocCustomPhoto(key) {
+  const inputEl = document.getElementById(`doc-custom-field-${key}`);
+  if (inputEl) inputEl.value = "";
+  const previewBox = document.getElementById(`preview-box-${key}`);
+  if (previewBox) {
+    previewBox.innerHTML = `<div class="text-center p-2"><i data-lucide="image" class="w-6 h-6 text-slate-300 mx-auto"></i><span class="text-[9px] text-slate-400 block mt-1">Sem foto</span></div>`;
+    if (window.lucide && typeof window.lucide.createIcons === "function") window.lucide.createIcons();
+  }
+  const removeBtn = document.getElementById(`btn-remove-photo-${key}`);
+  if (removeBtn) removeBtn.classList.add("hidden");
+  const fileInput = document.getElementById(`upload-input-${key}`);
+  if (fileInput) fileInput.value = "";
+}
+
+window.handleDocCustomPhotoUpload = handleDocCustomPhotoUpload;
+window.handleRemoveDocCustomPhoto = handleRemoveDocCustomPhoto;
+
 function openDocumentSignersModal(docCode = null) {
   const targetCode = docCode || TemplateHubState.previewingCode || "MOD-OBR-01";
   const tpl = getTemplateByCode(targetCode);
@@ -5301,7 +5739,7 @@ function openDocumentSignersModal(docCode = null) {
     document.body.appendChild(modal);
   }
 
-  // Seletor dinâmico com todos os 40 modelos
+  // Seletor dinâmico com todos os modelos
   const modelOptionsHtml = CORPORATE_DOCUMENT_TEMPLATES.map(t => `
     <option value="${t.code}" ${t.code === targetCode ? "selected" : ""}>${escapeDocHtml(t.code)} — ${escapeDocHtml(t.title)}</option>
   `).join("");
@@ -5345,8 +5783,63 @@ function openDocumentSignersModal(docCode = null) {
   if (Array.isArray(schema.fields) && schema.fields.length > 0) {
     const fieldsInputs = schema.fields.map(f => {
       const val = savedFields[f.key] || "";
+      const colClass = f.fullWidth ? "sm:col-span-2" : "sm:col-span-1";
+
+      if (f.type === "photo" || f.type === "image") {
+        return `
+          <div class="sm:col-span-2 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-2.5">
+            <div class="flex items-center justify-between flex-wrap gap-1">
+              <label class="block text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
+                <i data-lucide="camera" class="w-3.5 h-3.5 text-[#004b93]"></i>
+                <span>${escapeDocHtml(f.label)}</span>
+              </label>
+              <span class="text-[10px] text-slate-400 font-mono">PNG / JPG / WebP</span>
+            </div>
+            <input type="hidden" id="doc-custom-field-${f.key}" value="${escapeDocHtml(val)}" />
+            <div class="flex items-center gap-3.5 flex-wrap sm:flex-nowrap">
+              <div id="preview-box-${f.key}" class="w-32 h-24 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                ${val ? `<img src="${val}" class="w-full h-full object-cover" />` : `<div class="text-center p-2"><i data-lucide="image" class="w-6 h-6 text-slate-300 mx-auto"></i><span class="text-[9px] text-slate-400 block mt-1">Sem foto</span></div>`}
+              </div>
+              <div class="flex-1 space-y-2 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <label for="upload-input-${f.key}" class="px-3 py-1.5 rounded-lg bg-[#004b93] hover:bg-[#003870] text-white text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors shadow-2xs">
+                    <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                    <span>Carregar Foto do Aparelho</span>
+                  </label>
+                  <input type="file" id="upload-input-${f.key}" accept="image/*" class="hidden" onchange="handleDocCustomPhotoUpload(event, '${f.key}')" />
+                  <button type="button" id="btn-remove-photo-${f.key}" onclick="handleRemoveDocCustomPhoto('${f.key}')" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold cursor-pointer transition-colors border border-rose-200 ${val ? '' : 'hidden'}">
+                    Remover Foto
+                  </button>
+                </div>
+                <p class="text-[10.5px] text-slate-500 leading-tight">${escapeDocHtml(f.hint || 'Selecione uma foto da câmera ou arquivo do computador.')}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (f.type === "textarea") {
+        return `
+          <div class="${colClass}">
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">${escapeDocHtml(f.label)}</label>
+            <textarea id="doc-custom-field-${f.key}" rows="${f.rows || 3}" placeholder="${escapeDocHtml(f.placeholder || '')}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]">${escapeDocHtml(val)}</textarea>
+          </div>
+        `;
+      } else if (f.type === "select" && Array.isArray(f.options)) {
+        const optsHtml = f.options.map(opt => `
+          <option value="${escapeDocHtml(opt)}" ${val === opt ? "selected" : ""}>${escapeDocHtml(opt)}</option>
+        `).join("");
+        return `
+          <div class="${colClass}">
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">${escapeDocHtml(f.label)}</label>
+            <select id="doc-custom-field-${f.key}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]">
+              ${val ? '' : '<option value="">-- Selecione uma opção --</option>'}
+              ${optsHtml}
+            </select>
+          </div>
+        `;
+      }
+
       return `
-        <div>
+        <div class="${colClass}">
           <label class="block text-[11px] font-bold text-slate-700 mb-1">${escapeDocHtml(f.label)}</label>
           <input type="text" id="doc-custom-field-${f.key}" value="${escapeDocHtml(val)}" placeholder="${escapeDocHtml(f.placeholder || '')}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
         </div>
@@ -5359,7 +5852,7 @@ function openDocumentSignersModal(docCode = null) {
           <i data-lucide="sliders" class="w-3.5 h-3.5 text-[#004b93]"></i>
           <span>Campos &amp; Metadados Específicos deste Modelo</span>
         </h4>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50/70 p-3 rounded-xl border border-slate-200">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50/70 p-3.5 rounded-xl border border-slate-200">
           ${fieldsInputs}
         </div>
       </div>
@@ -5367,7 +5860,7 @@ function openDocumentSignersModal(docCode = null) {
   }
 
   modal.innerHTML = `
-    <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="bg-white rounded-2xl w-full max-w-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
       <!-- Cabeçalho Corporativo -->
       <div class="p-4 bg-[#0b1a30] text-white flex items-center justify-between shrink-0 border-b border-slate-800">
         <div class="flex items-center gap-2.5 min-w-0">
@@ -5926,6 +6419,39 @@ function getDocumentContextualEvidenceConfig(docCode) {
   const tpl = getTemplateByCode(docCode);
   const code = (docCode || "").toUpperCase();
   let mod = tpl ? tpl.module : "secops";
+
+  // Modelo Especial: Laudo de Homologação e Teste de TVs, Projetores e Aparelhos de Obra
+  if (code === "MOD-OBR-06") {
+    return {
+      module: "obras",
+      entityLabel: "Aparelho / Equipamento Testado",
+      entityPlaceholder: "Ex: Smart TV 55 Samsung / Projetor Epson PowerLite",
+      entityIcon: "tv",
+      secondaryLabel: "Marca, Modelo & Nº de Série (S/N)",
+      secondaryPlaceholder: "Ex: Samsung UN55CU7700 - S/N: 9ZJ43L7A000124K",
+      assetLabel: "Obra / Canteiro de Destino",
+      assetOptions: [
+        "Residencial Jardins da Costa",
+        "Edifício Mirante da Praia",
+        "Canteiro Reserva Jardim (Obra 04)",
+        "Escritório Central (Matriz)",
+        "Estande de Vendas / Stand Comercial",
+        "Outro Canteiro / Unidade"
+      ],
+      defaultCategories: [
+        "Fotos do Aparelho Ligado / Teste de Tela",
+        "Foto da Etiqueta de Patrimônio & Nº de Série",
+        "Fotos dos Acessórios & Controle Remoto",
+        "Nota Fiscal de Compra / Danfe do Aparelho",
+        "Laudo de Bancada / Vistoria Técnica Assinado",
+        "Termo de Recebimento no Almoxarifado da Obra",
+        "Outros Registros do Equipamento"
+      ],
+      kpiTitle: "Aparelhos Testados",
+      kpiSub: "Equipamentos",
+      kpiDesc: "TVs, projetores e eletroeletrônicos homologados"
+    };
+  }
 
   // Inferência contextual por código normativo
   if (code.startsWith("MOD-OBR-")) mod = "obras";
