@@ -402,11 +402,13 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
   },
   "MOD-OBR-06": {
     "title": "Laudo Técnico de Homologação, Teste de Funcionamento e Vistoria de Equipamentos (TVs, Projetores e Periféricos de Canteiro)",
+    "hideDocField": true,
     "signers": [
       {
         "role": "Técnico(a) que realizou o teste",
-        "docLabel": "CPF / Registro Técnico",
-        "placeholder": "Ex: Manoel M. G. Santos"
+        "docLabel": "",
+        "placeholder": "Ex: Manoel M. G. Santos",
+        "hideDoc": true
       }
     ],
     "fields": [
@@ -414,12 +416,6 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
         "key": "obra",
         "label": "Obra / Canteiro de Destino *",
         "placeholder": "Ex: Residencial Jardins da Costa / Central",
-        "fullWidth": false
-      },
-      {
-        "key": "nf_compra",
-        "label": "Nota Fiscal / Pedido de Compra / Fornecedor",
-        "placeholder": "Ex: NF-e 048.912 - Magazine Luiza / Kalunga",
         "fullWidth": false
       },
       {
@@ -458,12 +454,6 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
           "110V / 127V Monofásico"
         ],
         "fullWidth": false
-      },
-      {
-        "key": "itens_inclusos",
-        "label": "Acessórios e Cabos Inclusos",
-        "placeholder": "Ex: Controle remoto c/ pilhas, Cabo HDMI 2.0, Cabo de força NBR 14136, Suporte VESA, Manual",
-        "fullWidth": true
       },
       {
         "key": "parecer_status",
@@ -1517,7 +1507,7 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
           </div>
           <div class="sig-cursive">${escapeDocHtml(appliedSig.signerName)}</div>
           <div class="sig-role">${escapeDocHtml(effectiveRole)}</div>
-          <div class="sig-meta"><strong>Signatário:</strong> ${escapeDocHtml(appliedSig.signerName)} (${escapeDocHtml(appliedSig.signerDoc || "Verificado via RBAC")})</div>
+          <div class="sig-meta"><strong>Signatário:</strong> ${escapeDocHtml(appliedSig.signerName)}${docCode === "MOD-OBR-06" ? "" : ` (${escapeDocHtml(appliedSig.signerDoc || "Verificado via RBAC")})`}</div>
           <div class="sig-meta"><strong>Modalidade:</strong> ${escapeDocHtml(appliedSig.method || "Assinatura Eletrônica SGSI / ICP-Brasil")}</div>
           <div class="sig-meta"><strong>Carimbo de Tempo:</strong> ${escapeDocHtml(appliedSig.timestamp)} &bull; <strong>IP:</strong> ${escapeDocHtml(appliedSig.ip || "127.0.0.1")}</div>
           <div class="sig-hash-box"><strong>Hash SHA-256:</strong> ${escapeDocHtml(appliedSig.hash)}</div>
@@ -1545,12 +1535,14 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
         <div class="sig-meta" style="margin-bottom: 2px;">
           <strong>Cargo / Setor:</strong> ${escapeDocHtml(effectiveRole)}
         </div>
+        ${docCode === "MOD-OBR-06" ? "" : `
         <div class="sig-meta" style="margin-bottom: 2px;">
           <strong>CPF / Registro Profissional:</strong> 
           <span style="color: ${hasExplicitName ? '#0b1a30' : '#64748b'}; border-bottom: 1px dashed #cbd5e1; display: inline-block; min-width: 140px;">
             ${escapeDocHtml(effectiveDocLabel)}
           </span>
         </div>
+        `}
         <div class="sig-meta" style="margin-top: 6px; font-size: 7.5pt; color: #64748b; border-top: 1px dotted #e2e8f0; padding-top: 4px;">
           <strong>Data:</strong> ${effectiveDateStr} &nbsp;|&nbsp; <em>Assinatura Física / Rubrica ou Certificação Digital</em>
         </div>
@@ -1566,7 +1558,7 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
       </div>
       <div class="sig-cursive">${escapeDocHtml(appliedSig.signerName)}</div>
       <div class="sig-role">${escapeDocHtml(appliedSig.signerRole || "Homologação Digital SGSI")}</div>
-      <div class="sig-meta"><strong>Signatário:</strong> ${escapeDocHtml(appliedSig.signerName)} (${escapeDocHtml(appliedSig.signerDoc || "Verificado via RBAC")})</div>
+      <div class="sig-meta"><strong>Signatário:</strong> ${escapeDocHtml(appliedSig.signerName)}${docCode === "MOD-OBR-06" ? "" : ` (${escapeDocHtml(appliedSig.signerDoc || "Verificado via RBAC")})`}</div>
       <div class="sig-meta"><strong>Modalidade:</strong> ${escapeDocHtml(appliedSig.method || "Assinatura Eletrônica SGSI / ICP-Brasil")}</div>
       <div class="sig-meta"><strong>Carimbo de Tempo:</strong> ${escapeDocHtml(appliedSig.timestamp)} &bull; <strong>IP:</strong> ${escapeDocHtml(appliedSig.ip || "127.0.0.1")}</div>
       <div class="sig-hash-box"><strong>Hash SHA-256:</strong> ${escapeDocHtml(appliedSig.hash)}</div>
@@ -2441,12 +2433,10 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     summary: "Laudo pericial e operacional de recebimento, teste em bancada, validação de funcionamento (boot, tela, HDMI, áudio, Wi-Fi) e registro fotográfico de TVs, projetores, monitores e periféricos adquiridos para obras e canteiros.",
     buildBody: (ctx, custom = {}) => {
       const obraDestino = custom.obra || ctx.activeUnit;
-      const nfCompra = custom.nf_compra || "__________________________________________________";
       const tipoAparelho = custom.equipamento_tipo || "Smart TV / Projetor Multimídia / Monitor";
       const marca = custom.marca || "___________________________";
       const modelo = custom.modelo || "___________________________";
       const tensao = custom.tensao || "Bivolt Automático (100V ~ 240V)";
-      const itensInclusos = custom.itens_inclusos || "Controle remoto c/ pilhas, cabo de força tripolar NBR 14136, cabo HDMI 2.0, suporte de fixação";
       const loteAparelhos = (custom.lote_aparelhos || "").trim();
       const parecerStatus = custom.parecer_status || "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra";
       const obsTecnicas = (custom.obs_tecnicas || "").trim();
@@ -2459,7 +2449,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       } else {
         if (custom.foto_ligado) photos.push({ title: "Foto 1: Aparelho Ligado / Tela Ativa", dataUrl: custom.foto_ligado, caption: "Teste de imagem e cores" });
         if (custom.foto_etiqueta) photos.push({ title: "Foto 2: Identificação do Aparelho", dataUrl: custom.foto_etiqueta, caption: "Marca e modelo" });
-        if (custom.foto_acessorios) photos.push({ title: "Foto 3: Controle e Acessórios", dataUrl: custom.foto_acessorios, caption: "Acessórios e cabos inclusos" });
+        if (custom.foto_acessorios) photos.push({ title: "Foto 3: Controle e Acessórios", dataUrl: custom.foto_acessorios, caption: "Controle remoto e periféricos" });
         if (photos.length === 0) {
           const docEvidences = (typeof getEvidencesForDocument === "function") ? getEvidencesForDocument("MOD-OBR-06") : [];
           const imageEvidences = docEvidences.filter(e => e.fileDataUrl && e.fileDataUrl.startsWith("data:image"));
@@ -2521,15 +2511,14 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       ];
 
       return `
-        <h2>1. Identificação do Empreendimento e Dados da Aquisição</h2>
+        <h2>1. Identificação do Empreendimento e Local do Teste</h2>
         <table class="data-table">
           <tr>
             <td width="55%"><strong>Obra / Canteiro de Destino:</strong> ${escapeDocHtml(obraDestino)}</td>
             <td width="45%"><strong>Data do Teste / Vistoria:</strong> ${escapeDocHtml(dataVistoria)}</td>
           </tr>
           <tr>
-            <td><strong>Nota Fiscal / Pedido / Fornecedor:</strong> ${escapeDocHtml(nfCompra)}</td>
-            <td><strong>Local de Homologação:</strong> Bancada de Testes de T.I. / Central AC Engenharia</td>
+            <td colspan="2"><strong>Local de Homologação:</strong> Bancada de Testes de T.I. / Central AC Engenharia</td>
           </tr>
         </table>
 
@@ -2557,10 +2546,6 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
             <tr>
               <td><strong>Tensão Elétrica (Voltagem):</strong></td>
               <td>${escapeDocHtml(tensao)}</td>
-            </tr>
-            <tr>
-              <td><strong>Acessórios e Cabos Inclusos:</strong></td>
-              <td>${escapeDocHtml(itensInclusos)}</td>
             </tr>
           </tbody>
         </table>
@@ -5791,7 +5776,7 @@ function handleAddSignerRow(docCode) {
   const newIdx = currentCount;
   const isObr06 = docCode === "MOD-OBR-06";
   const defaultRole = isObr06 ? "Técnico(a) que realizou o teste" : "Signatário Adicional";
-  const defaultDocLabel = isObr06 ? "CPF / Registro Técnico" : "CPF / Registro";
+  const defaultDocLabel = isObr06 ? "" : "CPF / Registro";
 
   const card = document.createElement("div");
   card.className = "doc-custom-signer-card bg-slate-50/90 rounded-xl p-3.5 border border-slate-200 shadow-2xs space-y-2.5 relative";
@@ -5806,19 +5791,21 @@ function handleAddSignerRow(docCode) {
         <i data-lucide="trash-2" class="w-3 h-3"></i> Remover
       </button>
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-      <div class="sm:col-span-5">
+    <div class="grid grid-cols-1 ${isObr06 ? 'sm:grid-cols-2' : 'sm:grid-cols-12'} gap-2.5">
+      <div class="${isObr06 ? '' : 'sm:col-span-5'}">
         <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Nome Completo do Signatário</label>
         <input type="text" data-signer-field="name" value="" placeholder="Ex: Nome do Técnico" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
       </div>
-      <div class="sm:col-span-4">
+      <div class="${isObr06 ? '' : 'sm:col-span-4'}">
         <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Cargo / Função no Documento</label>
         <input type="text" data-signer-field="role" value="${escapeDocHtml(defaultRole)}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
       </div>
+      ${isObr06 ? '' : `
       <div class="sm:col-span-3">
         <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Registro / CPF / CREA</label>
         <input type="text" data-signer-field="docLabel" value="${escapeDocHtml(defaultDocLabel)}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
       </div>
+      `}
     </div>
   `;
   container.appendChild(card);
@@ -5898,6 +5885,8 @@ function openDocumentSignersModal(docCode = null) {
   `).join("");
 
   // Constrói lista de signatários ativos (se houver salvos no storage, usa eles; senão, usa os definidos no schema)
+  const isObr06 = targetCode === "MOD-OBR-06";
+  const hideDocField = Boolean(schema.hideDocField || isObr06);
   const activeSigners = (savedSigners && savedSigners.length > 0) ? savedSigners : schema.signers;
   const signersHtml = activeSigners.map((s, idx) => {
     const nameVal = s.name || "";
@@ -5913,7 +5902,7 @@ function openDocumentSignersModal(docCode = null) {
             <span class="text-xs font-bold text-slate-800">${escapeDocHtml(roleVal)}</span>
           </div>
           <div class="flex items-center gap-2">
-            <span class="text-[10px] text-slate-500 font-mono">${escapeDocHtml(docVal || "Documento")}</span>
+            ${hideDocField ? '' : `<span class="text-[10px] text-slate-500 font-mono">${escapeDocHtml(docVal || "Documento")}</span>`}
             ${canRemove ? `
               <button type="button" onclick="this.closest('.doc-custom-signer-card').remove(); updateSignerCounters();" class="text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer" title="Remover este signatário">
                 <i data-lucide="trash-2" class="w-3 h-3"></i> Remover
@@ -5921,19 +5910,21 @@ function openDocumentSignersModal(docCode = null) {
             ` : ''}
           </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-          <div class="sm:col-span-5">
+        <div class="grid grid-cols-1 ${hideDocField ? 'sm:grid-cols-2' : 'sm:grid-cols-12'} gap-2.5">
+          <div class="${hideDocField ? '' : 'sm:col-span-5'}">
             <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Nome Completo do Signatário</label>
             <input type="text" data-signer-field="name" id="doc-custom-signer-name-${idx}" value="${escapeDocHtml(nameVal)}" placeholder="${escapeDocHtml(s.placeholder || 'Ex: Nome do Técnico')}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
           </div>
-          <div class="sm:col-span-4">
+          <div class="${hideDocField ? '' : 'sm:col-span-4'}">
             <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Cargo / Função no Documento</label>
             <input type="text" data-signer-field="role" id="doc-custom-signer-role-${idx}" value="${escapeDocHtml(roleVal)}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
           </div>
+          ${hideDocField ? '' : `
           <div class="sm:col-span-3">
             <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Registro / CPF / CREA</label>
             <input type="text" data-signer-field="docLabel" id="doc-custom-signer-doc-${idx}" value="${escapeDocHtml(docVal)}" placeholder="${escapeDocHtml(s.docLabel || 'CPF/CREA')}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
           </div>
+          `}
         </div>
       </div>
     `;
