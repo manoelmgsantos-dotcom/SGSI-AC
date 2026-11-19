@@ -404,19 +404,9 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
     "title": "Laudo Técnico de Homologação, Teste de Funcionamento e Vistoria de Equipamentos (TVs, Projetores e Periféricos de Canteiro)",
     "signers": [
       {
-        "role": "Técnico(a) de T.I. / Elétrica (Responsável pelo Teste)",
+        "role": "Técnico(a) que realizou o teste",
         "docLabel": "CPF / Registro Técnico",
         "placeholder": "Ex: Manoel M. G. Santos"
-      },
-      {
-        "role": "Recebedor na Obra / Almoxarife / Fiscal",
-        "docLabel": "CPF / Matrícula Obra",
-        "placeholder": "Ex: João Silva (Almoxarifado)"
-      },
-      {
-        "role": "Engenheiro(a) Residente / Gestor de Obra",
-        "docLabel": "CREA-SE",
-        "placeholder": "Ex: Eng. Ricardo Lima"
       }
     ],
     "fields": [
@@ -459,18 +449,6 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
         "fullWidth": false
       },
       {
-        "key": "serie",
-        "label": "Número de Série (S/N) *",
-        "placeholder": "Ex: 9ZJ43L7A000124K",
-        "fullWidth": false
-      },
-      {
-        "key": "patrimonio",
-        "label": "Plaqueta de Patrimônio / Tag GLPI",
-        "placeholder": "Ex: PAT-AC-0842",
-        "fullWidth": false
-      },
-      {
         "key": "tensao",
         "label": "Tensão Elétrica (Voltagem)",
         "type": "select",
@@ -488,13 +466,6 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
         "fullWidth": true
       },
       {
-        "key": "lote_aparelhos",
-        "label": "Detalhamento de Lote (se houver múltiplos aparelhos testados juntos)",
-        "type": "textarea",
-        "placeholder": "Ex:\nItem 1: Smart TV 55 Samsung | S/N: 9ZJ43L7A000124K | Pat: PAT-AC-0842 | [OK] Aprovado\nItem 2: Smart TV 55 Samsung | S/N: 9ZJ43L7A000125L | Pat: PAT-AC-0843 | [OK] Aprovado\nItem 3: Projetor Epson PowerLite | S/N: E84201948 | Pat: PAT-AC-0844 | [OK] Aprovado",
-        "fullWidth": true
-      },
-      {
         "key": "parecer_status",
         "label": "Resultado da Homologação Técnica *",
         "type": "select",
@@ -507,30 +478,23 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
       },
       {
         "key": "obs_tecnicas",
-        "label": "Observações Técnicas e Recomendações de Instalação na Obra",
+        "label": "Observações Técnicas do Teste (opcional — não aparece na impressão se vazio)",
         "type": "textarea",
-        "placeholder": "Ex: Imagem nítida sem dead pixels; portas HDMI 1 e 2 testadas com notebook; áudio estéreo sem chiados; Wi-Fi conectado na rede interna; recomendado usar filtro de linha no container da obra.",
+        "placeholder": "Ex: Imagem nítida sem dead pixels; portas HDMI testadas com notebook; áudio estéreo sem chiados. Deixe em branco se não houver observações.",
         "fullWidth": true
       },
       {
-        "key": "foto_ligado",
-        "label": "Foto 1: Aparelho Ligado / Teste de Tela ou Projeção Ativa",
-        "type": "photo",
-        "hint": "Carregue a foto do aparelho em funcionamento (exibindo tela nítida, cores e imagem ativa).",
+        "key": "lote_aparelhos",
+        "label": "Detalhamento de Outros Testes / Aparelhos Adicionais (opcional — não aparece na impressão se vazio)",
+        "type": "textarea",
+        "placeholder": "Ex:\nItem 2: Smart TV 55 Samsung | Conexões OK | Aprovado\nItem 3: Projetor Epson PowerLite | Projeção nítida | Aprovado\n(Deixe em branco se testou apenas um aparelho)",
         "fullWidth": true
       },
       {
-        "key": "foto_etiqueta",
-        "label": "Foto 2: Etiqueta de Identificação e Número de Série (S/N / Anatel)",
-        "type": "photo",
-        "hint": "Carregue a foto aproximada da etiqueta traseira com dados de marca, modelo, tensão e número de série.",
-        "fullWidth": true
-      },
-      {
-        "key": "foto_acessorios",
-        "label": "Foto 3: Acessórios, Cabos, Controle Remoto e Embalagem",
-        "type": "photo",
-        "hint": "Carregue a foto do controle remoto, cabos de conexão e componentes entregues junto com o aparelho.",
+        "key": "photos",
+        "label": "Fotos do Teste e Funcionamento do(s) Aparelho(s)",
+        "type": "photo_gallery",
+        "hint": "Adicione fotos do aparelho ligado, da tela, dos acessórios e conexões. Clique em '+ Adicionar Foto / Mais Fotos' para selecionar uma ou várias fotos.",
         "fullWidth": true
       }
     ]
@@ -1513,7 +1477,26 @@ function buildSignatureGridHTML(signers, includeWitnesses = false, docCode = nul
   const customDocDate = (customData && customData.docDate && customData.docDate.trim()) ? customData.docDate.trim() : null;
   const effectiveDateStr = customDocDate ? escapeDocHtml(customDocDate) : "_____ / _____ / _________";
 
-  const cards = signers.map((s, idx) => {
+  // Determina a lista efetiva de signatários
+  let effectiveSignersList = [...signers];
+  if (docCode === "MOD-OBR-06" && customSigners.length > 0) {
+    // Para MOD-OBR-06, a quantidade e papéis seguem fielmente a configuração dinâmica salva
+    effectiveSignersList = customSigners.map(cs => ({
+      role: cs.role || "Técnico(a) que realizou o teste",
+      name: cs.name || "",
+      docLabel: cs.docLabel || "CPF / Registro Técnico"
+    }));
+  } else if (customSigners.length > effectiveSignersList.length) {
+    for (let i = effectiveSignersList.length; i < customSigners.length; i++) {
+      effectiveSignersList.push({
+        role: customSigners[i].role || "Signatário Adicional",
+        name: customSigners[i].name || "",
+        docLabel: customSigners[i].docLabel || "CPF / Registro"
+      });
+    }
+  }
+
+  const cards = effectiveSignersList.map((s, idx) => {
     const appliedSig = docSigs[idx] || null;
     const override = customSigners[idx] || {};
 
@@ -2454,7 +2437,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     title: "Laudo Técnico de Homologação, Teste de Funcionamento e Vistoria de Equipamentos (TVs, Projetores e Periféricos de Canteiro)",
     normative: "ABNT NBR ISO/IEC 27001:2022 A.7.10, A.8.1, NR-10 & NR-18 (Segurança em Obras)",
     evidenceCategory: "Canteiros de Obras & Infraestrutura",
-    signersSummary: "Técnico(a) de T.I. / Elétrica + Almoxarife / Recebedor na Obra + Engenheiro(a) Residente",
+    signersSummary: "Técnico(a) que realizou o teste (+ signatários/testes adicionais sob demanda)",
     summary: "Laudo pericial e operacional de recebimento, teste em bancada, validação de funcionamento (boot, tela, HDMI, áudio, Wi-Fi) e registro fotográfico de TVs, projetores, monitores e periféricos adquiridos para obras e canteiros.",
     buildBody: (ctx, custom = {}) => {
       const obraDestino = custom.obra || ctx.activeUnit;
@@ -2462,26 +2445,80 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       const tipoAparelho = custom.equipamento_tipo || "Smart TV / Projetor Multimídia / Monitor";
       const marca = custom.marca || "___________________________";
       const modelo = custom.modelo || "___________________________";
-      const serie = custom.serie || "_________________________________";
-      const patrimonio = custom.patrimonio || "PAT-AC-_______";
       const tensao = custom.tensao || "Bivolt Automático (100V ~ 240V)";
       const itensInclusos = custom.itens_inclusos || "Controle remoto c/ pilhas, cabo de força tripolar NBR 14136, cabo HDMI 2.0, suporte de fixação";
       const loteAparelhos = (custom.lote_aparelhos || "").trim();
       const parecerStatus = custom.parecer_status || "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra";
-      const obsTecnicas = custom.obs_tecnicas || "Aparelho testado a frio e mantido ligado por 30 minutos em bancada. Painel de imagem e áudio sem distorções, portas de comunicação testadas com sinal ativo de notebook. Liberado para instalação física no canteiro.";
+      const obsTecnicas = (custom.obs_tecnicas || "").trim();
       const dataVistoria = custom.docDate || ctx.todayBr;
 
-      // Fotos do documento (prioriza as fotos customizadas; fallback para evidências anexadas se disponíveis)
-      const docEvidences = (typeof getEvidencesForDocument === "function") ? getEvidencesForDocument("MOD-OBR-06") : [];
-      const imageEvidences = docEvidences.filter(e => e.fileDataUrl && e.fileDataUrl.startsWith("data:image"));
-
-      const fotoLigado = custom.foto_ligado || (imageEvidences[0] ? imageEvidences[0].fileDataUrl : "");
-      const fotoEtiqueta = custom.foto_etiqueta || (imageEvidences[1] ? imageEvidences[1].fileDataUrl : "");
-      const fotoAcessorios = custom.foto_acessorios || (imageEvidences[2] ? imageEvidences[2].fileDataUrl : "");
+      // Fotos do documento: galeria dinâmica de fotos adicionadas pelo usuário
+      let photos = [];
+      if (Array.isArray(custom.photos) && custom.photos.length > 0) {
+        photos = custom.photos.filter(p => p && p.dataUrl);
+      } else {
+        if (custom.foto_ligado) photos.push({ title: "Foto 1: Aparelho Ligado / Tela Ativa", dataUrl: custom.foto_ligado, caption: "Teste de imagem e cores" });
+        if (custom.foto_etiqueta) photos.push({ title: "Foto 2: Identificação do Aparelho", dataUrl: custom.foto_etiqueta, caption: "Marca e modelo" });
+        if (custom.foto_acessorios) photos.push({ title: "Foto 3: Controle e Acessórios", dataUrl: custom.foto_acessorios, caption: "Acessórios e cabos inclusos" });
+        if (photos.length === 0) {
+          const docEvidences = (typeof getEvidencesForDocument === "function") ? getEvidencesForDocument("MOD-OBR-06") : [];
+          const imageEvidences = docEvidences.filter(e => e.fileDataUrl && e.fileDataUrl.startsWith("data:image"));
+          imageEvidences.forEach((ev, i) => {
+            if (ev.fileDataUrl) photos.push({ title: ev.name || `Foto ${i + 1}`, dataUrl: ev.fileDataUrl, caption: "Evidência anexada ao documento" });
+          });
+        }
+      }
 
       const isAprovado = parecerStatus.includes("APROVADO") && !parecerStatus.includes("RESSALVAS");
       const isRessalvas = parecerStatus.includes("RESSALVAS");
       const isReprovado = parecerStatus.includes("REPROVADO");
+
+      // Detalhamento do Lote de Aparelhos (não aparece na impressão se vazio)
+      let loteSectionHtml = "";
+      if (loteAparelhos) {
+        loteSectionHtml = `
+          <div style="margin-top: 10px; margin-bottom: 12px; page-break-inside: avoid;">
+            <strong style="font-size: 8.5pt; color: #0b1a30; display: block; margin-bottom: 4px;">Detalhamento de Outros Testes / Aparelhos Adicionais:</strong>
+            <pre style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px 12px; font-size: 8pt; color: #334155; font-family: monospace; white-space: pre-wrap; margin: 0;">${escapeDocHtml(loteAparelhos)}</pre>
+          </div>
+        `;
+      }
+
+      // Galeria Fotográfica do Teste (não aparece na impressão se não houver fotos)
+      let photoSectionHtml = "";
+      if (photos.length > 0) {
+        const gridCols = photos.length === 1 ? '1fr' : photos.length === 2 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)';
+        photoSectionHtml = `
+          <h2>4. Registro Fotográfico de Evidências do Teste e Vistoria (${photos.length} Foto${photos.length > 1 ? 's' : ''})</h2>
+          <div style="display: grid; grid-template-columns: ${gridCols}; gap: 12px; margin: 10px 0 16px 0; page-break-inside: avoid;">
+            ${photos.map((p, idx) => `
+              <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; background: #ffffff; text-align: center; page-break-inside: avoid;">
+                <div style="font-size: 7.5pt; font-weight: 700; color: #0b1a30; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
+                  ${escapeDocHtml(p.title || `Foto ${idx + 1}`)}
+                </div>
+                <div style="min-height: 140px; height: 140px; background: #0f172a; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                  <img src="${p.dataUrl}" style="max-height: 140px; max-width: 100%; object-fit: contain;" alt="${escapeDocHtml(p.title || 'Foto do Teste')}" />
+                </div>
+                ${p.caption ? `<div style="font-size: 7pt; color: #64748b; margin-top: 4px; line-height: 1.2;">${escapeDocHtml(p.caption)}</div>` : ''}
+              </div>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      // Observações do Parecer Técnico (não aparece na impressão se vazio)
+      let obsHtml = "";
+      if (obsTecnicas) {
+        obsHtml = `
+          <p style="margin-top: 5px; font-size: 8.5pt;">
+            <strong>Parecer / Observações do Teste:</strong> ${escapeDocHtml(obsTecnicas)}
+          </p>
+        `;
+      }
+
+      const defaultSigners = [
+        { role: "Técnico(a) que realizou o teste", name: (custom.signers && custom.signers[0] && custom.signers[0].name) || "" }
+      ];
 
       return `
         <h2>1. Identificação do Empreendimento e Dados da Aquisição</h2>
@@ -2518,14 +2555,6 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
               <td>${escapeDocHtml(modelo)}</td>
             </tr>
             <tr>
-              <td><strong>Número de Série (S/N):</strong></td>
-              <td><code style="font-size: 9.5pt; font-weight: 700; color: #0f2942;">${escapeDocHtml(serie)}</code></td>
-            </tr>
-            <tr>
-              <td><strong>Plaqueta de Patrimônio / Tag GLPI:</strong></td>
-              <td><code style="font-size: 9.5pt; font-weight: 700; color: #004b93;">${escapeDocHtml(patrimonio)}</code></td>
-            </tr>
-            <tr>
               <td><strong>Tensão Elétrica (Voltagem):</strong></td>
               <td>${escapeDocHtml(tensao)}</td>
             </tr>
@@ -2536,12 +2565,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           </tbody>
         </table>
 
-        ${loteAparelhos ? `
-        <div style="margin-top: 10px; margin-bottom: 12px;">
-          <strong style="font-size: 8.5pt; color: #0b1a30; display: block; margin-bottom: 4px;">Detalhamento do Lote de Aparelhos Testados:</strong>
-          <pre style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px 12px; font-size: 8pt; color: #334155; font-family: monospace; white-space: pre-wrap; margin: 0;">${escapeDocHtml(loteAparelhos)}</pre>
-        </div>
-        ` : ''}
+        ${loteSectionHtml}
 
         <h2>3. Roteiro de Inspeção e Checklist de Testes Operacionais em Bancada</h2>
         <table class="data-table">
@@ -2599,91 +2623,27 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           </tbody>
         </table>
 
-        <h2>4. Registro Fotográfico de Evidências do Teste e Vistoria</h2>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 10px 0 16px 0; page-break-inside: avoid;">
-          <!-- Foto 1 -->
-          <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; background: #ffffff; text-align: center;">
-            <div style="font-size: 7.5pt; font-weight: 700; color: #0b1a30; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
-              Foto 1: Aparelho Ligado / Tela Ativa
-            </div>
-            <div style="min-height: 140px; height: 140px; background: #0f172a; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-              ${fotoLigado ? `
-                <img src="${fotoLigado}" style="max-height: 140px; max-width: 100%; object-fit: contain;" alt="Foto do aparelho ligado" />
-              ` : `
-                <div style="color: #94a3b8; font-size: 8pt; padding: 12px; font-style: italic;">
-                  [ Foto do aparelho ligado e operando em bancada ]
-                </div>
-              `}
-            </div>
-            <div style="font-size: 7pt; color: #64748b; margin-top: 4px; line-height: 1.2;">
-              Teste de exibição de imagem e cores em funcionamento ativo.
-            </div>
-          </div>
+        ${photoSectionHtml}
 
-          <!-- Foto 2 -->
-          <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; background: #ffffff; text-align: center;">
-            <div style="font-size: 7.5pt; font-weight: 700; color: #0b1a30; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
-              Foto 2: Etiqueta &amp; Nº de Série (S/N)
-            </div>
-            <div style="min-height: 140px; height: 140px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-              ${fotoEtiqueta ? `
-                <img src="${fotoEtiqueta}" style="max-height: 140px; max-width: 100%; object-fit: contain;" alt="Foto da etiqueta e serial" />
-              ` : `
-                <div style="color: #94a3b8; font-size: 8pt; padding: 12px; font-style: italic;">
-                  [ Foto da etiqueta traseira com Nº de Série / Anatel ]
-                </div>
-              `}
-            </div>
-            <div style="font-size: 7pt; color: #64748b; margin-top: 4px; line-height: 1.2;">
-              Identificação do fabricante, modelo, voltagem e número de série.
-            </div>
-          </div>
-
-          <!-- Foto 3 -->
-          <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; background: #ffffff; text-align: center;">
-            <div style="font-size: 7.5pt; font-weight: 700; color: #0b1a30; text-transform: uppercase; margin-bottom: 5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
-              Foto 3: Controle, Cabos &amp; Acessórios
-            </div>
-            <div style="min-height: 140px; height: 140px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-              ${fotoAcessorios ? `
-                <img src="${fotoAcessorios}" style="max-height: 140px; max-width: 100%; object-fit: contain;" alt="Foto dos acessórios e controle" />
-              ` : `
-                <div style="color: #94a3b8; font-size: 8pt; padding: 12px; font-style: italic;">
-                  [ Foto dos acessórios, cabos, suporte e controle remoto ]
-                </div>
-              `}
-            </div>
-            <div style="font-size: 7pt; color: #64748b; margin-top: 4px; line-height: 1.2;">
-              Conferência dos itens que acompanham o aparelho até o canteiro.
-            </div>
-          </div>
-        </div>
-
-        <h2>5. Parecer Técnico da Homologação &amp; Diretrizes de Instalação</h2>
+        <h2>${photoSectionHtml ? '5' : '4'}. Parecer Técnico da Homologação &amp; Diretrizes de Instalação</h2>
         <div class="callout" style="margin-bottom: 10px; border-left-color: ${isReprovado ? '#dc2626' : isRessalvas ? '#d97706' : '#059669'};">
           <strong style="font-size: 9pt; color: ${isReprovado ? '#b91c1c' : isRessalvas ? '#b45309' : '#047857'};">
             ${escapeDocHtml(parecerStatus)}
           </strong>
-          <p style="margin-top: 5px; font-size: 8.5pt;">
-            <strong>Parecer do Avaliador Técnico:</strong> ${escapeDocHtml(obsTecnicas)}
-          </p>
+          ${obsHtml}
         </div>
 
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; font-size: 8pt; color: #475569; margin-bottom: 12px;">
-          <strong>Recomendações Obrigatórias para a Equipe de Obra:</strong>
+          <strong>Recomendações Técnicas para a Equipe de Obra:</strong>
           <ul style="margin: 4px 0 0 16px; padding: 0; line-height: 1.4;">
             <li>Fixar em suporte VESA adequado em parede firme ou estrutura metálica protegida do container;</li>
-            <li>Conectar preferencialmente em filtro de linha / nobreak com proteção contra surtos elétricos;</li>
+            <li>Conectar preferencialmente em filtro de linha ou nobreak com proteção contra surtos elétricos;</li>
             <li>Não expor o aparelho a goteiras, poeira de brita/concreto ou umidade excessiva de obra;</li>
-            <li>Em caso de avaria ou falha no canteiro, acionar imediatamente o setor de T.I. com o número de patrimônio <strong>${escapeDocHtml(patrimonio)}</strong>.</li>
+            <li>Em caso de avaria ou falha no canteiro, acionar imediatamente o setor de T.I. informando o modelo do equipamento testado.</li>
           </ul>
         </div>
 
-        ${buildSignatureGridHTML([
-          { role: "Técnico(a) de T.I. / Elétrica (Responsável pelo Teste)", name: ctx.secopsName },
-          { role: "Recebedor na Obra / Almoxarife / Fiscal", name: "" },
-          { role: "Engenheiro(a) Residente / Gestor de Obra", name: "" }
-        ], false, "MOD-OBR-06")}
+        ${buildSignatureGridHTML(defaultSigners, false, "MOD-OBR-06")}
       `;
     }
   },
@@ -5718,6 +5678,188 @@ function handleRemoveDocCustomPhoto(key) {
 window.handleDocCustomPhotoUpload = handleDocCustomPhotoUpload;
 window.handleRemoveDocCustomPhoto = handleRemoveDocCustomPhoto;
 
+// Estado e Gerenciamento Dinâmico de Fotos do Laudo de Testes / Equipamentos
+const DocGalleryState = {
+  photos: []
+};
+
+function renderDocGalleryGrid() {
+  const grid = document.getElementById("doc-gallery-grid");
+  const emptyEl = document.getElementById("doc-gallery-empty");
+  const badge = document.getElementById("doc-gallery-counter-badge");
+  if (!grid) return;
+
+  if (badge) badge.textContent = `${DocGalleryState.photos.length} foto(s)`;
+  if (emptyEl) {
+    if (DocGalleryState.photos.length > 0) emptyEl.classList.add("hidden");
+    else emptyEl.classList.remove("hidden");
+  }
+
+  grid.innerHTML = DocGalleryState.photos.map((p, idx) => `
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2 relative shadow-2xs group" id="doc-photo-card-${p.id}">
+      <div class="h-32 rounded-lg bg-slate-900 flex items-center justify-center overflow-hidden relative">
+        <img src="${p.dataUrl}" class="max-h-32 max-w-full object-contain" alt="Foto ${idx + 1}" />
+        <button type="button" onclick="handleRemoveDocGalleryPhoto('${p.id}')" class="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600/90 hover:bg-rose-600 text-white shadow-xs transition-colors cursor-pointer" title="Remover esta foto">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+      <div>
+        <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Legenda / Título da Foto ${idx + 1}</label>
+        <input type="text" value="${escapeDocHtml(p.title || `Foto ${idx + 1}`)}" onchange="handleUpdateDocGalleryTitle('${p.id}', this.value)" placeholder="Ex: TV ligada / Entrada HDMI" class="w-full bg-white border border-slate-300 rounded-md px-2 py-1 text-xs text-slate-800 focus:outline-none focus:border-[#004b93]" />
+      </div>
+    </div>
+  `).join("");
+
+  if (window.lucide && typeof window.lucide.createIcons === "function") {
+    window.lucide.createIcons();
+  }
+}
+
+function handleDocGalleryUpload(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+
+  const fileList = Array.from(files);
+  let loadedCount = 0;
+
+  fileList.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const rawDataUrl = e.target.result;
+      const img = new Image();
+      img.onload = function() {
+        const maxDim = 1200;
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.82);
+
+        const newId = "photo_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+        const defaultTitle = `Foto ${DocGalleryState.photos.length + 1}: ${file.name.replace(/\.[^/.]+$/, "").substring(0, 30)}`;
+
+        DocGalleryState.photos.push({
+          id: newId,
+          dataUrl: compressedDataUrl,
+          title: defaultTitle,
+          caption: ""
+        });
+
+        loadedCount++;
+        if (loadedCount === fileList.length) {
+          renderDocGalleryGrid();
+          if (window.showToast) {
+            window.showToast(`${fileList.length} foto(s) adicionada(s) ao laudo com sucesso!`, "success");
+          }
+        }
+      };
+      img.src = rawDataUrl;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  event.target.value = "";
+}
+
+function handleRemoveDocGalleryPhoto(photoId) {
+  DocGalleryState.photos = DocGalleryState.photos.filter(p => p.id !== photoId);
+  renderDocGalleryGrid();
+  if (window.showToast) window.showToast("Foto removida do laudo.", "info");
+}
+
+function handleUpdateDocGalleryTitle(photoId, newTitle) {
+  const photo = DocGalleryState.photos.find(p => p.id === photoId);
+  if (photo) photo.title = newTitle.trim();
+}
+
+function handleAddSignerRow(docCode) {
+  const container = document.getElementById("doc-custom-signers-container");
+  if (!container) return;
+  const currentCount = container.querySelectorAll(".doc-custom-signer-card").length;
+  const newIdx = currentCount;
+  const isObr06 = docCode === "MOD-OBR-06";
+  const defaultRole = isObr06 ? "Técnico(a) que realizou o teste" : "Signatário Adicional";
+  const defaultDocLabel = isObr06 ? "CPF / Registro Técnico" : "CPF / Registro";
+
+  const card = document.createElement("div");
+  card.className = "doc-custom-signer-card bg-slate-50/90 rounded-xl p-3.5 border border-slate-200 shadow-2xs space-y-2.5 relative";
+  card.id = `doc-custom-signer-card-${newIdx}`;
+  card.innerHTML = `
+    <div class="flex items-center justify-between gap-2 flex-wrap">
+      <div class="flex items-center gap-2">
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0f2942] text-white">Signatário ${newIdx + 1}</span>
+        <span class="text-xs font-bold text-slate-800">${escapeDocHtml(defaultRole)}</span>
+      </div>
+      <button type="button" onclick="this.closest('.doc-custom-signer-card').remove(); updateSignerCounters();" class="text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer">
+        <i data-lucide="trash-2" class="w-3 h-3"></i> Remover
+      </button>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+      <div class="sm:col-span-5">
+        <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Nome Completo do Signatário</label>
+        <input type="text" data-signer-field="name" value="" placeholder="Ex: Nome do Técnico" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+      </div>
+      <div class="sm:col-span-4">
+        <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Cargo / Função no Documento</label>
+        <input type="text" data-signer-field="role" value="${escapeDocHtml(defaultRole)}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+      </div>
+      <div class="sm:col-span-3">
+        <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Registro / CPF / CREA</label>
+        <input type="text" data-signer-field="docLabel" value="${escapeDocHtml(defaultDocLabel)}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+      </div>
+    </div>
+  `;
+  container.appendChild(card);
+  updateSignerCounters();
+  if (window.lucide && typeof window.lucide.createIcons === "function") {
+    window.lucide.createIcons();
+  }
+}
+
+function updateSignerCounters() {
+  const container = document.getElementById("doc-custom-signers-container");
+  if (!container) return;
+  const cards = container.querySelectorAll(".doc-custom-signer-card");
+  cards.forEach((card, idx) => {
+    const badge = card.querySelector(".bg-\\[\\#0f2942\\]");
+    if (badge) badge.textContent = `Signatário ${idx + 1}`;
+  });
+  const countLabel = document.getElementById("doc-custom-signers-count");
+  if (countLabel) countLabel.textContent = `${cards.length} Signatário(s) Configurado(s)`;
+}
+
+function handleAddAnotherTestToDoc() {
+  const loteEl = document.getElementById("doc-custom-field-lote_aparelhos");
+  if (!loteEl) return;
+  const current = loteEl.value.trim();
+  const count = (current.match(/Item\s*\d+/gi) || []).length + 2;
+  const snippet = `Item ${count}: [Tipo / Marca do Aparelho] | Tensão: Bivolt | Parecer: Aprovado | Obs: Funcionamento testado 100%`;
+  loteEl.value = current ? current + "\n" + snippet : snippet;
+  loteEl.focus();
+  if (window.showToast) window.showToast(`Template para Item ${count} adicionado ao campo de detalhamento!`, "info");
+}
+
+window.DocGalleryState = DocGalleryState;
+window.renderDocGalleryGrid = renderDocGalleryGrid;
+window.handleDocGalleryUpload = handleDocGalleryUpload;
+window.handleRemoveDocGalleryPhoto = handleRemoveDocGalleryPhoto;
+window.handleUpdateDocGalleryTitle = handleUpdateDocGalleryTitle;
+window.handleAddSignerRow = handleAddSignerRow;
+window.updateSignerCounters = updateSignerCounters;
+window.handleAddAnotherTestToDoc = handleAddAnotherTestToDoc;
+
 function openDocumentSignersModal(docCode = null) {
   const targetCode = docCode || TemplateHubState.previewingCode || "MOD-OBR-01";
   const tpl = getTemplateByCode(targetCode);
@@ -5730,6 +5872,17 @@ function openDocumentSignersModal(docCode = null) {
   const savedData = getStoredDocumentCustomData(targetCode);
   const savedSigners = Array.isArray(savedData.signers) ? savedData.signers : [];
   const savedFields = (savedData.fields && typeof savedData.fields === "object") ? savedData.fields : {};
+
+  // Inicializa a galeria de fotos se aplicável ao modelo
+  let initialPhotos = [];
+  if (Array.isArray(savedFields.photos)) {
+    initialPhotos = [...savedFields.photos];
+  } else {
+    if (savedFields.foto_ligado) initialPhotos.push({ id: "p1", title: "Foto 1: Aparelho Ligado / Tela Ativa", dataUrl: savedFields.foto_ligado, caption: "Teste de imagem e cores" });
+    if (savedFields.foto_etiqueta) initialPhotos.push({ id: "p2", title: "Foto 2: Identificação do Aparelho", dataUrl: savedFields.foto_etiqueta, caption: "Marca e modelo" });
+    if (savedFields.foto_acessorios) initialPhotos.push({ id: "p3", title: "Foto 3: Controle e Acessórios", dataUrl: savedFields.foto_acessorios, caption: "Acessórios e cabos" });
+  }
+  DocGalleryState.photos = initialPhotos;
 
   let modal = document.getElementById("modal-document-custom-fields");
   if (!modal) {
@@ -5744,34 +5897,42 @@ function openDocumentSignersModal(docCode = null) {
     <option value="${t.code}" ${t.code === targetCode ? "selected" : ""}>${escapeDocHtml(t.code)} — ${escapeDocHtml(t.title)}</option>
   `).join("");
 
-  // Constrói campos de signatários específicos deste documento
-  const signersHtml = schema.signers.map((s, idx) => {
-    const curVal = savedSigners[idx] || {};
-    const nameVal = curVal.name || "";
-    const roleVal = curVal.role || s.role;
-    const docVal = curVal.docLabel !== undefined ? curVal.docLabel : (s.docLabel || "");
+  // Constrói lista de signatários ativos (se houver salvos no storage, usa eles; senão, usa os definidos no schema)
+  const activeSigners = (savedSigners && savedSigners.length > 0) ? savedSigners : schema.signers;
+  const signersHtml = activeSigners.map((s, idx) => {
+    const nameVal = s.name || "";
+    const roleVal = s.role || (schema.signers[idx] ? schema.signers[idx].role : "Signatário");
+    const docVal = s.docLabel !== undefined ? s.docLabel : (schema.signers[idx] ? schema.signers[idx].docLabel : "CPF / Registro");
+    const canRemove = activeSigners.length > 1 || idx > 0;
 
     return `
-      <div class="bg-slate-50/90 rounded-xl p-3.5 border border-slate-200 shadow-2xs space-y-2.5">
+      <div class="doc-custom-signer-card bg-slate-50/90 rounded-xl p-3.5 border border-slate-200 shadow-2xs space-y-2.5 relative" id="doc-custom-signer-card-${idx}">
         <div class="flex items-center justify-between gap-2 flex-wrap">
           <div class="flex items-center gap-2">
             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0f2942] text-white">Signatário ${idx + 1}</span>
-            <span class="text-xs font-bold text-slate-800">${escapeDocHtml(s.role)}</span>
+            <span class="text-xs font-bold text-slate-800">${escapeDocHtml(roleVal)}</span>
           </div>
-          <span class="text-[10px] text-slate-500 font-mono">${escapeDocHtml(s.docLabel || "Documento")}</span>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] text-slate-500 font-mono">${escapeDocHtml(docVal || "Documento")}</span>
+            ${canRemove ? `
+              <button type="button" onclick="this.closest('.doc-custom-signer-card').remove(); updateSignerCounters();" class="text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer" title="Remover este signatário">
+                <i data-lucide="trash-2" class="w-3 h-3"></i> Remover
+              </button>
+            ` : ''}
+          </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
           <div class="sm:col-span-5">
             <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Nome Completo do Signatário</label>
-            <input type="text" id="doc-custom-signer-name-${idx}" value="${escapeDocHtml(nameVal)}" placeholder="${escapeDocHtml(s.placeholder || 'Ex: Nome Completo')}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+            <input type="text" data-signer-field="name" id="doc-custom-signer-name-${idx}" value="${escapeDocHtml(nameVal)}" placeholder="${escapeDocHtml(s.placeholder || 'Ex: Nome do Técnico')}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
           </div>
           <div class="sm:col-span-4">
             <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Cargo / Função no Documento</label>
-            <input type="text" id="doc-custom-signer-role-${idx}" value="${escapeDocHtml(roleVal)}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+            <input type="text" data-signer-field="role" id="doc-custom-signer-role-${idx}" value="${escapeDocHtml(roleVal)}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
           </div>
           <div class="sm:col-span-3">
             <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Registro / CPF / CREA</label>
-            <input type="text" id="doc-custom-signer-doc-${idx}" value="${escapeDocHtml(docVal)}" placeholder="${escapeDocHtml(s.docLabel || 'CPF/CREA')}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
+            <input type="text" data-signer-field="docLabel" id="doc-custom-signer-doc-${idx}" value="${escapeDocHtml(docVal)}" placeholder="${escapeDocHtml(s.docLabel || 'CPF/CREA')}" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93] focus:ring-1 focus:ring-[#004b93]" />
           </div>
         </div>
       </div>
@@ -5785,7 +5946,38 @@ function openDocumentSignersModal(docCode = null) {
       const val = savedFields[f.key] || "";
       const colClass = f.fullWidth ? "sm:col-span-2" : "sm:col-span-1";
 
-      if (f.type === "photo" || f.type === "image") {
+      if (f.type === "photo_gallery") {
+        return `
+          <div class="sm:col-span-2 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <i data-lucide="camera" class="w-4 h-4 text-[#004b93]"></i>
+                  <span>${escapeDocHtml(f.label)}</span>
+                  <span id="doc-gallery-counter-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-[#004b93]">${DocGalleryState.photos.length} foto(s)</span>
+                </label>
+                <p class="text-[11px] text-slate-500 mt-0.5">${escapeDocHtml(f.hint || 'Adicione fotos do teste. Se não anexar fotos, a seção não ocupa espaço na impressão.')}</p>
+              </div>
+              <div>
+                <label for="doc-gallery-file-input" class="px-3.5 py-1.5 rounded-lg bg-[#004b93] hover:bg-[#003870] text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors shadow-2xs">
+                  <i data-lucide="image-plus" class="w-4 h-4"></i>
+                  <span>+ Adicionar Foto / Mais Fotos</span>
+                </label>
+                <input type="file" id="doc-gallery-file-input" accept="image/*" multiple class="hidden" onchange="handleDocGalleryUpload(event)" />
+              </div>
+            </div>
+
+            <div id="doc-gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              <!-- Rendered via renderDocGalleryGrid() -->
+            </div>
+            <div id="doc-gallery-empty" class="text-center py-6 px-4 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 ${DocGalleryState.photos.length > 0 ? 'hidden' : ''}">
+              <i data-lucide="images" class="w-8 h-8 text-slate-300 mx-auto mb-1"></i>
+              <p class="text-xs font-semibold text-slate-600">Nenhuma foto adicionada ao laudo</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Clique em '+ Adicionar Foto / Mais Fotos' para selecionar uma ou várias imagens do aparelho ou teste.</p>
+            </div>
+          </div>
+        `;
+      } else if (f.type === "photo" || f.type === "image") {
         return `
           <div class="sm:col-span-2 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-2.5">
             <div class="flex items-center justify-between flex-wrap gap-1">
@@ -5923,10 +6115,22 @@ function openDocumentSignersModal(docCode = null) {
               <i data-lucide="users" class="w-3.5 h-3.5 text-[#004b93]"></i>
               <span>Quadro de Signatários Oficiais de ${escapeDocHtml(targetCode)}</span>
             </h4>
-            <span class="text-[10px] text-slate-500">${schema.signers.length} Signatário(s) Previsto(s)</span>
+            <span id="doc-custom-signers-count" class="text-[10px] text-slate-500">${activeSigners.length} Signatário(s) Configurado(s)</span>
           </div>
-          <div class="space-y-2">
+          <div id="doc-custom-signers-container" class="space-y-2">
             ${signersHtml}
+          </div>
+          <div class="flex items-center gap-2 flex-wrap pt-1">
+            <button type="button" onclick="handleAddSignerRow('${escapeDocHtml(targetCode)}')" class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-[#004b93] text-xs font-semibold flex items-center gap-1.5 border border-blue-200 transition-colors cursor-pointer shadow-2xs">
+              <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+              <span>${targetCode === 'MOD-OBR-06' ? '+ Adicionar Outro Técnico que Realizou Teste' : '+ Adicionar Mais um Signatário'}</span>
+            </button>
+            ${targetCode === 'MOD-OBR-06' ? `
+            <button type="button" onclick="handleAddAnotherTestToDoc()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 border border-slate-300 transition-colors cursor-pointer shadow-2xs" title="Adicionar modelo de preenchimento para teste de outro aparelho no campo de detalhamento">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>+ Adicionar Detalhes de Outro Aparelho / Teste</span>
+            </button>
+            ` : ''}
           </div>
         </div>
 
@@ -5954,6 +6158,7 @@ function openDocumentSignersModal(docCode = null) {
   `;
 
   modal.classList.remove("hidden");
+  renderDocGalleryGrid();
   if (window.lucide && typeof window.lucide.createIcons === "function") {
     window.lucide.createIcons();
   }
@@ -5968,24 +6173,55 @@ function handleSaveDocumentCustomData(e, docCode) {
     : { signers: [], fields: [] };
 
   const signers = [];
-  schema.signers.forEach((s, idx) => {
-    const nameEl = document.getElementById(`doc-custom-signer-name-${idx}`);
-    const roleEl = document.getElementById(`doc-custom-signer-role-${idx}`);
-    const docEl = document.getElementById(`doc-custom-signer-doc-${idx}`);
-
-    signers.push({
-      name: nameEl ? nameEl.value.trim() : "",
-      role: roleEl ? roleEl.value.trim() : s.role,
-      docLabel: docEl ? docEl.value.trim() : s.docLabel
+  const container = document.getElementById("doc-custom-signers-container");
+  if (container) {
+    const cards = container.querySelectorAll(".doc-custom-signer-card");
+    cards.forEach((card, idx) => {
+      const nameEl = card.querySelector('[data-signer-field="name"]');
+      const roleEl = card.querySelector('[data-signer-field="role"]');
+      const docEl = card.querySelector('[data-signer-field="docLabel"]');
+      signers.push({
+        name: nameEl ? nameEl.value.trim() : "",
+        role: roleEl ? roleEl.value.trim() : (idx === 0 && docCode === "MOD-OBR-06" ? "Técnico(a) que realizou o teste" : "Signatário"),
+        docLabel: docEl ? docEl.value.trim() : "CPF / Registro Técnico"
+      });
     });
-  });
+  }
+
+  // Fallback caso container não tenha cards
+  if (signers.length === 0 && Array.isArray(schema.signers)) {
+    schema.signers.forEach((s, idx) => {
+      const nameEl = document.getElementById(`doc-custom-signer-name-${idx}`);
+      const roleEl = document.getElementById(`doc-custom-signer-role-${idx}`);
+      const docEl = document.getElementById(`doc-custom-signer-doc-${idx}`);
+
+      signers.push({
+        name: nameEl ? nameEl.value.trim() : "",
+        role: roleEl ? roleEl.value.trim() : s.role,
+        docLabel: docEl ? docEl.value.trim() : s.docLabel
+      });
+    });
+  }
 
   const fields = {};
   if (Array.isArray(schema.fields)) {
     schema.fields.forEach(f => {
-      const fieldEl = document.getElementById(`doc-custom-field-${f.key}`);
-      if (fieldEl) {
-        fields[f.key] = fieldEl.value.trim();
+      if (f.type === "photo_gallery") {
+        fields.photos = Array.isArray(DocGalleryState.photos) ? [...DocGalleryState.photos] : [];
+        if (fields.photos.length > 0) {
+          fields.foto_ligado = fields.photos[0]?.dataUrl || "";
+          fields.foto_etiqueta = fields.photos[1]?.dataUrl || "";
+          fields.foto_acessorios = fields.photos[2]?.dataUrl || "";
+        } else {
+          fields.foto_ligado = "";
+          fields.foto_etiqueta = "";
+          fields.foto_acessorios = "";
+        }
+      } else {
+        const fieldEl = document.getElementById(`doc-custom-field-${f.key}`);
+        if (fieldEl) {
+          fields[f.key] = fieldEl.value.trim();
+        }
       }
     });
   }
@@ -6022,6 +6258,9 @@ function handleSaveDocumentCustomData(e, docCode) {
 function clearDocumentCustomData(docCode) {
   if (!docCode) return;
   clearStoredDocumentCustomData(docCode);
+  if (docCode === "MOD-OBR-06") {
+    DocGalleryState.photos = [];
+  }
 
   if (typeof closeModal === "function") {
     closeModal("modal-document-custom-fields");
@@ -6427,8 +6666,8 @@ function getDocumentContextualEvidenceConfig(docCode) {
       entityLabel: "Aparelho / Equipamento Testado",
       entityPlaceholder: "Ex: Smart TV 55 Samsung / Projetor Epson PowerLite",
       entityIcon: "tv",
-      secondaryLabel: "Marca, Modelo & Nº de Série (S/N)",
-      secondaryPlaceholder: "Ex: Samsung UN55CU7700 - S/N: 9ZJ43L7A000124K",
+      secondaryLabel: "Marca & Modelo do Equipamento",
+      secondaryPlaceholder: "Ex: Samsung Smart TV 55 pol. UHD / Projetor Epson",
       assetLabel: "Obra / Canteiro de Destino",
       assetOptions: [
         "Residencial Jardins da Costa",
@@ -6440,8 +6679,9 @@ function getDocumentContextualEvidenceConfig(docCode) {
       ],
       defaultCategories: [
         "Fotos do Aparelho Ligado / Teste de Tela",
-        "Foto da Etiqueta de Patrimônio & Nº de Série",
+        "Fotos do Teste / Funcionamento do Aparelho",
         "Fotos dos Acessórios & Controle Remoto",
+        "Fotos das Conexões & Cabos",
         "Nota Fiscal de Compra / Danfe do Aparelho",
         "Laudo de Bancada / Vistoria Técnica Assinado",
         "Termo de Recebimento no Almoxarifado da Obra",
