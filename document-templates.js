@@ -416,68 +416,20 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
         "key": "obra",
         "label": "Obra / Canteiro de Destino *",
         "placeholder": "Ex: Residencial Jardins da Costa / Central",
-        "fullWidth": false
+        "fullWidth": true
       },
       {
-        "key": "equipamento_tipo",
-        "label": "Tipo do Aparelho Testado *",
-        "type": "select",
-        "options": [
-          "Smart TV LED / Painel de Reuniões",
-          "Projetor Multimídia / Datashow",
-          "Monitor de Vídeo / CFTV",
-          "Caixa de Som / Sistema de Áudio para DDS",
-          "Aparelho de Videoconferência / Webcam",
-          "Outro Equipamento Eletroeletrônico"
-        ],
-        "fullWidth": false
-      },
-      {
-        "key": "marca",
-        "label": "Marca / Fabricante *",
-        "placeholder": "Ex: Samsung, LG, Epson, Philco, AOC, BenQ, TCL",
-        "fullWidth": false
-      },
-      {
-        "key": "modelo",
-        "label": "Modelo / Polegadas / Resolução *",
-        "placeholder": "Ex: Smart TV 55 pol. UHD 4K / Projetor 3800 Lumens WXGA",
-        "fullWidth": false
-      },
-      {
-        "key": "tensao",
-        "label": "Tensão Elétrica (Voltagem)",
-        "type": "select",
-        "options": [
-          "Bivolt Automático (100V ~ 240V)",
-          "220V Monofásico",
-          "110V / 127V Monofásico"
-        ],
-        "fullWidth": false
-      },
-      {
-        "key": "parecer_status",
-        "label": "Resultado da Homologação Técnica *",
-        "type": "select",
-        "options": [
-          "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra",
-          "APROVADO COM RESSALVAS — Funcionamento validado com pequenas observações",
-          "REPROVADO — Aparelho com defeito / vício oculto (Acionar Garantia ou Devolução)"
-        ],
+        "key": "devices",
+        "label": "Relação de Aparelhos / Equipamentos Testados",
+        "type": "device_manager",
+        "hint": "Preencha os dados de cada aparelho testado. Clique em '+ Adicionar Mais um Aparelho ao Teste' para incluir novos aparelhos. Todos serão organizados em uma tabela compacta no documento.",
         "fullWidth": true
       },
       {
         "key": "obs_tecnicas",
-        "label": "Observações Técnicas do Teste (opcional — não aparece na impressão se vazio)",
+        "label": "Observações Gerais do Teste (opcional — não aparece na impressão se vazio)",
         "type": "textarea",
         "placeholder": "Ex: Imagem nítida sem dead pixels; portas HDMI testadas com notebook; áudio estéreo sem chiados. Deixe em branco se não houver observações.",
-        "fullWidth": true
-      },
-      {
-        "key": "lote_aparelhos",
-        "label": "Detalhamento de Outros Testes / Aparelhos Adicionais (opcional — não aparece na impressão se vazio)",
-        "type": "textarea",
-        "placeholder": "Ex:\nItem 2: Smart TV 55 Samsung | Conexões OK | Aprovado\nItem 3: Projetor Epson PowerLite | Projeção nítida | Aprovado\n(Deixe em branco se testou apenas um aparelho)",
         "fullWidth": true
       },
       {
@@ -2433,14 +2385,34 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     summary: "Laudo pericial e operacional de recebimento, teste em bancada, validação de funcionamento (boot, tela, HDMI, áudio, Wi-Fi) e registro fotográfico de TVs, projetores, monitores e periféricos adquiridos para obras e canteiros.",
     buildBody: (ctx, custom = {}) => {
       const obraDestino = custom.obra || ctx.activeUnit;
-      const tipoAparelho = custom.equipamento_tipo || "Smart TV / Projetor Multimídia / Monitor";
-      const marca = custom.marca || "___________________________";
-      const modelo = custom.modelo || "___________________________";
-      const tensao = custom.tensao || "Bivolt Automático (100V ~ 240V)";
-      const loteAparelhos = (custom.lote_aparelhos || "").trim();
-      const parecerStatus = custom.parecer_status || "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra";
-      const obsTecnicas = (custom.obs_tecnicas || "").trim();
       const dataVistoria = custom.docDate || ctx.todayBr;
+      const obsTecnicas = (custom.obs_tecnicas || "").trim();
+
+      // Recupera aparelhos testados (lista estruturada ou fallback)
+      let devices = [];
+      if (Array.isArray(custom.devices) && custom.devices.length > 0) {
+        devices = custom.devices.filter(d => d && (d.marca || d.modelo || d.tipo));
+      }
+      if (devices.length === 0) {
+        devices = [{
+          tipo: custom.equipamento_tipo || "Smart TV LED / Painel de Reuniões",
+          marca: custom.marca || "___________________________",
+          modelo: custom.modelo || "___________________________",
+          tensao: custom.tensao || "Bivolt Automático (100V ~ 240V)",
+          status: custom.parecer_status || "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra"
+        }];
+      }
+
+      const hasReprovado = devices.some(d => d.status && d.status.includes("REPROVADO"));
+      const hasRessalvas = devices.some(d => d.status && d.status.includes("RESSALVAS"));
+      const overallStatus = hasReprovado
+        ? "REPROVADO — Constatado defeito / vício oculto em equipamento do lote"
+        : hasRessalvas
+        ? "APROVADO COM RESSALVAS — Funcionamento validado com pequenas observações"
+        : "APROVADO — Equipamento(s) 100% íntegro(s), testado(s) e liberado(s) para envio à obra";
+
+      const isReprovado = hasReprovado;
+      const isRessalvas = hasRessalvas && !hasReprovado;
 
       // Fotos do documento: galeria dinâmica de fotos adicionadas pelo usuário
       let photos = [];
@@ -2457,21 +2429,6 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
             if (ev.fileDataUrl) photos.push({ title: ev.name || `Foto ${i + 1}`, dataUrl: ev.fileDataUrl, caption: "Evidência anexada ao documento" });
           });
         }
-      }
-
-      const isAprovado = parecerStatus.includes("APROVADO") && !parecerStatus.includes("RESSALVAS");
-      const isRessalvas = parecerStatus.includes("RESSALVAS");
-      const isReprovado = parecerStatus.includes("REPROVADO");
-
-      // Detalhamento do Lote de Aparelhos (não aparece na impressão se vazio)
-      let loteSectionHtml = "";
-      if (loteAparelhos) {
-        loteSectionHtml = `
-          <div style="margin-top: 10px; margin-bottom: 12px; page-break-inside: avoid;">
-            <strong style="font-size: 8.5pt; color: #0b1a30; display: block; margin-bottom: 4px;">Detalhamento de Outros Testes / Aparelhos Adicionais:</strong>
-            <pre style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px 12px; font-size: 8pt; color: #334155; font-family: monospace; white-space: pre-wrap; margin: 0;">${escapeDocHtml(loteAparelhos)}</pre>
-          </div>
-        `;
       }
 
       // Galeria Fotográfica do Teste (não aparece na impressão se não houver fotos)
@@ -2522,35 +2479,33 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           </tr>
         </table>
 
-        <h2>2. Especificações e Identificação do(s) Aparelho(s) Testado(s)</h2>
-        <table class="data-table">
+        <h2>2. Relação e Especificações dos Equipamentos Testados (${devices.length} Aparelho${devices.length > 1 ? 's' : ''})</h2>
+        <table class="data-table" style="font-size: 8.5pt;">
           <thead>
             <tr>
-              <th width="28%">Parâmetro Técnico</th>
-              <th width="72%">Especificação Registrada no Laudo</th>
+              <th width="6%" style="text-align: center;">Item</th>
+              <th width="26%">Tipo do Equipamento</th>
+              <th width="20%">Marca / Fabricante</th>
+              <th width="26%">Modelo / Detalhes</th>
+              <th width="10%">Voltagem</th>
+              <th width="12%" style="text-align: center;">Resultado</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td><strong>Tipo de Equipamento:</strong></td>
-              <td><strong style="color: #004b93; font-size: 9.5pt;">${escapeDocHtml(tipoAparelho)}</strong></td>
-            </tr>
-            <tr>
-              <td><strong>Marca / Fabricante:</strong></td>
-              <td><strong>${escapeDocHtml(marca)}</strong></td>
-            </tr>
-            <tr>
-              <td><strong>Modelo / Dimensões:</strong></td>
-              <td>${escapeDocHtml(modelo)}</td>
-            </tr>
-            <tr>
-              <td><strong>Tensão Elétrica (Voltagem):</strong></td>
-              <td>${escapeDocHtml(tensao)}</td>
-            </tr>
+            ${devices.map((d, i) => `
+              <tr>
+                <td style="text-align: center; font-weight: 700; color: #0b1a30;">${String(i + 1).padStart(2, '0')}</td>
+                <td><strong style="color: #004b93;">${escapeDocHtml(d.tipo || 'Smart TV / Projetor')}</strong></td>
+                <td><strong>${escapeDocHtml(d.marca || '—')}</strong></td>
+                <td>${escapeDocHtml(d.modelo || '—')}</td>
+                <td>${escapeDocHtml(d.tensao || 'Bivolt')}</td>
+                <td style="text-align: center; font-weight: 700; font-size: 8pt; color: ${d.status?.includes('REPROVADO') ? '#dc2626' : d.status?.includes('RESSALVAS') ? '#d97706' : '#059669'};">
+                  ${d.status?.includes('REPROVADO') ? '[ ✕ ] REPROVADO' : d.status?.includes('RESSALVAS') ? '[ ! ] RESSALVAS' : '[ ✓ ] APROVADO'}
+                </td>
+              </tr>
+            `).join('')}
           </tbody>
         </table>
-
-        ${loteSectionHtml}
 
         <h2>3. Roteiro de Inspeção e Checklist de Testes Operacionais em Bancada</h2>
         <table class="data-table">
@@ -2613,7 +2568,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
         <h2>${photoSectionHtml ? '5' : '4'}. Parecer Técnico da Homologação &amp; Diretrizes de Instalação</h2>
         <div class="callout" style="margin-bottom: 10px; border-left-color: ${isReprovado ? '#dc2626' : isRessalvas ? '#d97706' : '#059669'};">
           <strong style="font-size: 9pt; color: ${isReprovado ? '#b91c1c' : isRessalvas ? '#b45309' : '#047857'};">
-            ${escapeDocHtml(parecerStatus)}
+            ${escapeDocHtml(overallStatus)}
           </strong>
           ${obsHtml}
         </div>
@@ -5827,15 +5782,144 @@ function updateSignerCounters() {
   if (countLabel) countLabel.textContent = `${cards.length} Signatário(s) Configurado(s)`;
 }
 
-function handleAddAnotherTestToDoc() {
-  const loteEl = document.getElementById("doc-custom-field-lote_aparelhos");
-  if (!loteEl) return;
-  const current = loteEl.value.trim();
-  const count = (current.match(/Item\s*\d+/gi) || []).length + 2;
-  const snippet = `Item ${count}: [Tipo / Marca do Aparelho] | Tensão: Bivolt | Parecer: Aprovado | Obs: Funcionamento testado 100%`;
-  loteEl.value = current ? current + "\n" + snippet : snippet;
-  loteEl.focus();
-  if (window.showToast) window.showToast(`Template para Item ${count} adicionado ao campo de detalhamento!`, "info");
+// Estado e Gerenciamento Dinâmico de Aparelhos / Equipamentos (MOD-OBR-06)
+const DocDevicesState = {
+  devices: []
+};
+
+function renderDocDevicesList() {
+  const container = document.getElementById("doc-devices-list");
+  const badge = document.getElementById("doc-devices-counter-badge");
+  if (!container) return;
+
+  if (badge) badge.textContent = `${DocDevicesState.devices.length} aparelho(s)`;
+
+  if (DocDevicesState.devices.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-6 px-4 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+        <p class="text-xs font-semibold text-slate-600">Nenhum aparelho adicionado</p>
+        <p class="text-[11px] text-slate-400 mt-0.5">Clique em '+ Adicionar Mais um Aparelho ao Teste' para incluir um equipamento.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = DocDevicesState.devices.map((d, idx) => `
+    <div class="doc-device-card bg-slate-50/90 rounded-xl p-3.5 border border-slate-200/80 shadow-2xs space-y-2.5 relative" data-device-id="${d.id}">
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#004b93] text-white">Aparelho ${idx + 1}</span>
+          <span class="text-xs font-bold text-slate-800">${escapeDocHtml(d.tipo || 'Equipamento')} ${d.marca ? `— ${escapeDocHtml(d.marca)}` : ''} ${d.modelo ? `(${escapeDocHtml(d.modelo)})` : ''}</span>
+        </div>
+        ${DocDevicesState.devices.length > 1 ? `
+          <button type="button" onclick="handleRemoveDeviceFromDoc('${d.id}')" class="text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer" title="Remover este aparelho">
+            <i data-lucide="trash-2" class="w-3 h-3"></i> Remover Aparelho
+          </button>
+        ` : ''}
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5">
+        <div class="sm:col-span-1 lg:col-span-4">
+          <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Tipo do Aparelho *</label>
+          <select data-device-field="tipo" onchange="updateDeviceState('${d.id}', 'tipo', this.value)" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93]">
+            <option value="Smart TV LED / Painel de Reuniões" ${d.tipo === 'Smart TV LED / Painel de Reuniões' ? 'selected' : ''}>Smart TV LED / Painel de Reuniões</option>
+            <option value="Projetor Multimídia / Datashow" ${d.tipo === 'Projetor Multimídia / Datashow' ? 'selected' : ''}>Projetor Multimídia / Datashow</option>
+            <option value="Monitor de Vídeo / CFTV" ${d.tipo === 'Monitor de Vídeo / CFTV' ? 'selected' : ''}>Monitor de Vídeo / CFTV</option>
+            <option value="Caixa de Som / Sistema de Áudio para DDS" ${d.tipo === 'Caixa de Som / Sistema de Áudio para DDS' ? 'selected' : ''}>Caixa de Som / Sistema de Áudio para DDS</option>
+            <option value="Aparelho de Videoconferência / Webcam" ${d.tipo === 'Aparelho de Videoconferência / Webcam' ? 'selected' : ''}>Aparelho de Videoconferência / Webcam</option>
+            <option value="Outro Equipamento Eletroeletrônico" ${d.tipo === 'Outro Equipamento Eletroeletrônico' ? 'selected' : ''}>Outro Equipamento Eletroeletrônico</option>
+          </select>
+        </div>
+
+        <div class="sm:col-span-1 lg:col-span-4">
+          <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Marca / Fabricante *</label>
+          <input type="text" data-device-field="marca" value="${escapeDocHtml(d.marca || '')}" oninput="updateDeviceState('${d.id}', 'marca', this.value)" placeholder="Ex: Samsung, LG, Epson, Philco" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93]" />
+        </div>
+
+        <div class="sm:col-span-1 lg:col-span-4">
+          <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Modelo / Polegadas / Resolução *</label>
+          <input type="text" data-device-field="modelo" value="${escapeDocHtml(d.modelo || '')}" oninput="updateDeviceState('${d.id}', 'modelo', this.value)" placeholder="Ex: Smart TV 55 pol. UHD 4K / Projetor 3800 Lumens" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93]" />
+        </div>
+
+        <div class="sm:col-span-1 lg:col-span-4">
+          <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Tensão Elétrica (Voltagem)</label>
+          <select data-device-field="tensao" onchange="updateDeviceState('${d.id}', 'tensao', this.value)" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93]">
+            <option value="Bivolt Automático (100V ~ 240V)" ${d.tensao === 'Bivolt Automático (100V ~ 240V)' ? 'selected' : ''}>Bivolt Automático (100V ~ 240V)</option>
+            <option value="220V Monofásico" ${d.tensao === '220V Monofásico' ? 'selected' : ''}>220V Monofásico</option>
+            <option value="110V / 127V Monofásico" ${d.tensao === '110V / 127V Monofásico' ? 'selected' : ''}>110V / 127V Monofásico</option>
+          </select>
+        </div>
+
+        <div class="sm:col-span-1 lg:col-span-8">
+          <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Resultado do Teste / Homologação *</label>
+          <select data-device-field="status" onchange="updateDeviceState('${d.id}', 'status', this.value)" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93]">
+            <option value="APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra" ${d.status?.includes('APROVADO') && !d.status?.includes('RESSALVAS') ? 'selected' : ''}>APROVADO — Equipamento 100% íntegro e liberado para obra</option>
+            <option value="APROVADO COM RESSALVAS — Funcionamento validado com pequenas observações" ${d.status?.includes('RESSALVAS') ? 'selected' : ''}>APROVADO COM RESSALVAS — Validado com pequenas observações</option>
+            <option value="REPROVADO — Aparelho com defeito / vício oculto (Acionar Garantia ou Devolução)" ${d.status?.includes('REPROVADO') ? 'selected' : ''}>REPROVADO — Com defeito / vício oculto (Devolução / Garantia)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  if (window.lucide && typeof window.lucide.createIcons === "function") {
+    window.lucide.createIcons();
+  }
+}
+
+function syncDevicesFromDom() {
+  const container = document.getElementById("doc-devices-list");
+  if (!container) return;
+  const cards = container.querySelectorAll(".doc-device-card");
+  cards.forEach(card => {
+    const devId = card.getAttribute("data-device-id");
+    const dev = DocDevicesState.devices.find(d => d.id === devId);
+    if (dev) {
+      const tipoEl = card.querySelector('[data-device-field="tipo"]');
+      const marcaEl = card.querySelector('[data-device-field="marca"]');
+      const modeloEl = card.querySelector('[data-device-field="modelo"]');
+      const tensaoEl = card.querySelector('[data-device-field="tensao"]');
+      const statusEl = card.querySelector('[data-device-field="status"]');
+      if (tipoEl) dev.tipo = tipoEl.value;
+      if (marcaEl) dev.marca = marcaEl.value.trim();
+      if (modeloEl) dev.modelo = modeloEl.value.trim();
+      if (tensaoEl) dev.tensao = tensaoEl.value;
+      if (statusEl) dev.status = statusEl.value;
+    }
+  });
+}
+
+function handleAddDeviceToDoc() {
+  syncDevicesFromDom();
+  const newId = "dev_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+  DocDevicesState.devices.push({
+    id: newId,
+    tipo: "Smart TV LED / Painel de Reuniões",
+    marca: "",
+    modelo: "",
+    tensao: "Bivolt Automático (100V ~ 240V)",
+    status: "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra"
+  });
+  renderDocDevicesList();
+  if (window.showToast) {
+    window.showToast(`Aparelho ${DocDevicesState.devices.length} adicionado ao teste!`, "info");
+  }
+}
+
+function handleRemoveDeviceFromDoc(devId) {
+  syncDevicesFromDom();
+  DocDevicesState.devices = DocDevicesState.devices.filter(d => d.id !== devId);
+  renderDocDevicesList();
+  if (window.showToast) {
+    window.showToast("Aparelho removido do laudo.", "info");
+  }
+}
+
+function updateDeviceState(devId, field, val) {
+  const dev = DocDevicesState.devices.find(d => d.id === devId);
+  if (dev) {
+    dev[field] = val;
+  }
 }
 
 window.DocGalleryState = DocGalleryState;
@@ -5843,9 +5927,14 @@ window.renderDocGalleryGrid = renderDocGalleryGrid;
 window.handleDocGalleryUpload = handleDocGalleryUpload;
 window.handleRemoveDocGalleryPhoto = handleRemoveDocGalleryPhoto;
 window.handleUpdateDocGalleryTitle = handleUpdateDocGalleryTitle;
+window.DocDevicesState = DocDevicesState;
+window.renderDocDevicesList = renderDocDevicesList;
+window.syncDevicesFromDom = syncDevicesFromDom;
+window.handleAddDeviceToDoc = handleAddDeviceToDoc;
+window.handleRemoveDeviceFromDoc = handleRemoveDeviceFromDoc;
+window.updateDeviceState = updateDeviceState;
 window.handleAddSignerRow = handleAddSignerRow;
 window.updateSignerCounters = updateSignerCounters;
-window.handleAddAnotherTestToDoc = handleAddAnotherTestToDoc;
 
 function openDocumentSignersModal(docCode = null) {
   const targetCode = docCode || TemplateHubState.previewingCode || "MOD-OBR-01";
@@ -5859,6 +5948,38 @@ function openDocumentSignersModal(docCode = null) {
   const savedData = getStoredDocumentCustomData(targetCode);
   const savedSigners = Array.isArray(savedData.signers) ? savedData.signers : [];
   const savedFields = (savedData.fields && typeof savedData.fields === "object") ? savedData.fields : {};
+
+  // Inicializa aparelhos testados se for MOD-OBR-06 ou houver dados de devices
+  let initialDevices = [];
+  if (Array.isArray(savedFields.devices) && savedFields.devices.length > 0) {
+    initialDevices = savedFields.devices.map((d, i) => ({
+      id: d.id || `dev_${i}_${Date.now()}`,
+      tipo: d.tipo || "Smart TV LED / Painel de Reuniões",
+      marca: d.marca || "",
+      modelo: d.modelo || "",
+      tensao: d.tensao || "Bivolt Automático (100V ~ 240V)",
+      status: d.status || "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra"
+    }));
+  } else if (savedFields.marca || savedFields.modelo || savedFields.equipamento_tipo) {
+    initialDevices = [{
+      id: "dev_1",
+      tipo: savedFields.equipamento_tipo || "Smart TV LED / Painel de Reuniões",
+      marca: savedFields.marca || "",
+      modelo: savedFields.modelo || "",
+      tensao: savedFields.tensao || "Bivolt Automático (100V ~ 240V)",
+      status: savedFields.parecer_status || "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra"
+    }];
+  } else {
+    initialDevices = [{
+      id: "dev_1",
+      tipo: "Smart TV LED / Painel de Reuniões",
+      marca: "",
+      modelo: "",
+      tensao: "Bivolt Automático (100V ~ 240V)",
+      status: "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra"
+    }];
+  }
+  DocDevicesState.devices = initialDevices;
 
   // Inicializa a galeria de fotos se aplicável ao modelo
   let initialPhotos = [];
@@ -5937,7 +6058,29 @@ function openDocumentSignersModal(docCode = null) {
       const val = savedFields[f.key] || "";
       const colClass = f.fullWidth ? "sm:col-span-2" : "sm:col-span-1";
 
-      if (f.type === "photo_gallery") {
+      if (f.type === "device_manager") {
+        return `
+          <div class="sm:col-span-2 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+            <div class="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100">
+              <div>
+                <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <i data-lucide="tv" class="w-4 h-4 text-[#004b93]"></i>
+                  <span>${escapeDocHtml(f.label)}</span>
+                  <span id="doc-devices-counter-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-[#004b93]">${DocDevicesState.devices.length} aparelho(s)</span>
+                </label>
+                <p class="text-[11px] text-slate-500 mt-0.5">${escapeDocHtml(f.hint || 'Preencha os dados de cada aparelho testado. Clique em \'+ Adicionar Mais um Aparelho ao Teste\' para incluir novos aparelhos. Todos serão organizados em uma tabela compacta no documento impresso.')}</p>
+              </div>
+              <button type="button" onclick="handleAddDeviceToDoc()" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors shadow-2xs">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>+ Adicionar Mais um Aparelho ao Teste</span>
+              </button>
+            </div>
+            <div id="doc-devices-list" class="space-y-3">
+              <!-- Renderizado via renderDocDevicesList() -->
+            </div>
+          </div>
+        `;
+      } else if (f.type === "photo_gallery") {
         return `
           <div class="sm:col-span-2 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
             <div class="flex items-center justify-between flex-wrap gap-2">
@@ -6116,12 +6259,6 @@ function openDocumentSignersModal(docCode = null) {
               <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
               <span>${targetCode === 'MOD-OBR-06' ? '+ Adicionar Outro Técnico que Realizou Teste' : '+ Adicionar Mais um Signatário'}</span>
             </button>
-            ${targetCode === 'MOD-OBR-06' ? `
-            <button type="button" onclick="handleAddAnotherTestToDoc()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 border border-slate-300 transition-colors cursor-pointer shadow-2xs" title="Adicionar modelo de preenchimento para teste de outro aparelho no campo de detalhamento">
-              <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
-              <span>+ Adicionar Detalhes de Outro Aparelho / Teste</span>
-            </button>
-            ` : ''}
           </div>
         </div>
 
@@ -6149,6 +6286,7 @@ function openDocumentSignersModal(docCode = null) {
   `;
 
   modal.classList.remove("hidden");
+  renderDocDevicesList();
   renderDocGalleryGrid();
   if (window.lucide && typeof window.lucide.createIcons === "function") {
     window.lucide.createIcons();
@@ -6197,7 +6335,17 @@ function handleSaveDocumentCustomData(e, docCode) {
   const fields = {};
   if (Array.isArray(schema.fields)) {
     schema.fields.forEach(f => {
-      if (f.type === "photo_gallery") {
+      if (f.type === "device_manager") {
+        syncDevicesFromDom();
+        fields.devices = Array.isArray(DocDevicesState.devices) ? [...DocDevicesState.devices] : [];
+        if (fields.devices.length > 0) {
+          fields.equipamento_tipo = fields.devices[0].tipo || "";
+          fields.marca = fields.devices[0].marca || "";
+          fields.modelo = fields.devices[0].modelo || "";
+          fields.tensao = fields.devices[0].tensao || "";
+          fields.parecer_status = fields.devices[0].status || "";
+        }
+      } else if (f.type === "photo_gallery") {
         fields.photos = Array.isArray(DocGalleryState.photos) ? [...DocGalleryState.photos] : [];
         if (fields.photos.length > 0) {
           fields.foto_ligado = fields.photos[0]?.dataUrl || "";
@@ -6251,6 +6399,7 @@ function clearDocumentCustomData(docCode) {
   clearStoredDocumentCustomData(docCode);
   if (docCode === "MOD-OBR-06") {
     DocGalleryState.photos = [];
+    DocDevicesState.devices = [];
   }
 
   if (typeof closeModal === "function") {
