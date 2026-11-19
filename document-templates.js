@@ -416,7 +416,13 @@ const DOCUMENT_CUSTOM_FIELDS_SCHEMA = {
         "key": "obra",
         "label": "Obra / Canteiro de Destino *",
         "placeholder": "Ex: Residencial Jardins da Costa / Central",
-        "fullWidth": true
+        "fullWidth": false
+      },
+      {
+        "key": "local_homologacao",
+        "label": "Local de Homologação / Teste",
+        "placeholder": "Ex: Bancada de Testes de T.I. / Central AC Engenharia",
+        "fullWidth": false
       },
       {
         "key": "devices",
@@ -1566,6 +1572,8 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
   const protocolCode = `SGSI-${meta.code}-${new Date().getFullYear()}`;
   const isWord = Boolean(options.forWord);
   const managerDept = meta.department || MODULE_MANAGEMENT_DEPT[meta.module] || "Gerência Executiva de T.I., SecOps & Governança SGSI";
+  const hideDeptHeader = Boolean(meta.hideDeptHeader || meta.code === "MOD-OBR-06");
+  const hideClassification = Boolean(meta.hideClassification || meta.code === "MOD-OBR-06");
 
   return `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" lang="pt-BR">
@@ -2026,16 +2034,20 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
                 <span style="display: inline-block; padding: 2px 8px; font-family: monospace; font-size: 8.5pt; font-weight: 800; color: #ffffff; background: #0b1a30; border-radius: 4px;">${escapeDocHtml(meta.code)}</span>
               </td>
             </tr>
+            ${hideDeptHeader ? "" : `
             <tr>
               <td style="padding: 2.5px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Gerência Responsável:</td>
               <td style="padding: 2.5px 0; text-align: right; color: #0b1a30; font-weight: 700; font-size: 8pt;">${escapeDocHtml(managerDept)}</td>
             </tr>
+            `}
+            ${hideClassification ? "" : `
             <tr>
               <td style="padding: 2.5px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Classificação:</td>
               <td style="padding: 2.5px 0; text-align: right;">
                 <span style="display: inline-block; padding: 1.5px 6px; font-size: 7.5pt; font-weight: 700; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: 4px;">${escapeDocHtml(meta.classification || "CONFIDENCIAL / RESTRITO")}</span>
               </td>
             </tr>
+            `}
             <tr>
               <td style="padding: 2.5px 0; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.04em;">Protocolo SGSI:</td>
               <td style="padding: 2.5px 0; text-align: right; font-family: monospace; font-size: 8pt; color: #334155; font-weight: 700;">${escapeDocHtml(protocolCode)}</td>
@@ -2056,8 +2068,10 @@ function buildCorporateDocumentHTML(meta, bodyHtml, options = {}) {
     <div class="doc-title-banner">
       <div class="doc-type-eyebrow">
         <span>${escapeDocHtml(meta.docType || "INSTRUMENTO NORMATIVO HOMOLOGADO")}</span>
+        ${hideDeptHeader ? "" : `
         <span style="margin: 0 6px; color: #94a3b8;">&bull;</span>
         <span>GERÊNCIA RESPONSÁVEL: ${escapeDocHtml(managerDept.toUpperCase())}</span>
+        `}
       </div>
       <h1 class="doc-main-title">${escapeDocHtml(meta.title)}</h1>
       <div style="font-size: 8.5pt; color: #475569; margin-top: 5px; font-weight: 500;">
@@ -2377,6 +2391,8 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     code: "MOD-OBR-06",
     module: "obras",
     docType: "Laudo / Vistoria Fotográfica",
+    hideDeptHeader: true,
+    hideClassification: true,
     requiresSignature: true,
     title: "Laudo Técnico de Homologação, Teste de Funcionamento e Vistoria de Equipamentos (TVs, Projetores e Periféricos de Canteiro)",
     normative: "ABNT NBR ISO/IEC 27001:2022 A.7.10, A.8.1, NR-10 & NR-18 (Segurança em Obras)",
@@ -2386,6 +2402,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
     buildBody: (ctx, custom = {}) => {
       const obraDestino = custom.obra || ctx.activeUnit;
       const dataVistoria = custom.docDate || ctx.todayBr;
+      const localHomologacao = (custom.local_homologacao && custom.local_homologacao.trim()) || "Bancada de Testes de T.I. / Central AC Engenharia";
       const obsTecnicas = (custom.obs_tecnicas || "").trim();
 
       // Recupera aparelhos testados (lista estruturada ou fallback)
@@ -2399,7 +2416,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           marca: custom.marca || "___________________________",
           modelo: custom.modelo || "___________________________",
           tensao: custom.tensao || "Bivolt Automático (100V ~ 240V)",
-          status: custom.parecer_status || "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra"
+          status: custom.parecer_status || "APROVADO — Equipamento 100% íntegro e testado"
         }];
       }
 
@@ -2409,7 +2426,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
         ? "REPROVADO — Constatado defeito / vício oculto em equipamento do lote"
         : hasRessalvas
         ? "APROVADO COM RESSALVAS — Funcionamento validado com pequenas observações"
-        : "APROVADO — Equipamento(s) 100% íntegro(s), testado(s) e liberado(s) para envio à obra";
+        : "APROVADO — Equipamento(s) 100% íntegro(s) e testado(s)";
 
       const isReprovado = hasReprovado;
       const isRessalvas = hasRessalvas && !hasReprovado;
@@ -2475,7 +2492,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
             <td width="45%"><strong>Data do Teste / Vistoria:</strong> ${escapeDocHtml(dataVistoria)}</td>
           </tr>
           <tr>
-            <td colspan="2"><strong>Local de Homologação:</strong> Bancada de Testes de T.I. / Central AC Engenharia</td>
+            <td colspan="2"><strong>Local de Homologação:</strong> ${escapeDocHtml(localHomologacao)}</td>
           </tr>
         </table>
 
@@ -2554,33 +2571,17 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
               <td style="color: #059669; font-weight: 700;">[ ✓ ] CONFORME</td>
               <td>Som nítido sem chiado; teclas do controle remoto 100% responsivas</td>
             </tr>
-            <tr>
-              <td style="text-align: center;">07</td>
-              <td><strong>Segurança Elétrica e Aterramento</strong></td>
-              <td style="color: #059669; font-weight: 700;">[ ✓ ] CONFORME</td>
-              <td>Plugue tripolar NBR 14136, sem fuga de corrente ou aquecimento</td>
-            </tr>
           </tbody>
         </table>
 
         ${photoSectionHtml}
 
-        <h2>${photoSectionHtml ? '5' : '4'}. Parecer Técnico da Homologação &amp; Diretrizes de Instalação</h2>
+        <h2>${photoSectionHtml ? '5' : '4'}. Parecer Técnico da Homologação</h2>
         <div class="callout" style="margin-bottom: 10px; border-left-color: ${isReprovado ? '#dc2626' : isRessalvas ? '#d97706' : '#059669'};">
           <strong style="font-size: 9pt; color: ${isReprovado ? '#b91c1c' : isRessalvas ? '#b45309' : '#047857'};">
             ${escapeDocHtml(overallStatus)}
           </strong>
           ${obsHtml}
-        </div>
-
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; font-size: 8pt; color: #475569; margin-bottom: 12px;">
-          <strong>Recomendações Técnicas para a Equipe de Obra:</strong>
-          <ul style="margin: 4px 0 0 16px; padding: 0; line-height: 1.4;">
-            <li>Fixar em suporte VESA adequado em parede firme ou estrutura metálica protegida do container;</li>
-            <li>Conectar preferencialmente em filtro de linha ou nobreak com proteção contra surtos elétricos;</li>
-            <li>Não expor o aparelho a goteiras, poeira de brita/concreto ou umidade excessiva de obra;</li>
-            <li>Em caso de avaria ou falha no canteiro, acionar imediatamente o setor de T.I. informando o modelo do equipamento testado.</li>
-          </ul>
         </div>
 
         ${buildSignatureGridHTML(defaultSigners, false, "MOD-OBR-06")}
@@ -5846,7 +5847,7 @@ function renderDocDevicesList() {
         <div class="sm:col-span-1 lg:col-span-8">
           <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Resultado do Teste / Homologação *</label>
           <select data-device-field="status" onchange="updateDeviceState('${d.id}', 'status', this.value)" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93]">
-            <option value="APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra" ${d.status?.includes('APROVADO') && !d.status?.includes('RESSALVAS') ? 'selected' : ''}>APROVADO — Equipamento 100% íntegro e liberado para obra</option>
+            <option value="APROVADO — Equipamento 100% íntegro e testado" ${d.status?.includes('APROVADO') && !d.status?.includes('RESSALVAS') ? 'selected' : ''}>APROVADO — Equipamento 100% íntegro e testado</option>
             <option value="APROVADO COM RESSALVAS — Funcionamento validado com pequenas observações" ${d.status?.includes('RESSALVAS') ? 'selected' : ''}>APROVADO COM RESSALVAS — Validado com pequenas observações</option>
             <option value="REPROVADO — Aparelho com defeito / vício oculto (Acionar Garantia ou Devolução)" ${d.status?.includes('REPROVADO') ? 'selected' : ''}>REPROVADO — Com defeito / vício oculto (Devolução / Garantia)</option>
           </select>
@@ -5891,7 +5892,7 @@ function handleAddDeviceToDoc() {
     marca: "",
     modelo: "",
     tensao: "Bivolt Automático (100V ~ 240V)",
-    status: "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra"
+    status: "APROVADO — Equipamento 100% íntegro e testado"
   });
   renderDocDevicesList();
   if (window.showToast) {
@@ -5951,7 +5952,7 @@ function openDocumentSignersModal(docCode = null) {
       marca: d.marca || "",
       modelo: d.modelo || "",
       tensao: d.tensao || "Bivolt Automático (100V ~ 240V)",
-      status: d.status || "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra"
+      status: d.status || "APROVADO — Equipamento 100% íntegro e testado"
     }));
   } else if (savedFields.marca || savedFields.modelo || savedFields.equipamento_tipo) {
     initialDevices = [{
@@ -5960,7 +5961,7 @@ function openDocumentSignersModal(docCode = null) {
       marca: savedFields.marca || "",
       modelo: savedFields.modelo || "",
       tensao: savedFields.tensao || "Bivolt Automático (100V ~ 240V)",
-      status: savedFields.parecer_status || "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra"
+      status: savedFields.parecer_status || "APROVADO — Equipamento 100% íntegro e testado"
     }];
   } else {
     initialDevices = [{
@@ -5969,7 +5970,7 @@ function openDocumentSignersModal(docCode = null) {
       marca: "",
       modelo: "",
       tensao: "Bivolt Automático (100V ~ 240V)",
-      status: "APROVADO — Equipamento 100% íntegro, testado e liberado para envio à obra"
+      status: "APROVADO — Equipamento 100% íntegro e testado"
     }];
   }
   DocDevicesState.devices = initialDevices;
