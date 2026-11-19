@@ -2395,7 +2395,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
       }
       if (devices.length === 0) {
         devices = [{
-          tipo: custom.equipamento_tipo || "Smart TV LED / Painel de Reuniões",
+          tipo: custom.equipamento_tipo || "",
           marca: custom.marca || "___________________________",
           modelo: custom.modelo || "___________________________",
           tensao: custom.tensao || "Bivolt Automático (100V ~ 240V)",
@@ -2495,7 +2495,7 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
             ${devices.map((d, i) => `
               <tr>
                 <td style="text-align: center; font-weight: 700; color: #0b1a30;">${String(i + 1).padStart(2, '0')}</td>
-                <td><strong style="color: #004b93;">${escapeDocHtml(d.tipo || 'Smart TV / Projetor')}</strong></td>
+                <td><strong style="color: #004b93;">${escapeDocHtml(d.tipo || '—')}</strong></td>
                 <td><strong>${escapeDocHtml(d.marca || '—')}</strong></td>
                 <td>${escapeDocHtml(d.modelo || '—')}</td>
                 <td>${escapeDocHtml(d.tensao || 'Bivolt')}</td>
@@ -5821,14 +5821,7 @@ function renderDocDevicesList() {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5">
         <div class="sm:col-span-1 lg:col-span-4">
           <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Tipo do Aparelho *</label>
-          <select data-device-field="tipo" onchange="updateDeviceState('${d.id}', 'tipo', this.value)" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93]">
-            <option value="Smart TV LED / Painel de Reuniões" ${d.tipo === 'Smart TV LED / Painel de Reuniões' ? 'selected' : ''}>Smart TV LED / Painel de Reuniões</option>
-            <option value="Projetor Multimídia / Datashow" ${d.tipo === 'Projetor Multimídia / Datashow' ? 'selected' : ''}>Projetor Multimídia / Datashow</option>
-            <option value="Monitor de Vídeo / CFTV" ${d.tipo === 'Monitor de Vídeo / CFTV' ? 'selected' : ''}>Monitor de Vídeo / CFTV</option>
-            <option value="Caixa de Som / Sistema de Áudio para DDS" ${d.tipo === 'Caixa de Som / Sistema de Áudio para DDS' ? 'selected' : ''}>Caixa de Som / Sistema de Áudio para DDS</option>
-            <option value="Aparelho de Videoconferência / Webcam" ${d.tipo === 'Aparelho de Videoconferência / Webcam' ? 'selected' : ''}>Aparelho de Videoconferência / Webcam</option>
-            <option value="Outro Equipamento Eletroeletrônico" ${d.tipo === 'Outro Equipamento Eletroeletrônico' ? 'selected' : ''}>Outro Equipamento Eletroeletrônico</option>
-          </select>
+          <input type="text" data-device-field="tipo" value="${escapeDocHtml(d.tipo || '')}" oninput="updateDeviceState('${d.id}', 'tipo', this.value)" placeholder="Ex: Smart TV, Projetor, Monitor, Caixa de Som" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93]" />
         </div>
 
         <div class="sm:col-span-1 lg:col-span-4">
@@ -5880,7 +5873,7 @@ function syncDevicesFromDom() {
       const modeloEl = card.querySelector('[data-device-field="modelo"]');
       const tensaoEl = card.querySelector('[data-device-field="tensao"]');
       const statusEl = card.querySelector('[data-device-field="status"]');
-      if (tipoEl) dev.tipo = tipoEl.value;
+      if (tipoEl) dev.tipo = tipoEl.value.trim();
       if (marcaEl) dev.marca = marcaEl.value.trim();
       if (modeloEl) dev.modelo = modeloEl.value.trim();
       if (tensaoEl) dev.tensao = tensaoEl.value;
@@ -5894,7 +5887,7 @@ function handleAddDeviceToDoc() {
   const newId = "dev_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
   DocDevicesState.devices.push({
     id: newId,
-    tipo: "Smart TV LED / Painel de Reuniões",
+    tipo: "",
     marca: "",
     modelo: "",
     tensao: "Bivolt Automático (100V ~ 240V)",
@@ -5954,7 +5947,7 @@ function openDocumentSignersModal(docCode = null) {
   if (Array.isArray(savedFields.devices) && savedFields.devices.length > 0) {
     initialDevices = savedFields.devices.map((d, i) => ({
       id: d.id || `dev_${i}_${Date.now()}`,
-      tipo: d.tipo || "Smart TV LED / Painel de Reuniões",
+      tipo: d.tipo || "",
       marca: d.marca || "",
       modelo: d.modelo || "",
       tensao: d.tensao || "Bivolt Automático (100V ~ 240V)",
@@ -5963,7 +5956,7 @@ function openDocumentSignersModal(docCode = null) {
   } else if (savedFields.marca || savedFields.modelo || savedFields.equipamento_tipo) {
     initialDevices = [{
       id: "dev_1",
-      tipo: savedFields.equipamento_tipo || "Smart TV LED / Painel de Reuniões",
+      tipo: savedFields.equipamento_tipo || "",
       marca: savedFields.marca || "",
       modelo: savedFields.modelo || "",
       tensao: savedFields.tensao || "Bivolt Automático (100V ~ 240V)",
@@ -5972,7 +5965,7 @@ function openDocumentSignersModal(docCode = null) {
   } else {
     initialDevices = [{
       id: "dev_1",
-      tipo: "Smart TV LED / Painel de Reuniões",
+      tipo: "",
       marca: "",
       modelo: "",
       tensao: "Bivolt Automático (100V ~ 240V)",
