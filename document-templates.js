@@ -2501,11 +2501,10 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
           <thead>
             <tr>
               <th width="6%" style="text-align: center;">Item</th>
-              <th width="26%">Tipo do Equipamento</th>
-              <th width="20%">Marca / Fabricante</th>
+              <th width="30%">Tipo do Equipamento</th>
+              <th width="24%">Marca / Fabricante</th>
               <th width="26%">Modelo / Detalhes</th>
-              <th width="10%">Voltagem</th>
-              <th width="12%" style="text-align: center;">Resultado</th>
+              <th width="14%" style="text-align: center;">Resultado</th>
             </tr>
           </thead>
           <tbody>
@@ -2515,7 +2514,6 @@ const CORPORATE_DOCUMENT_TEMPLATES = [
                 <td><strong style="color: #004b93;">${escapeDocHtml(d.tipo || '—')}</strong></td>
                 <td><strong>${escapeDocHtml(d.marca || '—')}</strong></td>
                 <td>${escapeDocHtml(d.modelo || '—')}</td>
-                <td>${escapeDocHtml(d.tensao || 'Bivolt')}</td>
                 <td style="text-align: center; font-weight: 700; font-size: 8pt; color: ${d.status?.includes('REPROVADO') ? '#dc2626' : d.status?.includes('RESSALVAS') ? '#d97706' : '#059669'};">
                   ${d.status?.includes('REPROVADO') ? '[ ✕ ] REPROVADO' : d.status?.includes('RESSALVAS') ? '[ ! ] RESSALVAS' : '[ ✓ ] APROVADO'}
                 </td>
@@ -5835,16 +5833,7 @@ function renderDocDevicesList() {
           <input type="text" data-device-field="modelo" value="${escapeDocHtml(d.modelo || '')}" oninput="updateDeviceState('${d.id}', 'modelo', this.value)" placeholder="Ex: Smart TV 55 pol. UHD 4K / Projetor 3800 Lumens" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93]" />
         </div>
 
-        <div class="sm:col-span-1 lg:col-span-4">
-          <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Tensão Elétrica (Voltagem)</label>
-          <select data-device-field="tensao" onchange="updateDeviceState('${d.id}', 'tensao', this.value)" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93]">
-            <option value="Bivolt Automático (100V ~ 240V)" ${d.tensao === 'Bivolt Automático (100V ~ 240V)' ? 'selected' : ''}>Bivolt Automático (100V ~ 240V)</option>
-            <option value="220V Monofásico" ${d.tensao === '220V Monofásico' ? 'selected' : ''}>220V Monofásico</option>
-            <option value="110V / 127V Monofásico" ${d.tensao === '110V / 127V Monofásico' ? 'selected' : ''}>110V / 127V Monofásico</option>
-          </select>
-        </div>
-
-        <div class="sm:col-span-1 lg:col-span-8">
+        <div class="sm:col-span-2 lg:col-span-12">
           <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Resultado do Teste / Homologação *</label>
           <select data-device-field="status" onchange="updateDeviceState('${d.id}', 'status', this.value)" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#004b93]">
             <option value="APROVADO — Equipamento 100% íntegro e testado" ${d.status?.includes('APROVADO') && !d.status?.includes('RESSALVAS') ? 'selected' : ''}>APROVADO — Equipamento 100% íntegro e testado</option>
