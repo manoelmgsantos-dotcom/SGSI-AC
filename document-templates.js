@@ -7801,6 +7801,13 @@ function renderDocumentEvidenceUploadForm(docCode) {
     ? buildSgsiObrasSelectOptionsHtml()
     : cfg.assetOptions.map(opt => `<option value="${escapeDocHtml(opt)}">${escapeDocHtml(opt)}</option>`).join("");
 
+  const registeredUsers = (typeof getStoredUsers === "function") ? getStoredUsers() : [];
+  const respUsersDatalistHtml = `
+    <datalist id="doc-evid-resp-users-datalist">
+      ${registeredUsers.map(u => `<option value="${escapeDocHtml(u.name)}">${escapeDocHtml(u.roleName || u.email || '')}</option>`).join("")}
+    </datalist>
+  `;
+
   panel.innerHTML = `
     <div class="card-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-6">
       <div class="border-b border-slate-100 pb-3">
@@ -7813,6 +7820,7 @@ function renderDocumentEvidenceUploadForm(docCode) {
 
       <form id="form-doc-evidence-upload" onsubmit="handleSaveDocumentEvidence(event, '${docCode}')" class="space-y-5 text-xs">
         ${datalistHtml}
+        ${respUsersDatalistHtml}
         
         <!-- BLOCO 1: DADOS CONTEXTUAIS DO MODELO -->
         <div class="p-4 rounded-xl bg-blue-50/60 border border-blue-200/80 space-y-3">
@@ -7882,10 +7890,20 @@ function renderDocumentEvidenceUploadForm(docCode) {
           <input type="text" id="doc-evid-input-title" required placeholder="Ex: Anexo Comprobatório de Conformidade — ${escapeDocHtml(docCode)}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs" />
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-start">
           <div>
-            <label class="block text-slate-700 font-semibold mb-1">Analista / Responsável pela Coleta *</label>
-            <input type="text" id="doc-evid-input-resp" required value="${escapeDocHtml(ctx.currentUserName || 'Analista de T.I. / GRC')}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs" />
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <label class="block text-slate-700 font-semibold">Analista(s) / Responsável(is) pela Coleta *</label>
+              <button type="button" onclick="handleAddDocEvidenceResponsibleRow()" class="px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-[#004b93] border border-blue-200 text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors" title="Adicionar mais um responsável pela coleta">
+                <i data-lucide="user-plus" class="w-3 h-3"></i>
+                <span>+ Adicionar</span>
+              </button>
+            </div>
+            <div id="doc-evid-resp-list" class="space-y-2">
+              <div class="doc-evid-resp-row flex items-center gap-1.5">
+                <input type="text" id="doc-evid-input-resp" list="doc-evid-resp-users-datalist" required value="${escapeDocHtml(ctx.currentUserName || 'Analista de T.I. / GRC')}" placeholder="Nome do responsável pela coleta" class="doc-evid-resp-input flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs" />
+              </div>
+            </div>
           </div>
           <div>
             <label class="block text-slate-700 font-semibold mb-1">Data da Coleta / Homologação *</label>
@@ -7998,6 +8016,26 @@ async function handleDocumentEvidenceFileSelect(input) {
   }
 }
 
+function handleAddDocEvidenceResponsibleRow() {
+  const list = document.getElementById("doc-evid-resp-list");
+  if (!list) return;
+
+  const row = document.createElement("div");
+  row.className = "doc-evid-resp-row flex items-center gap-1.5";
+  row.innerHTML = `
+    <input type="text" list="doc-evid-resp-users-datalist" placeholder="Nome do outro responsável / técnico" class="doc-evid-resp-input flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs" />
+    <button type="button" onclick="this.closest('.doc-evid-resp-row').remove()" class="p-2 rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 cursor-pointer transition-colors shrink-0" title="Remover responsável">
+      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+    </button>
+  `;
+  list.appendChild(row);
+  if (window.lucide && typeof window.lucide.createIcons === "function") {
+    window.lucide.createIcons();
+  }
+  const input = row.querySelector("input");
+  if (input) input.focus();
+}
+
 async function handleSaveDocumentEvidence(e, docCode) {
   e.preventDefault();
 
@@ -8006,7 +8044,17 @@ async function handleSaveDocumentEvidence(e, docCode) {
   const secondaryVal = (document.getElementById("doc-evid-input-secondary")?.value || "").trim();
   const assetVal = document.getElementById("doc-evid-input-asset")?.value || "Sistemas Corporativos AC Engenharia";
   const category = document.getElementById("doc-evid-input-category")?.value || "Auditoria & Custódia Forense";
-  const responsible = (document.getElementById("doc-evid-input-resp")?.value || "Analista de T.I. / GRC").trim();
+
+  const respInputs = Array.from(document.querySelectorAll("#doc-evid-resp-list .doc-evid-resp-input"));
+  const responsiblesList = Array.from(new Set(
+    respInputs.map(el => (el.value || "").trim()).filter(Boolean)
+  ));
+  if (responsiblesList.length === 0) {
+    const fallbackResp = (document.getElementById("doc-evid-input-resp")?.value || "").trim();
+    if (fallbackResp) responsiblesList.push(fallbackResp);
+  }
+  const responsible = responsiblesList.length > 0 ? responsiblesList.join(", ") : "Analista de T.I. / GRC";
+
   const date = document.getElementById("doc-evid-input-date")?.value || new Date().toISOString().split("T")[0];
   const notes = (document.getElementById("doc-evid-input-notes")?.value || "").trim();
 
@@ -8050,6 +8098,7 @@ async function handleSaveDocumentEvidence(e, docCode) {
     category,
     location: cfg.assetIsObraSelect ? assetVal : (cfg.module === "obras" ? entityVal : "Escritório Central (Matriz)"),
     responsible,
+    responsibles: responsiblesList,
     // Propriedades universais e contextuais
     entityName: entityVal,
     secondaryInfo: secondaryVal,
@@ -8360,8 +8409,11 @@ window.switchDocumentEvidenceTab = switchDocumentEvidenceTab;
 window.applyDocumentEvidenceFilters = applyDocumentEvidenceFilters;
 window.renderDocumentEvidenceList = renderDocumentEvidenceList;
 window.renderDocumentEvidenceUploadForm = renderDocumentEvidenceUploadForm;
+window.handleAddDocEvidenceResponsibleRow = handleAddDocEvidenceResponsibleRow;
 window.handleDocumentEvidenceFileSelect = handleDocumentEvidenceFileSelect;
 window.handleSaveDocumentEvidence = handleSaveDocumentEvidence;
+window.getDynamicSgsiObrasList = getDynamicSgsiObrasList;
+window.buildSgsiObrasSelectOptionsHtml = buildSgsiObrasSelectOptionsHtml;
 window.deleteDocumentEvidence = deleteDocumentEvidence;
 window.downloadDocumentEvidenceFile = downloadDocumentEvidenceFile;
 window.printEvidenceForensicCertificate = printEvidenceForensicCertificate;
