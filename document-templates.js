@@ -6777,6 +6777,63 @@ function isEvidenceHubEnabledForDoc(docCode) {
   return Boolean(getTemplateByCode(docCode));
 }
 
+function getDynamicSgsiObrasList() {
+  try {
+    if (typeof getStoredObras === "function") {
+      const list = getStoredObras();
+      if (Array.isArray(list) && list.length > 0) return list;
+    }
+    if (typeof window !== "undefined" && typeof window.getStoredObras === "function") {
+      const list = window.getStoredObras();
+      if (Array.isArray(list) && list.length > 0) return list;
+    }
+    const raw = localStorage.getItem("AC_ENGENHARIA_OBRAS_V1");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.warn("Falha ao carregar obras cadastradas no SGSI:", e);
+  }
+  return [{ id: "MATRIZ-001", name: "Escritório Central (Matriz)", hierarchy: "principal", isHeadquarters: true }];
+}
+
+function buildSgsiObrasSelectOptionsHtml(selectedValue = "") {
+  const obras = getDynamicSgsiObrasList();
+  const matriz = obras.find(o => o && (o.hierarchy === "principal" || o.isHeadquarters || o.id === "MATRIZ-001"));
+  const adjacentes = obras.filter(o => o && o !== matriz);
+
+  let html = "";
+  if (adjacentes.length > 0) {
+    html += `
+      <optgroup label="🏗️ Canteiros & Obras Cadastradas (SGSI)">
+        ${adjacentes.map(o => {
+          const val = (o.name || o.id || "").trim();
+          const label = o.id && o.name ? `${o.name} (${o.id})` : val;
+          const sel = selectedValue && selectedValue === val ? " selected" : "";
+          return `<option value="${escapeDocHtml(val)}"${sel}>${escapeDocHtml(label)}</option>`;
+        }).join("")}
+      </optgroup>
+    `;
+  }
+  if (matriz) {
+    const val = (matriz.name || matriz.id || "Escritório Central (Matriz)").trim();
+    const sel = selectedValue && selectedValue === val ? " selected" : "";
+    html += `
+      <optgroup label="🏢 Unidade Principal (Matriz)">
+        <option value="${escapeDocHtml(val)}"${sel}>${escapeDocHtml(val)}</option>
+      </optgroup>
+    `;
+  }
+  const outroSel = selectedValue === "Outro Canteiro / Unidade" ? " selected" : "";
+  html += `
+    <optgroup label="🌐 Outros">
+      <option value="Outro Canteiro / Unidade"${outroSel}>Outro Canteiro / Unidade</option>
+    </optgroup>
+  `;
+  return html;
+}
+
 function getDocumentContextualEvidenceConfig(docCode) {
   const tpl = getTemplateByCode(docCode);
   const code = (docCode || "").toUpperCase();
@@ -6784,22 +6841,25 @@ function getDocumentContextualEvidenceConfig(docCode) {
 
   // Modelo Especial: Laudo de Homologação e Teste de TVs, Projetores e Aparelhos de Obra
   if (code === "MOD-OBR-06") {
+    const obrasCadastradas = getDynamicSgsiObrasList();
+    const dynamicObraNames = obrasCadastradas
+      .map(o => (o && (o.name || o.id)) ? String(o.name || o.id).trim() : "")
+      .filter(Boolean);
+    const assetOptions = Array.from(new Set([
+      ...dynamicObraNames,
+      "Outro Canteiro / Unidade"
+    ]));
+
     return {
       module: "obras",
+      assetIsObraSelect: true,
       entityLabel: "Aparelho / Equipamento Testado",
       entityPlaceholder: "Ex: Smart TV 55 Samsung / Projetor Epson PowerLite",
       entityIcon: "tv",
       secondaryLabel: "Marca & Modelo do Equipamento",
       secondaryPlaceholder: "Ex: Samsung Smart TV 55 pol. UHD / Projetor Epson",
       assetLabel: "Obra / Canteiro de Destino",
-      assetOptions: [
-        "Residencial Jardins da Costa",
-        "Edifício Mirante da Praia",
-        "Canteiro Reserva Jardim (Obra 04)",
-        "Escritório Central (Matriz)",
-        "Estande de Vendas / Stand Comercial",
-        "Outro Canteiro / Unidade"
-      ],
+      assetOptions,
       defaultCategories: [
         "Fotos do Aparelho Ligado / Teste de Tela",
         "Fotos do Teste / Funcionamento do Aparelho",
@@ -6828,11 +6888,14 @@ function getDocumentContextualEvidenceConfig(docCode) {
   else if (code.startsWith("MOD-GOV-")) mod = "raci";
 
   switch (mod) {
-    case "obras":
+    case "obras": {
+      const obrasList = getDynamicSgsiObrasList();
+      const firstAdj = obrasList.find(o => o && o.hierarchy !== "principal" && !o.isHeadquarters && o.id !== "MATRIZ-001");
+      const sampleObraName = firstAdj ? firstAdj.name : (obrasList[0]?.name || "Escritório Central (Matriz)");
       return {
         module: "obras",
         entityLabel: "Canteiro de Obras / Localidade",
-        entityPlaceholder: "Ex: Residencial Jardins da Costa (ou selecione na lista)",
+        entityPlaceholder: `Ex: ${sampleObraName} (ou selecione na lista)`,
         entityIcon: "hard-hat",
         secondaryLabel: "Engenheiro(a) Residente / Fiscal da Obra",
         secondaryPlaceholder: "Ex: Eng. Ricardo Lima (CREA-SE)",
@@ -6860,6 +6923,7 @@ function getDocumentContextualEvidenceConfig(docCode) {
         kpiSub: "Obras",
         kpiDesc: "Canteiros e frentes de obra com registros"
       };
+    }
 
     case "users":
       return {
@@ -7710,21 +7774,32 @@ function renderDocumentEvidenceUploadForm(docCode) {
 
   // Datalists inteligentes para autocompletar conforme o módulo
   let datalistHtml = "";
-  if (cfg.module === "obras") {
-    const obras = (typeof getStoredObras === "function") ? getStoredObras() : [];
+  let useEntityDatalist = false;
+  if (cfg.module === "obras" && !cfg.assetIsObraSelect) {
+    const obras = getDynamicSgsiObrasList();
+    useEntityDatalist = true;
     datalistHtml = `
       <datalist id="doc-evid-entity-datalist">
-        ${obras.map(o => `<option value="${escapeDocHtml(o.name || o.id)}">${escapeDocHtml(o.city ? `${o.name} (${o.city})` : o.name)}</option>`).join("")}
+        ${obras.map(o => {
+          const val = (o.name || o.id || "").trim();
+          const detail = o.address || o.commercialName || o.id || "";
+          return `<option value="${escapeDocHtml(val)}">${escapeDocHtml(detail && detail !== val ? `${val} (${detail})` : val)}</option>`;
+        }).join("")}
       </datalist>
     `;
   } else if (cfg.module === "users" || cfg.module === "secops") {
     const users = (typeof getStoredUsers === "function") ? getStoredUsers() : [];
+    useEntityDatalist = true;
     datalistHtml = `
       <datalist id="doc-evid-entity-datalist">
         ${users.map(u => `<option value="${escapeDocHtml(u.name)}">${escapeDocHtml(u.email || u.roleName || '')}</option>`).join("")}
       </datalist>
     `;
   }
+
+  const assetSelectOptionsHtml = cfg.assetIsObraSelect
+    ? buildSgsiObrasSelectOptionsHtml()
+    : cfg.assetOptions.map(opt => `<option value="${escapeDocHtml(opt)}">${escapeDocHtml(opt)}</option>`).join("");
 
   panel.innerHTML = `
     <div class="card-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-6">
@@ -7749,7 +7824,7 @@ function renderDocumentEvidenceUploadForm(docCode) {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
               <label class="block text-slate-700 font-semibold mb-1">${escapeDocHtml(cfg.entityLabel)} *</label>
-              <input type="text" id="doc-evid-input-entity" list="doc-evid-entity-datalist" required placeholder="${escapeDocHtml(cfg.entityPlaceholder)}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs" />
+              <input type="text" id="doc-evid-input-entity"${useEntityDatalist ? ' list="doc-evid-entity-datalist"' : ''} required placeholder="${escapeDocHtml(cfg.entityPlaceholder)}" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs" />
             </div>
             <div>
               <label class="block text-slate-700 font-semibold mb-1">${escapeDocHtml(cfg.secondaryLabel)}</label>
@@ -7760,8 +7835,8 @@ function renderDocumentEvidenceUploadForm(docCode) {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
               <label class="block text-slate-700 font-semibold mb-1">${escapeDocHtml(cfg.assetLabel)} *</label>
-              <select id="doc-evid-input-asset" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs">
-                ${cfg.assetOptions.map(opt => `<option value="${escapeDocHtml(opt)}">${escapeDocHtml(opt)}</option>`).join("")}
+              <select id="doc-evid-input-asset"${cfg.assetIsObraSelect ? ' data-obra-select="true"' : ''} required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-[#004b93] text-xs">
+                ${assetSelectOptionsHtml}
               </select>
             </div>
             <div>
@@ -7973,7 +8048,7 @@ async function handleSaveDocumentEvidence(e, docCode) {
     title,
     control: `${tpl.code} / ${tpl.normative}`,
     category,
-    location: cfg.module === "obras" ? entityVal : "Escritório Central (Matriz)",
+    location: cfg.assetIsObraSelect ? assetVal : (cfg.module === "obras" ? entityVal : "Escritório Central (Matriz)"),
     responsible,
     // Propriedades universais e contextuais
     entityName: entityVal,

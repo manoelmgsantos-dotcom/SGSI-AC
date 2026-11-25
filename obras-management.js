@@ -882,6 +882,41 @@ function refreshAllObraDropdowns() {
 
     riskBtnsContainer.innerHTML = btnsHtml;
   }
+
+  // 6. Dropdown de Obra / Canteiro de Destino no Anexo de Evidências de Documentos (ex: MOD-OBR-06)
+  const docEvidAssetSelect = document.getElementById("doc-evid-input-asset");
+  if (docEvidAssetSelect && docEvidAssetSelect.dataset.obraSelect === "true") {
+    const curDocObra = docEvidAssetSelect.value;
+    if (typeof buildSgsiObrasSelectOptionsHtml === "function") {
+      docEvidAssetSelect.innerHTML = buildSgsiObrasSelectOptionsHtml(curDocObra);
+    } else {
+      docEvidAssetSelect.innerHTML = `
+        ${adjacentes.length > 0 ? `<optgroup label="🏗️ Canteiros & Obras Cadastradas (SGSI)">${adjacentes.map(o => `<option value="${o.name}">${o.name}${o.id ? ` (${o.id})` : ""}</option>`).join("")}</optgroup>` : ""}
+        <optgroup label="🏢 Unidade Principal (Matriz)">
+          <option value="${matriz.name}">${matriz.name}</option>
+        </optgroup>
+        <optgroup label="🌐 Outros">
+          <option value="Outro Canteiro / Unidade">Outro Canteiro / Unidade</option>
+        </optgroup>
+      `;
+      if ([...docEvidAssetSelect.options].some(opt => opt.value === curDocObra)) {
+        docEvidAssetSelect.value = curDocObra;
+      }
+    }
+  }
+
+  // 7. Datalist de Obras no Anexo de Evidências dos demais modelos MOD-OBR-*
+  const docEvidDatalist = document.getElementById("doc-evid-entity-datalist");
+  const docEvidEntityInput = document.getElementById("doc-evid-input-entity");
+  if (docEvidDatalist && docEvidEntityInput && docEvidEntityInput.getAttribute("list") === "doc-evid-entity-datalist") {
+    if (typeof currentDocumentEvidenceTargetCode === "string" && currentDocumentEvidenceTargetCode.toUpperCase().startsWith("MOD-OBR-") && currentDocumentEvidenceTargetCode.toUpperCase() !== "MOD-OBR-06") {
+      docEvidDatalist.innerHTML = obras.map(o => {
+        const val = (o.name || o.id || "").trim();
+        const detail = o.address || o.commercialName || o.id || "";
+        return `<option value="${val}">${detail && detail !== val ? `${val} (${detail})` : val}</option>`;
+      }).join("");
+    }
+  }
 }
 
 // Exposição Global
